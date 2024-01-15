@@ -22,6 +22,11 @@ void setup() {
   }
   CoreS3.Display.drawString("Camera Init Success", dw / 2, dh / 2);
   CoreS3.Camera.sensor->set_framesize(CoreS3.Camera.sensor, FRAMESIZE_QVGA);
+
+  if(psramFound()){
+    size_t psram_size = esp_spiram_get_size() / 1048576;
+    Serial.printf("PSRAM size: %dMb\r\n", psram_size);
+  }
 }
 
 void loop() {

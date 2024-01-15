@@ -71,7 +71,8 @@ void setup() {
   // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
   // for larger pre-allocated frame buffer.
   if(psramFound()){
-    Serial.println("PSRAM found");
+    size_t psram_size = esp_spiram_get_size() / 1048576;
+    Serial.printf("PSRAM size: %dMb\r\n", psram_size);
     config.jpeg_quality = 10;
     config.fb_count = 2;
     config.grab_mode = CAMERA_GRAB_LATEST;
