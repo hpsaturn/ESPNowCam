@@ -1,3 +1,4 @@
+#define CAMERA_MODEL_ESP32S3_EYE // Has PSRAM
 
 #if defined(CAMERA_MODEL_WROVER_KIT)
 #define PWDN_GPIO_NUM    -1
