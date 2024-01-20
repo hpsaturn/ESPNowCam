@@ -31,7 +31,7 @@ void printFPS(const char *msg) {
     timeStamp = millis();
     Serial.printf("%s %2d FPS\r\n",msg, frame);
     frame = 0;
-  }
+  } 
 }
 
 void loop() {

@@ -3,7 +3,7 @@
 
 int32_t dw, dh;
 
-// #define CONVERT_TO_JPEG
+#define CONVERT_TO_JPEG
 
 void setup() {
   Serial.begin(115200);
@@ -29,6 +29,18 @@ void setup() {
   }
 }
 
+uint16_t frame = 0;
+
+void printFPS(const char *msg) {
+  static uint_least64_t timeStamp = 0;
+  frame++;
+  if (millis() - timeStamp > 1000) {
+    timeStamp = millis();
+    Serial.printf("%s %2d FPS\r\n",msg, frame);
+    frame = 0;
+  } 
+}
+
 void loop() {
   if (CoreS3.Camera.get()) {
 #ifdef CONVERT_TO_JPEG
@@ -36,8 +48,10 @@ void loop() {
     size_t out_jpg_len = 0;
     frame2jpg(CoreS3.Camera.fb, 64, &out_jpg, &out_jpg_len);
     CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
+    printFPS("JPG compression at");
     free(out_jpg);
 #else
+    printFPS("frame ready at");
     CoreS3.Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
 #endif
     CoreS3.Camera.free();
