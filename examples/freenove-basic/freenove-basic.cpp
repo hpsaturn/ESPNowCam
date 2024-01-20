@@ -1,15 +1,7 @@
 #include <Arduino.h>
 #include "CamFreenove.h"
 
-#if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_ARDUHAL_ESP_LOG)
-#include "esp32-hal-log.h"
-#define TAG ""
-#else
-#include "esp_log.h"
-static const char *TAG = "camera_basic";
-#endif
-
-#define CONVERT_TO_JPEG
+// #define CONVERT_TO_JPEG
 
 CamFreenove Camera;
 
@@ -30,17 +22,30 @@ void setup() {
   }
 }
 
+uint16_t frame = 0;
+
+void printFPS(const char *msg) {
+  static uint_least64_t timeStamp = 0;
+  frame++;
+  if (millis() - timeStamp > 1000) {
+    timeStamp = millis();
+    Serial.printf("%s %2d FPS\r\n",msg, frame);
+    frame = 0;
+  }
+}
+
 void loop() {
   if (Camera.get()) {
 #ifdef CONVERT_TO_JPEG
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
     frame2jpg(Camera.fb, 64, &out_jpg, &out_jpg_len);
-    Serial.println("frame2jpg ready");
-    // CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
+    printFPS("JPG compression at");
+    // Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
     free(out_jpg);
 #else
-    // CoreS3.Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
+    printFPS("frame ready at");
+    // Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
 #endif
     Camera.free();
   }
