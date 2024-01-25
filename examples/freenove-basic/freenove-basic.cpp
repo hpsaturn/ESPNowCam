@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "CamFreenove.h"
+#include <CamFreenove.h>
 
 // #define CONVERT_TO_JPEG
 

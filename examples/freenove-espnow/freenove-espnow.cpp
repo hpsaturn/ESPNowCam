@@ -105,15 +105,15 @@ bool encode_data(pb_ostream_t *stream, const pb_field_t *field, void *const *arg
   return pb_encode_string(stream, (const uint8_t *)chunk, strlen((const char*)chunk));
 }
 
-uint8_t chunk_data[200];
+uint8_t chunk_data[16];
 
 void dispatchFrame(uint8_t *data, uint32_t data_len) {
   Frame msg = Frame_init_zero;
   msg.chunk_left = data_len;
   msg.chunk_max = data_len;
   Chunk chunk = Chunk_init_zero;
-  memcpy(&chunk_data, data, 200);
-  chunk.lenght = 200;
+  memcpy(&chunk_data, data, 15);
+  chunk.lenght = 15;
   chunk.data.arg = &chunk;
   chunk.data.funcs.encode = encode_data;
   msg.chunk = chunk;
