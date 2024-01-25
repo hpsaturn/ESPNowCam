@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <WiFi.h>
 #include <esp_now.h>
 #include <pb_encode.h>
 #include "CamFreenove.h"
@@ -17,6 +18,22 @@ void setup() {
   Serial.println();
   delay(1000);
 
+  WiFi.mode(WIFI_STA);
+  // startup ESP Now
+  Serial.println("ESPNow Init");
+  Serial.println(WiFi.macAddress());
+  // shutdown wifi
+  WiFi.disconnect();
+  delay(100);
+
+  if (esp_now_init() == ESP_OK) {
+    Serial.println("ESPNow Init Success");
+  } else {
+    Serial.println("ESPNow Init Failed");
+    delay(100);
+    ESP.restart();
+  }
+
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
   }
@@ -26,10 +43,7 @@ void setup() {
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
-
-  if (esp_now_init() == ESP_OK) {
-    Serial.println("ESPNow Init Success");
-  }
+ 
 }
 
 uint16_t frame = 0;
@@ -82,15 +96,28 @@ bool sendMessage(uint32_t msglen, const uint8_t *mac) {
   return false;
 }
 
+uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+
+bool encode_data(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
+  uint8_t *chunk = (uint8_t *)(*arg);
+  if (!pb_encode_tag_for_field(stream, field))
+    return false;
+  return pb_encode_string(stream, (const uint8_t *)chunk, strlen((const char*)chunk));
+}
+
+uint8_t chunk_data[200];
+
 void dispatchFrame(uint8_t *data, uint32_t data_len) {
-    Frame msg = Frame_init_zero;
-    msg.chunk_left = data_len;
-    msg.chunk_max = data_len;
-    msg.lenght = 220;
-    uint8_t chunk [220];
-    memcpy(&chunk, data, 220);
-    msg.data.arg = &chunk;
-    // msg.data.funcs.encode = Frame
+  Frame msg = Frame_init_zero;
+  msg.chunk_left = data_len;
+  msg.chunk_max = data_len;
+  Chunk chunk = Chunk_init_zero;
+  memcpy(&chunk_data, data, 200);
+  chunk.lenght = 200;
+  chunk.data.arg = &chunk;
+  chunk.data.funcs.encode = encode_data;
+  msg.chunk = chunk;
+  sendMessage(encodeMsg(msg), targetAddress);
 }
 
 void loop() {
