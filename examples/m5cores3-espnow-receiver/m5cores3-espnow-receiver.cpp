@@ -8,30 +8,26 @@ int32_t dw, dh;
 
 /// general buffer for receive msgs
 uint8_t recv_buffer[256];
+/// frame buffer
+uint8_t fb[3000];
 
 Frame msg = Frame_init_zero;
 
+
+uint32_t fbpos = 0;
+
 bool decode_data(pb_istream_t *stream, const pb_field_t *field, void **arg) {
-  uint8_t buffer[20] = {0};
-
-  /* We could read block-by-block to avoid the large buffer... */
-  if (stream->bytes_left > sizeof(buffer) - 1)
+  uint64_t value;
+  if (!pb_decode_varint(stream, &value))
     return false;
-
-  if (!pb_read(stream, buffer, stream->bytes_left))
-    return false;
-
-  /* Print the string, in format comparable with protoc --decode.
-     * Format comes from the arg defined in main().
-     */
-  // printf("buffer %s\r\n", buffer);
-  Serial.printf("chunk: %s\r\n",buffer);
+  fb[fbpos++] = value;
   return true;
 }
 
 bool decodeMessage(uint16_t message_length) {
   pb_istream_t stream = pb_istream_from_buffer(recv_buffer, message_length);
-  msg.chunk.data.funcs.decode = &decode_data;
+  msg.data.funcs.decode = &decode_data;
+  // msg.data.arg = (void*) "array: \"%d\"\r\n";
   bool status = pb_decode(&stream, Frame_fields, &msg);
   if (!status) {
     Serial.printf("Decoding joystick msg failed: %s\r\n", PB_GET_ERROR(&stream));
@@ -52,11 +48,20 @@ void printFPS(const char *msg) {
   } 
 }
 
+void printFB(uint32_t len){
+  for (int32_t i = 0; i < len; i++) {
+    Serial.printf("%i ",fb[i]);
+  }
+}
+
 void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
   int msgLen = min(ESP_NOW_MAX_DATA_LEN, dataLen);
   memcpy(recv_buffer, data, msgLen);
   if (decodeMessage(msgLen)) {
-    Serial.printf("chunk len: %d\r\n",msg.chunk.lenght);
+    printFB(msg.lenght);
+    Serial.println();
+    fbpos = 0;
+    // Serial.printf("chunk len: %d\r\n",msg.lenght);
     // printFPS("ESPNow reception at:");
   }
 }

@@ -6,9 +6,6 @@
 #error Regenerate this file with the current version of nanopb generator.
 #endif
 
-PB_BIND(Chunk, Chunk, AUTO)
-
-
 PB_BIND(Frame, Frame, AUTO)
 
 

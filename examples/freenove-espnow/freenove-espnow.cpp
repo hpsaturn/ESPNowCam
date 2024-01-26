@@ -16,7 +16,7 @@ void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
-  delay(1000);
+  delay(2000);
 
   WiFi.mode(WIFI_STA);
   // startup ESP Now
@@ -43,7 +43,8 @@ void setup() {
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
- 
+
+  delay(1000);
 }
 
 uint16_t frame = 0;
@@ -98,42 +99,65 @@ bool sendMessage(uint32_t msglen, const uint8_t *mac) {
 
 uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
-bool encode_data(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
-  uint8_t *chunk = (uint8_t *)(*arg);
-  if (!pb_encode_tag_for_field(stream, field))
-    return false;
-  return pb_encode_string(stream, (const uint8_t *)chunk, strlen((const char*)chunk));
+uint8_t *out_jpg = NULL;
+size_t out_jpg_len = 0;
+const uint8_t chunk_size = 30;
+
+bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
+  uint8_t size = chunk_size / sizeof(uint8_t);
+  for (int i = 0; i < size; i++) {
+    if (!pb_encode_tag_for_field(stream, field))
+      return false;
+    Serial.printf("%i ", out_jpg[i]);
+    if (!pb_encode_varint(stream, out_jpg[i]))
+      return false;
+  }
+  return true;
 }
 
-uint8_t chunk_data[16];
+void dispatchFrame() {
+  uint32_t chunk_left = out_jpg_len;
+  // while (chunk_left > 0) {
 
-void dispatchFrame(uint8_t *data, uint32_t data_len) {
+  // }
   Frame msg = Frame_init_zero;
-  msg.chunk_left = data_len;
-  msg.chunk_max = data_len;
-  Chunk chunk = Chunk_init_zero;
-  memcpy(&chunk_data, data, 15);
-  chunk.lenght = 15;
-  chunk.data.arg = &chunk;
-  chunk.data.funcs.encode = encode_data;
-  msg.chunk = chunk;
+  msg.chunk_left = out_jpg_len;
+  msg.chunk_max = out_jpg_len;
+  msg.lenght = chunk_size;
+  msg.data.funcs.encode = &encode_uint8_array;
   sendMessage(encodeMsg(msg), targetAddress);
 }
 
-void loop() {
+void printJPGFrame(){
+
+  uint32_t checksum = 0;
+  for (int i = 0; i < out_jpg_len; i++) {
+    checksum = checksum + out_jpg[i];
+    // Serial.printf("%i ", out_jpg[i]);
+  }
+  Serial.println();
+  Serial.printf("framesum: %u\r\n", checksum);
+}
+
+void processFrame() {
   if (Camera.get()) {
 #ifdef CONVERT_TO_JPEG
-    uint8_t *out_jpg = NULL;
-    size_t out_jpg_len = 0;
     frame2jpg(Camera.fb, 64, &out_jpg, &out_jpg_len);
-    printFPS("JPG compression at");
-    dispatchFrame(out_jpg, out_jpg_len);
-    // Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
+    // printFPS("JPG compression at");
+    dispatchFrame();
+    Serial.println();
+    // printJPGFrame();
     free(out_jpg);
+    // Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
 #else
     printFPS("frame ready at");
     // Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
 #endif
     Camera.free();
   }
+}
+
+void loop() {
+  processFrame();
+  // delay(1000);
 }
