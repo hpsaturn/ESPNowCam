@@ -37,6 +37,8 @@ Basic tests and examples over ESP32S3 Cameras.
  ├── m5cores3-basic
  │   └── Basic builtin Camera/Display test
  ├── m5cores3-espnow
+ │   └── ESPNow built-in camera transmitter
+ ├── m5cores3-espnow-stats
  │   └── Basic stats via ESPNowJoystick library
  └── m5cores3-espnow-receiver
     └── Video receiver via ESPNow 
