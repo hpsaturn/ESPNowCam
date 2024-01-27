@@ -19,7 +19,7 @@ static camera_config_t camera_config = {
     .pin_href  = 7,
     .pin_pclk  = 13,
 
-    .xclk_freq_hz = 10000000,
+    .xclk_freq_hz = 20000000,
     .ledc_timer   = LEDC_TIMER_0,
     .ledc_channel = LEDC_CHANNEL_0,
 

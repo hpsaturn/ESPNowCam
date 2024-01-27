@@ -16,13 +16,13 @@ uint8_t *fb;
 Frame msg = Frame_init_zero;
 
 uint32_t fbpos = 0;
-uint32_t cksum = 0;
+// uint32_t cksum = 0;
 
 bool decode_data(pb_istream_t *stream, const pb_field_t *field, void **arg) {
   uint64_t value;
   if (!pb_decode_varint(stream, &value))
     return false;
-    cksum = cksum + (uint8_t) value;
+    // cksum = cksum + (uint8_t) value;
   fb[fbpos++] = (uint8_t) value;
   return true;
 }
@@ -66,9 +66,9 @@ void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
       // printFB(msg.lenght);
       // Serial.printf("\r\nfb size: %i msg lenght: %i cksum: %u\r\n",fbpos,msg.lenght,cksum);
       M5.Display.drawJpg(fb, msg.lenght , 0, 0, dw, dh);
-      printFPS("ESPNow reception at:");
+      // printFPS("ESPNow reception at:");
       fbpos = 0;
-      cksum = 0;
+      // cksum = 0;
     }
     // Serial.printf("chunk len: %d\r\n",msg.lenght);
   }
@@ -122,6 +122,7 @@ void setup() {
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
 
+  // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
   fb = (uint8_t*)  malloc(3500* sizeof( uint8_t ) ) ;
 
   delay(1000);
