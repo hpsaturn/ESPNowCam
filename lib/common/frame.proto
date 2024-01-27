@@ -3,6 +3,6 @@ syntax = "proto2";
 import "nanopb.proto";
 
 message Frame {
-  required uint32 lenght = 1;
+  required uint32 lenght = 1 [(nanopb).int_size = IS_16];
   repeated uint32 data = 2 [(nanopb).int_size = IS_8];
 }

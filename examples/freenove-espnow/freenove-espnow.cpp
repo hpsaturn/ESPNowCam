@@ -5,7 +5,7 @@
 #include "CamFreenove.h"
 #include "frame.pb.h"
 
-#define CHUNKSIZE 86
+#define CHUNKSIZE 87
 
 CamFreenove Camera;
 
