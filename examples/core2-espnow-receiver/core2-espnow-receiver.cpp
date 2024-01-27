@@ -11,7 +11,6 @@ int32_t dw, dh;
 /// general buffer for receive msgs
 uint8_t recv_buffer[256];
 /// frame buffer
-// uint8_t fb[3000];
 uint8_t *fb; 
 
 Frame msg = Frame_init_zero;
