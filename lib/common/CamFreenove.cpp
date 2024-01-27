@@ -19,7 +19,7 @@ static camera_config_t camera_config = {
     .pin_href  = 7,
     .pin_pclk  = 13,
 
-    .xclk_freq_hz = 20000000,
+    .xclk_freq_hz = 10000000,
     .ledc_timer   = LEDC_TIMER_0,
     .ledc_channel = LEDC_CHANNEL_0,
 
@@ -28,8 +28,8 @@ static camera_config_t camera_config = {
     .jpeg_quality  = 0,
     .fb_count      = 2,
     .fb_location   = CAMERA_FB_IN_PSRAM,
-    // .grab_mode     = CAMERA_GRAB_WHEN_EMPTY,
-    .grab_mode     = CAMERA_GRAB_LATEST
+    .grab_mode     = CAMERA_GRAB_WHEN_EMPTY
+    // .grab_mode     = CAMERA_GRAB_LATEST
     // .sccb_i2c_port = M5.In_I2C.getPort(),
 };
 

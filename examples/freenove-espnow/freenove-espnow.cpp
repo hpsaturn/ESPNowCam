@@ -5,35 +5,28 @@
 #include "CamFreenove.h"
 #include "frame.pb.h"
 
-#define CONVERT_TO_JPEG
 #define CHUNKSIZE 86
 
 CamFreenove Camera;
 
 /// general buffer for msg sender
-uint8_t send_buffer[255];
+uint8_t send_buffer[256];
 
 void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
-  delay(2000);
-
+  delay(1000);
   WiFi.mode(WIFI_STA);
-  // startup ESP Now
-  Serial.println("ESPNow Init");
   Serial.println(WiFi.macAddress());
   // shutdown wifi
   WiFi.disconnect();
   delay(100);
 
-  if (esp_now_init() == ESP_OK) {
-    Serial.println("ESPNow Init Success");
-  } else {
-    Serial.println("ESPNow Init Failed");
-    delay(100);
-    ESP.restart();
-  }
+  while (esp_now_init() != ESP_OK) {
+    Serial.print(".");
+  } 
+  Serial.println("\r\nESPNow Init Success");
 
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
@@ -44,8 +37,7 @@ void setup() {
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
-
-  delay(1000);
+  delay(500);
 }
 
 uint16_t frame = 0;
@@ -113,9 +105,9 @@ bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *con
     if (!pb_encode_tag_for_field(stream, field))
       return false;
     uint8_t val = (out_jpg+chunk_pos)[i];
-    framesum = framesum + val;
+    // framesum = framesum + val;
     // Serial.printf("%i ", val);
-    bytecount++;
+    // bytecount++;
     if (!pb_encode_varint(stream, val))
       return false;
   }
@@ -126,8 +118,8 @@ bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *con
 void dispatchFrame() {
   // Serial.println("Encoded Frame:");
   uint32_t chunk_left = out_jpg_len;
+  Frame msg = Frame_init_zero;
   while (chunk_left > 0) {
-    Frame msg = Frame_init_zero;
     if (chunk_left <= chunk_size) {
       chunk_size = chunk_left;
       msg.lenght = out_jpg_len;
@@ -147,8 +139,8 @@ void dispatchFrame() {
   }
   chunk_pos = 0;
   // Serial.printf("\r\nFrame encoded lenght: %u cheksum: %u\r\n", bytecount, framesum);
-  bytecount = 0;
-  framesum = 0;
+  // bytecount = 0;
+  // framesum = 0;
 }
 
 void printJPGFrame(){
@@ -163,19 +155,14 @@ void printJPGFrame(){
 
 void processFrame() {
   if (Camera.get()) {
-#ifdef CONVERT_TO_JPEG
-    frame2jpg(Camera.fb, 9, &out_jpg, &out_jpg_len);
+    frame2jpg(Camera.fb, 8, &out_jpg, &out_jpg_len);
+    // Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
     // printJPGFrame();
-    // printFPS("JPG compression at");
     // Serial.println();
     dispatchFrame();
     // Serial.println(out_jpg_len);
+    // printFPS("transmitting at ");
     free(out_jpg);
-    // Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
-#else
-    printFPS("frame ready at");
-    // Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
-#endif
     Camera.free();
   }
 }
