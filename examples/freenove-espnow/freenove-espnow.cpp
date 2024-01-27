@@ -6,6 +6,7 @@
 #include "frame.pb.h"
 
 #define CONVERT_TO_JPEG
+#define CHUNKSIZE 80
 
 CamFreenove Camera;
 
@@ -101,14 +102,14 @@ uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 uint8_t *out_jpg = NULL;
 size_t out_jpg_len = 0;
-const uint8_t chunk_size = 30;
+uint8_t chunk_size = CHUNKSIZE;
 
 bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
   uint8_t size = chunk_size / sizeof(uint8_t);
   for (int i = 0; i < size; i++) {
     if (!pb_encode_tag_for_field(stream, field))
       return false;
-    Serial.printf("%i ", out_jpg[i]);
+    // Serial.printf("%i ", out_jpg[i]);
     if (!pb_encode_varint(stream, out_jpg[i]))
       return false;
   }
@@ -117,15 +118,26 @@ bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *con
 
 void dispatchFrame() {
   uint32_t chunk_left = out_jpg_len;
-  // while (chunk_left > 0) {
-
-  // }
-  Frame msg = Frame_init_zero;
-  msg.chunk_left = out_jpg_len;
-  msg.chunk_max = out_jpg_len;
-  msg.lenght = chunk_size;
-  msg.data.funcs.encode = &encode_uint8_array;
-  sendMessage(encodeMsg(msg), targetAddress);
+  while (chunk_left > 0) {
+    Frame msg = Frame_init_zero;
+    if (chunk_left <= chunk_size) {
+      chunk_size = chunk_left;
+      msg.lenght = out_jpg_len;
+    }
+    else {
+      chunk_left = chunk_left - chunk_size;
+      msg.lenght = 0;
+    }
+    msg.chunk_left = chunk_left;
+    msg.chunk_max = out_jpg_len;
+    msg.data.funcs.encode = &encode_uint8_array;
+    sendMessage(encodeMsg(msg), targetAddress);
+    if (msg.lenght == out_jpg_len) {
+      chunk_left = 0;
+      chunk_size = CHUNKSIZE;
+    }
+    delay(5);
+  }
 }
 
 void printJPGFrame(){
@@ -142,10 +154,11 @@ void printJPGFrame(){
 void processFrame() {
   if (Camera.get()) {
 #ifdef CONVERT_TO_JPEG
-    frame2jpg(Camera.fb, 64, &out_jpg, &out_jpg_len);
+    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len);
     // printFPS("JPG compression at");
     dispatchFrame();
-    Serial.println();
+    // Serial.println(out_jpg_len);
+    // Serial.println();
     // printJPGFrame();
     free(out_jpg);
     // Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);

@@ -9,7 +9,8 @@ int32_t dw, dh;
 /// general buffer for receive msgs
 uint8_t recv_buffer[256];
 /// frame buffer
-uint8_t fb[3000];
+// uint8_t fb[3000];
+uint8_t *fb; 
 
 Frame msg = Frame_init_zero;
 
@@ -20,7 +21,7 @@ bool decode_data(pb_istream_t *stream, const pb_field_t *field, void **arg) {
   uint64_t value;
   if (!pb_decode_varint(stream, &value))
     return false;
-  fb[fbpos++] = value;
+  fb[fbpos++] = (uint8_t) value;
   return true;
 }
 
@@ -30,7 +31,7 @@ bool decodeMessage(uint16_t message_length) {
   // msg.data.arg = (void*) "array: \"%d\"\r\n";
   bool status = pb_decode(&stream, Frame_fields, &msg);
   if (!status) {
-    Serial.printf("Decoding joystick msg failed: %s\r\n", PB_GET_ERROR(&stream));
+    Serial.printf("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
     return false;
   }
   return true;
@@ -58,9 +59,13 @@ void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
   int msgLen = min(ESP_NOW_MAX_DATA_LEN, dataLen);
   memcpy(recv_buffer, data, msgLen);
   if (decodeMessage(msgLen)) {
-    printFB(msg.lenght);
-    Serial.println();
-    fbpos = 0;
+    // printFB(msg.lenght);
+    // Serial.println();
+    if (msg.lenght > 0 ) {
+      Serial.printf("fb size: %i msg lenght: %i\r\n",fbpos,msg.lenght);
+      CoreS3.Display.drawJpg(fb, msg.lenght , 0, 0, dw, dh);
+      fbpos = 0;
+    }
     // Serial.printf("chunk len: %d\r\n",msg.lenght);
     // printFPS("ESPNow reception at:");
   }
@@ -92,6 +97,11 @@ bool ESPNowInit() {
 void setup() {
   Serial.begin(115200);
   auto cfg = M5.config();
+  CoreS3.begin(cfg);
+  CoreS3.Display.setTextColor(GREEN);
+  CoreS3.Display.setTextDatum(middle_center);
+  CoreS3.Display.setFont(&fonts::Orbitron_Light_24);
+  CoreS3.Display.setTextSize(1);
 
   WiFi.mode(WIFI_STA);
   // startup ESP Now
@@ -100,12 +110,6 @@ void setup() {
   // shutdown wifi
   WiFi.disconnect();
   delay(100);
-
-  CoreS3.begin(cfg);
-  CoreS3.Display.setTextColor(GREEN);
-  CoreS3.Display.setTextDatum(middle_center);
-  CoreS3.Display.setFont(&fonts::Orbitron_Light_24);
-  CoreS3.Display.setTextSize(1);
 
   dw = CoreS3.Display.width();
   dh = CoreS3.Display.height();
@@ -118,8 +122,10 @@ void setup() {
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
+
+  fb = (uint8_t*)  malloc(3500* sizeof( uint8_t ) ) ;
   
-  CoreS3.Display.drawString("Init Success", dw / 2, dh / 2);
+  // CoreS3.Display.drawString("Init Success", dw / 2, dh / 2);
 }
 
 void loop() {
