@@ -1,3 +1,9 @@
+/**************************************************
+ * ESP32Cam video ESPNow Receiver
+ * by @hpsaturn Copyright (C) 2024
+ * This file is part ESP32S3 camera tests project:
+ * https://github.com/hpsaturn/esp32s3-cam
+**************************************************/
 #include <Arduino.h>
 #include <Wire.h>
 #include <M5Unified.h>

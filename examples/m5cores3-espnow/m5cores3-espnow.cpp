@@ -1,3 +1,10 @@
+/**************************************************
+ * ESP32Cam ESPNow Transmitter
+ * by @hpsaturn Copyright (C) 2024
+ * This file is part ESP32S3 camera tests project:
+ * https://github.com/hpsaturn/esp32s3-cam
+**************************************************/
+
 #include <M5CoreS3.h>
 #include "esp_camera.h"
 #include <WiFi.h>

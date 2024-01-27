@@ -1,3 +1,10 @@
+/**************************************************
+ * ESP32Cam Freenove ESPNow Transmitter
+ * by @hpsaturn Copyright (C) 2024
+ * This file is part ESP32S3 camera tests project:
+ * https://github.com/hpsaturn/esp32s3-cam
+**************************************************/
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <esp_now.h>

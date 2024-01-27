@@ -4,6 +4,14 @@
 
 Basic tests and examples over ESP32S3 Cameras.
 
+<table>
+  <tr>
+    <td>
+      Don't forget to star ⭐ this repository
+    </td>
+  </tr>
+</table>
+
 [![video demo](pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
 
 ## Supported devices
