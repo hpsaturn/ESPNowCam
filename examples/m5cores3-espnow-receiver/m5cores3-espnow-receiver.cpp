@@ -16,11 +16,13 @@ Frame msg = Frame_init_zero;
 
 
 uint32_t fbpos = 0;
+uint32_t cksum = 0;
 
 bool decode_data(pb_istream_t *stream, const pb_field_t *field, void **arg) {
   uint64_t value;
   if (!pb_decode_varint(stream, &value))
     return false;
+    cksum = cksum + (uint8_t) value;
   fb[fbpos++] = (uint8_t) value;
   return true;
 }
@@ -59,15 +61,16 @@ void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
   int msgLen = min(ESP_NOW_MAX_DATA_LEN, dataLen);
   memcpy(recv_buffer, data, msgLen);
   if (decodeMessage(msgLen)) {
-    // printFB(msg.lenght);
     // Serial.println();
     if (msg.lenght > 0 ) {
-      Serial.printf("fb size: %i msg lenght: %i\r\n",fbpos,msg.lenght);
+      // printFB(msg.lenght);
+      // Serial.printf("\r\nfb size: %i msg lenght: %i cksum: %u\r\n",fbpos,msg.lenght,cksum);
       CoreS3.Display.drawJpg(fb, msg.lenght , 0, 0, dw, dh);
+      printFPS("ESPNow reception at:");
       fbpos = 0;
+      cksum = 0;
     }
     // Serial.printf("chunk len: %d\r\n",msg.lenght);
-    // printFPS("ESPNow reception at:");
   }
 }
 
@@ -124,30 +127,9 @@ void setup() {
   }
 
   fb = (uint8_t*)  malloc(3500* sizeof( uint8_t ) ) ;
-  
-  // CoreS3.Display.drawString("Init Success", dw / 2, dh / 2);
+
+  delay(1000);
 }
 
 void loop() {
-//   if (CoreS3.Camera.get()) {
-// #ifdef CONVERT_TO_JPEG
-//     uint8_t *out_jpg = NULL;
-//     size_t out_jpg_len = 0;
-//     frame2jpg(CoreS3.Camera.fb, 32, &out_jpg, &out_jpg_len);
-//     // Serial.printf("jpg data size: %i\r\n",out_jpg_len);
-//     jm.az = sizeof(CoreS3.Camera.fb);
-//     jm.ax = out_jpg_len;
-//     jm.ay = CoreS3.Display.height();
-//     joystick.sendJoystickMsg(jm);
-//     CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
-//     free(out_jpg);
-// #else
-//     jm.az = sizeof(CoreS3.Camera.fb->buf);
-//     jm.ax = CoreS3.Display.width();
-//     jm.ay = CoreS3.Display.height();
-//     joystick.sendJoystickMsg(jm);
-//     CoreS3.Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
-// #endif
-//     CoreS3.Camera.free();
-//   }
 }

@@ -6,12 +6,12 @@
 #include "frame.pb.h"
 
 #define CONVERT_TO_JPEG
-#define CHUNKSIZE 80
+#define CHUNKSIZE 86
 
 CamFreenove Camera;
 
 /// general buffer for msg sender
-uint8_t send_buffer[256];
+uint8_t send_buffer[255];
 
 void setup() {
   Serial.begin(115200);
@@ -103,20 +103,28 @@ uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t *out_jpg = NULL;
 size_t out_jpg_len = 0;
 uint8_t chunk_size = CHUNKSIZE;
+uint32_t chunk_pos = 0;
+uint32_t framesum = 0;
+uint32_t bytecount = 0;
+
 
 bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
-  uint8_t size = chunk_size / sizeof(uint8_t);
-  for (int i = 0; i < size; i++) {
+  for (int i = 0; i < chunk_size; i++) {
     if (!pb_encode_tag_for_field(stream, field))
       return false;
-    // Serial.printf("%i ", out_jpg[i]);
-    if (!pb_encode_varint(stream, out_jpg[i]))
+    uint8_t val = (out_jpg+chunk_pos)[i];
+    framesum = framesum + val;
+    // Serial.printf("%i ", val);
+    bytecount++;
+    if (!pb_encode_varint(stream, val))
       return false;
   }
+  // Serial.printf("%i ", chunk_pos);
   return true;
 }
 
 void dispatchFrame() {
+  // Serial.println("Encoded Frame:");
   uint32_t chunk_left = out_jpg_len;
   while (chunk_left > 0) {
     Frame msg = Frame_init_zero;
@@ -128,38 +136,40 @@ void dispatchFrame() {
       chunk_left = chunk_left - chunk_size;
       msg.lenght = 0;
     }
-    msg.chunk_left = chunk_left;
-    msg.chunk_max = out_jpg_len;
     msg.data.funcs.encode = &encode_uint8_array;
     sendMessage(encodeMsg(msg), targetAddress);
+    chunk_pos = out_jpg_len - chunk_left;
     if (msg.lenght == out_jpg_len) {
       chunk_left = 0;
       chunk_size = CHUNKSIZE;
     }
-    delay(5);
+    delay(4);
   }
+  chunk_pos = 0;
+  // Serial.printf("\r\nFrame encoded lenght: %u cheksum: %u\r\n", bytecount, framesum);
+  bytecount = 0;
+  framesum = 0;
 }
 
 void printJPGFrame(){
-
   uint32_t checksum = 0;
+  Serial.println("JPG Frame:");
   for (int i = 0; i < out_jpg_len; i++) {
-    checksum = checksum + out_jpg[i];
-    // Serial.printf("%i ", out_jpg[i]);
+    checksum = checksum + (uint8_t) out_jpg[i];
+    Serial.printf("%i ", out_jpg[i]);
   }
-  Serial.println();
-  Serial.printf("framesum: %u\r\n", checksum);
+  Serial.printf("\r\nJPG lenght: %u cheksum: %u\r\n", out_jpg_len, checksum);
 }
 
 void processFrame() {
   if (Camera.get()) {
 #ifdef CONVERT_TO_JPEG
-    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len);
+    frame2jpg(Camera.fb, 9, &out_jpg, &out_jpg_len);
+    // printJPGFrame();
     // printFPS("JPG compression at");
+    // Serial.println();
     dispatchFrame();
     // Serial.println(out_jpg_len);
-    // Serial.println();
-    // printJPGFrame();
     free(out_jpg);
     // Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
 #else
@@ -172,5 +182,4 @@ void processFrame() {
 
 void loop() {
   processFrame();
-  // delay(1000);
 }

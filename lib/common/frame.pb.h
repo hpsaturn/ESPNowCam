@@ -11,8 +11,6 @@
 
 /* Struct definitions */
 typedef struct _Frame {
-    uint32_t chunk_max;
-    uint32_t chunk_left;
     uint32_t lenght;
     pb_callback_t data;
 } Frame;
@@ -23,21 +21,17 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define Frame_init_default                       {0, 0, 0, {{NULL}, NULL}}
-#define Frame_init_zero                          {0, 0, 0, {{NULL}, NULL}}
+#define Frame_init_default                       {0, {{NULL}, NULL}}
+#define Frame_init_zero                          {0, {{NULL}, NULL}}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define Frame_chunk_max_tag                      1
-#define Frame_chunk_left_tag                     2
-#define Frame_lenght_tag                         3
-#define Frame_data_tag                           4
+#define Frame_lenght_tag                         1
+#define Frame_data_tag                           2
 
 /* Struct field encoding specification for nanopb */
 #define Frame_FIELDLIST(X, a) \
-X(a, STATIC,   REQUIRED, UINT32,   chunk_max,         1) \
-X(a, STATIC,   REQUIRED, UINT32,   chunk_left,        2) \
-X(a, STATIC,   REQUIRED, UINT32,   lenght,            3) \
-X(a, CALLBACK, REPEATED, UINT32,   data,              4)
+X(a, STATIC,   REQUIRED, UINT32,   lenght,            1) \
+X(a, CALLBACK, REPEATED, UINT32,   data,              2)
 #define Frame_CALLBACK pb_default_field_callback
 #define Frame_DEFAULT NULL
 
