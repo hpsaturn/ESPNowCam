@@ -17,9 +17,9 @@ Basic tests and examples over ESP32S3 Cameras.
 
 - [x] M5Core2 (AWS tested)
 - [x] M5CoreS3
-- [ ] Maybe TFT with LGFX support and PSRAM
+- [ ] Maybe any TFT with LGFX support and PSRAM
 
-## Examples or tests
+## Examples and Tests
 
 ```
  examples
