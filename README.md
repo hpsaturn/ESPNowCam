@@ -39,7 +39,7 @@ Basic tests and examples over ESP32S3 Cameras.
  ├── freenove-espnow
  │   └── ESPNow camera transmitter
  ├── freenove-espnow-stats
- │   └── Basic stats via ESPNowJoystick library
+ │   └── Basic stats via ESPNowJoystick library [1]
  ├── freenove-webcam
  │   └── Original Freenove example with improvements
  ├── m5cores3-basic
@@ -47,11 +47,13 @@ Basic tests and examples over ESP32S3 Cameras.
  ├── m5cores3-espnow
  │   └── ESPNow built-in camera transmitter
  ├── m5cores3-espnow-stats
- │   └── Basic stats via ESPNowJoystick library
+ │   └── Basic stats via ESPNowJoystick library [1]
  └── m5cores3-espnow-receiver
     └── Video receiver via ESPNow 
         (Use with freenove espnow sample)
 ```
+
+[1] For receive the stats, configure other ESP32 how is explained here: [ESPNowJoystick Library](https://github.com/hpsaturn/espnow-joystick#readme)
 
 ## Usage and Install
 
@@ -63,15 +65,16 @@ For compile and install each sample, only choose one and run the next command in
 pio run -e m5cores3-espnow-receiver --target upload
 ```
 
-Valid samples names are: 
+Valid samples names are:  
 
 ```bash
-freenove-espnow 
-m5cores3-espnow-receiver
-freenove-basic 
-core2-espnow-receiver
 m5cores3-espnow
+m5cores3-espnow-receiver
+m5cores3-espnow-stats
+m5cores3-basic
+freenove-espnow 
 freenove-webcam
 freenove-espnow-stats
-m5cores3-basic
+freenove-basic 
+core2-espnow-receiver
 ```
