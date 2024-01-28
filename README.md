@@ -29,52 +29,31 @@ Basic tests and examples over ESP32S3 Cameras.
 
 ## Examples and Tests
 
-```
- examples 
- ├── freenove-basic
- │   └── Basic FPS and JPEG speed tester
- ├── freenove-espnow
- │   └── ESPNow camera transmitter
- ├── freenove-espnow-stats
- │   └── Basic stats via ESPNowJoystick library [1]
- ├── freenove-webcam
- │   └── Original Freenove example with improvements
- ├── m5cores3-basic
- │   └── Basic builtin Camera/Display test
- ├── m5cores3-espnow
- │   └── ESPNow built-in camera transmitter
- ├── m5cores3-espnow-stats
- │   └── Basic stats via ESPNowJoystick library [1]
- ├─── m5cores3-espnow-receiver
- │   └── Video receiver via ESPNow 
- │       Use with freenove or M5CoreS3 espnow sample
- └─── core2-espnow-receiver
-     └── Video receiver via ESPNow 
-         Use with freenove or M5CoreS3 espnow sample
-```
+| ENV Name   |    Target      |  Status |
+|:-----------------|:--------------:|:----------:|
+| freenove-basic   |  Basic FPS and JPEG speed tester | STABLE |
+| freenove-espnow  | ESPNow camera transmitter | INPROGRESS |
+| freenove-espnow-stats | Basic stats via ESPNowJoystick [1] | STABLE |
+| freenove-webcam | Original Freenove example with improvements  | STABLE |
+| m5cores3-basic | Basic builtin Camera/Display test | STABLE |
+| m5cores3-espnow | ESPNow built-in camera transmitter | INPROGRESS |
+| m5cores3-espnow-stats |Basic stats via ESPNowJoystick [1] | STABLE |
+| m5cores3-espnow-receiver | Video receiver via ESPNow [2] |INPROGRESS |
+| core2-espnow-receiver | Video receiver via ESPNow  | INPROGRESS |
+||||
+
 
 [1] For receive the stats, configure other ESP32 how is explained here: [ESPNowJoystick Library](https://github.com/hpsaturn/espnow-joystick#readme)
+
+[2] Use with freenove or M5CoreS3 espnow sample
 
 ## Usage and Install
 
 Please install first [PlatformIO](http://platformio.org/) open source ecosystem for IoT development compatible with **Arduino** IDE and its command line tools (Windows, MacOs and Linux). Also, you may need to install [git](http://git-scm.com/) in your system.
 
-For compile and install each sample, only choose one and run the next command in the root of this project, like that:
+For compile and install each sample, only choose one of them envs names in the table, and run the next command in the root of this project, like that:
 
 ```bash
 pio run -e m5cores3-espnow-receiver --target upload
 ```
-
-Valid samples names are:  
-
-```bash
-m5cores3-espnow
-m5cores3-espnow-receiver
-m5cores3-espnow-stats
-m5cores3-basic
-freenove-espnow 
-freenove-webcam
-freenove-espnow-stats
-freenove-basic 
-core2-espnow-receiver
-```
+---
