@@ -37,7 +37,7 @@ bool decodeMessage(uint16_t message_length) {
   pb_istream_t stream = pb_istream_from_buffer(recv_buffer, message_length);
   msg.data.funcs.decode = &decode_data;
   // msg.data.arg = (void*) "array: \"%d\"\r\n";
-  bool status = pb_decode(&stream, Frame_fields, &msg);
+  bool status = pb_decode_delimited(&stream, Frame_fields, &msg);
   if (!status) {
     Serial.printf("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
     return false;

@@ -61,7 +61,7 @@ void printFPS(const char *msg) {
 
 size_t encodeMsg(Frame msg) {
   pb_ostream_t stream = pb_ostream_from_buffer(send_buffer, sizeof(send_buffer));
-  bool status = pb_encode(&stream, Frame_fields, &msg);
+  bool status = pb_encode_delimited(&stream, Frame_fields, &msg);
   size_t message_length = stream.bytes_written;
   if (!status) {
     printf("Encoding failed: %s\r\n", PB_GET_ERROR(&stream));
