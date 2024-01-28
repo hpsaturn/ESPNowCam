@@ -30,10 +30,7 @@ Basic tests and examples over ESP32S3 Cameras.
 ## Examples and Tests
 
 ```
- examples
- ├── core2-espnow-receiver
- │   └── Video receiver via ESPNow 
- │       (Use with freenove espnow sample)
+ examples 
  ├── freenove-basic
  │   └── Basic FPS and JPEG speed tester
  ├── freenove-espnow
@@ -48,9 +45,12 @@ Basic tests and examples over ESP32S3 Cameras.
  │   └── ESPNow built-in camera transmitter
  ├── m5cores3-espnow-stats
  │   └── Basic stats via ESPNowJoystick library [1]
- └── m5cores3-espnow-receiver
-    └── Video receiver via ESPNow 
-        (Use with freenove espnow sample)
+ ├─── m5cores3-espnow-receiver
+ │   └── Video receiver via ESPNow 
+ │       Use with freenove or M5CoreS3 espnow sample
+ └─── core2-espnow-receiver
+     └── Video receiver via ESPNow 
+         Use with freenove or M5CoreS3 espnow sample
 ```
 
 [1] For receive the stats, configure other ESP32 how is explained here: [ESPNowJoystick Library](https://github.com/hpsaturn/espnow-joystick#readme)
