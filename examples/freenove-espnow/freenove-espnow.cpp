@@ -162,7 +162,7 @@ void printJPGFrame(){
 
 void processFrame() {
   if (Camera.get()) {
-    frame2jpg(Camera.fb, 8, &out_jpg, &out_jpg_len);
+    frame2jpg(Camera.fb, 9, &out_jpg, &out_jpg_len);
     // Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
     // printJPGFrame();
     // Serial.println();

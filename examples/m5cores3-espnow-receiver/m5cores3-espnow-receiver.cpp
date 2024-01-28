@@ -17,6 +17,7 @@ int32_t dw, dh;
 uint8_t recv_buffer[256];
 /// frame buffer
 uint8_t *fb; 
+bool is_new_frame = true;
 
 Frame msg = Frame_init_zero;
 
@@ -64,16 +65,21 @@ void printFB(uint32_t len){
 
 void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
   int msgLen = min(ESP_NOW_MAX_DATA_LEN, dataLen);
+  // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
+  if (is_new_frame) fb = (uint8_t*)  malloc(4000* sizeof( uint8_t ) ) ;
   memcpy(recv_buffer, data, msgLen);
   if (decodeMessage(msgLen)) {
+    is_new_frame = false;
     // Serial.println();
     if (msg.lenght > 0 ) {
       // printFB(msg.lenght);
       // Serial.printf("\r\nfb size: %i msg lenght: %i cksum: %u\r\n",fbpos,msg.lenght,cksum);
       CoreS3.Display.drawJpg(fb, msg.lenght , 0, 0, dw, dh);
-      // printFPS("ESPNow reception at:");
+      free(fb);
+      is_new_frame = true;
       fbpos = 0;
       // cksum = 0;
+      printFPS("ESPNow reception at:");
     }
     // Serial.printf("chunk len: %d\r\n",msg.lenght);
   }
@@ -130,10 +136,6 @@ void setup() {
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
-
-  // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = (uint8_t*)  malloc(3500* sizeof( uint8_t ) ) ;
-
   delay(1000);
 }
 
