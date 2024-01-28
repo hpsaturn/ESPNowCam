@@ -169,7 +169,7 @@ void printJPGFrame(){
 
 void processFrame() {
   if (CoreS3.Camera.get()) {
-    frame2jpg(CoreS3.Camera.fb, 8, &out_jpg, &out_jpg_len);
+    frame2jpg(CoreS3.Camera.fb, 6, &out_jpg, &out_jpg_len);
     CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
     // printJPGFrame();
     // Serial.println();
