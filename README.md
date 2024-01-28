@@ -56,4 +56,17 @@ For compile and install each sample, only choose one of them envs names in the t
 ```bash
 pio run -e m5cores3-espnow-receiver --target upload
 ```
+
+## TODO
+
+- [ ] NanoPb possible issue #1 (payload size)
+- [ ] Unified ESPNow in an one class for all transmitters and receivers
+- [ ] Migration to esp_wifi_80211_tx() to improve Payload
+
+## Troubleshooting
+
+The Freenove camera sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial crashes.
+
+**This is a proof of concept and some basic tests and examples, don't hope to much**  
+
 ---
