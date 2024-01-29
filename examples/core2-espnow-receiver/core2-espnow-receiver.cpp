@@ -80,7 +80,7 @@ void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
       is_new_frame = true;
       fbpos = 0;
       // cksum = 0;
-      printFPS("ESPNow reception at:");
+      // printFPS("FPS:");
     }
     // Serial.printf("chunk len: %d\r\n",msg.lenght);
   }
@@ -116,14 +116,6 @@ void setup() {
   M5.Display.setBrightness(96);
   dw=M5.Display.width();
   dh=M5.Display.height();
-
-  WiFi.mode(WIFI_STA);
-  // startup ESP Now
-  Serial.println("ESPNow Init");
-  Serial.println(WiFi.macAddress());
-  // shutdown wifi
-  WiFi.disconnect();
-  delay(100);
 
   if (ESPNowInit()) {
     M5.Display.drawString("ESPNow Init Success", dw / 2, dh / 2);

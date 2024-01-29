@@ -79,7 +79,7 @@ void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
       is_new_frame = true;
       fbpos = 0;
       // cksum = 0;
-      printFPS("ESPNow reception at:");
+      // printFPS("FPS:");
     }
     // Serial.printf("chunk len: %d\r\n",msg.lenght);
   }
@@ -116,14 +116,6 @@ void setup() {
   CoreS3.Display.setTextDatum(middle_center);
   CoreS3.Display.setFont(&fonts::Orbitron_Light_24);
   CoreS3.Display.setTextSize(1);
-
-  WiFi.mode(WIFI_STA);
-  // startup ESP Now
-  Serial.println("ESPNow Init");
-  Serial.println(WiFi.macAddress());
-  // shutdown wifi
-  WiFi.disconnect();
-  delay(100);
 
   dw = CoreS3.Display.width();
   dh = CoreS3.Display.height();
