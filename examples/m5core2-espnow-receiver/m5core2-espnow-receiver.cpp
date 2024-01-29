@@ -6,25 +6,9 @@
 **************************************************/
 
 #include <Arduino.h>
-#include "S3_Parallel16_ili9488.h"
-#include <LGFX_TFT_eSPI.hpp>
+#include <M5Unified.h>
 #include "ESPNowReceiver.h"
 #include "Utils.h"
-
-//#include <TFT_eSPI.h>
-
-// #ifdef min
-// #undef min
-// #endif
-// #ifdef max
-// #undef max
-// #endif
-// #include <algorithm>
-
-LGFX tft;
-
-#define LCD_CS 37
-#define LCD_BLK 45
 
 ESPNowReceiver radio;
 
@@ -34,24 +18,16 @@ uint8_t *fb;
 int32_t dw, dh;
 
 void onDataReady(uint32_t lenght) {
-  tft.drawJpg(fb, lenght , 0, 0, dw, dh);
+  M5.Display.drawJpg(fb, lenght , 0, 0, dw, dh);
 }
 
 void setup() {
   Serial.begin(115200);
-
-  pinMode(LCD_CS, OUTPUT);
-  pinMode(LCD_BLK, OUTPUT);
-
-  digitalWrite(LCD_CS, LOW);
-  digitalWrite(LCD_BLK, HIGH);
-
-  tft.init();
-  tft.setRotation(1);
-  tft.startWrite();
-
-  dw = tft.width();
-  dh = tft.height();
+  auto cfg = M5.config();
+  M5.begin(cfg);
+  M5.Display.setBrightness(96);
+  dw=M5.Display.width();
+  dh=M5.Display.height();
 
   if(psramFound()){
     size_t psram_size = esp_spiram_get_size() / 1048576;
@@ -65,9 +41,9 @@ void setup() {
   radio.setRecvCallback(onDataReady);
 
   if (radio.init()) {
-    tft.drawString("ESPNow Init Success", dw / 2, dh / 2);
-  }
-  delay(1000);
+    M5.Display.drawString("ESPNow Init Success", dw / 2, dh / 2);
+  } 
+  delay(500);
 }
 
 void loop() {
