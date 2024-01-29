@@ -5,9 +5,26 @@
  * https://github.com/hpsaturn/esp32s3-cam
 **************************************************/
 
-#include <M5CoreS3.h>
+#include <Arduino.h>
+#include "S3_Parallel16_ili9488.h"
+#include <LGFX_TFT_eSPI.hpp>
 #include "ESPNowReceiver.h"
 #include "Utils.h"
+
+//#include <TFT_eSPI.h>
+
+// #ifdef min
+// #undef min
+// #endif
+// #ifdef max
+// #undef max
+// #endif
+// #include <algorithm>
+
+LGFX tft;
+
+#define LCD_CS 37
+#define LCD_BLK 45
 
 ESPNowReceiver radio;
 
@@ -17,20 +34,24 @@ uint8_t *fb;
 int32_t dw, dh;
 
 void onDataReady(uint32_t lenght) {
-  CoreS3.Display.drawJpg(fb, lenght , 0, 0, dw, dh);
+  tft.drawJpg(fb, lenght , 0, 0, dw, dh);
 }
 
 void setup() {
   Serial.begin(115200);
-  auto cfg = M5.config();
-  CoreS3.begin(cfg);
-  CoreS3.Display.setTextColor(GREEN);
-  CoreS3.Display.setTextDatum(middle_center);
-  CoreS3.Display.setFont(&fonts::Orbitron_Light_24);
-  CoreS3.Display.setTextSize(1);
 
-  dw = CoreS3.Display.width();
-  dh = CoreS3.Display.height();
+  pinMode(LCD_CS, OUTPUT);
+  pinMode(LCD_BLK, OUTPUT);
+
+  digitalWrite(LCD_CS, LOW);
+  digitalWrite(LCD_BLK, HIGH);
+
+  tft.init();
+  tft.setRotation(1);
+  tft.startWrite();
+
+  dw = tft.width();
+  dh = tft.height();
 
   if(psramFound()){
     size_t psram_size = esp_spiram_get_size() / 1048576;
@@ -44,7 +65,7 @@ void setup() {
   radio.setRecvCallback(onDataReady);
 
   if (radio.init()) {
-    M5.Display.drawString("ESPNow Init Success", dw / 2, dh / 2);
+    tft.drawString("ESPNow Init Success", dw / 2, dh / 2);
   }
   delay(1000);
 }
