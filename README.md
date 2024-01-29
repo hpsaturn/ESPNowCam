@@ -12,7 +12,7 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
   </tr>
 </table>
 
-[![video demo](pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
+[![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
 
 ## Supported devices
 
@@ -61,7 +61,7 @@ pio run -e m5cores3-espnow-receiver --target upload
 
 The last version has many improvements, and right now is stable. It needs some tiny changes but now it supports ~9FPS with JPG Quality 12.
 
-![ESPNow Camera Video](pictures/espnow_video.gif)
+![ESPNow Camera Video](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/espnow_video.gif)
 
 ## Troubleshooting
 

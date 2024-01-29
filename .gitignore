@@ -40,5 +40,7 @@
 *.swp
 
 .vscode
+deploy.sh
+releases
 releases/binaries/
 releases/installer/
