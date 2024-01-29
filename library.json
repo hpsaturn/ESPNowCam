@@ -1,0 +1,56 @@
+{
+  "name": "EspNowCam",
+  "version": "0.1.0",
+  "homepage":"https://github.com/hpsaturn/esp32s3-cam",
+  "keywords": 
+  [ 
+    "Camera",
+    "M5Stack",
+    "ESPNow",
+    "ESP-Now",
+    "Video",
+    "Streaming",
+    "Buffers",
+    "ESP32Cam",
+    "Esp32s3",
+    "M5CoreS3",
+    "M5Core2",
+    "Nanopb"
+  ],
+  "description":"ESPNowCam, a straightforward video streamer for popular ESP32Cam models, leveraging the ESPNow protocol. No need for IPs, routers, or credentials—keeping it simple! :D ESPNowCam supports ESP32 Cameras and displays",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/hpsaturn/esp32s3-cam"
+  },
+  "frameworks": ["espidf", "arduino"],
+  "platforms":
+  [
+    "espressif32"
+  ],
+  "export": {
+    "exclude":
+    [
+        ".github",
+        ".travis.yml",
+        ".gitignore",
+        "deploy.sh",
+        "releases",
+        "pictures",
+        "screenshots"
+    ]
+  },
+  "authors":
+  [
+    {
+      "name": "@hpsaturn",
+      "url": "https://hpsaturn.com",
+      "maintainer": true
+    }  
+  ],
+  "license": "GPL-3.0-only",
+  "dependencies":
+  [
+    {"name":"Nanopb", "owner":"nanopb", "version":"0.4.8"}
+  ]
+}
