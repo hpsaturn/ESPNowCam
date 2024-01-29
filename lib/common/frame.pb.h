@@ -31,7 +31,7 @@ extern "C" {
 /* Struct field encoding specification for nanopb */
 #define Frame_FIELDLIST(X, a) \
 X(a, STATIC,   REQUIRED, UINT32,   lenght,            1) \
-X(a, CALLBACK, REPEATED, UINT32,   data,              2)
+X(a, CALLBACK, REPEATED, BYTES,    data,              2)
 #define Frame_CALLBACK pb_default_field_callback
 #define Frame_DEFAULT NULL
 

@@ -1,5 +1,5 @@
-#include "M5CoreS3.h"
-#include "esp_camera.h"
+#include <M5CoreS3.h>
+#include <esp_camera.h>
 
 int32_t dw, dh;
 
