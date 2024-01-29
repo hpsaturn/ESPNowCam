@@ -32,16 +32,14 @@ Basic tests and examples over ESP32S3 Cameras.
 | ENV Name   |    Target      |  Status |
 |:-----------------|:--------------:|:----------:|
 | freenove-basic   |  Basic FPS and JPEG speed tester | STABLE |
-| freenove-espnow  | ESPNow camera transmitter | INPROGRESS |
+| freenove-espnow  | ESPNow camera transmitter | STABLE |
 | freenove-espnow-stats | Basic stats via ESPNowJoystick [1] | STABLE |
 | freenove-webcam | Original Freenove example with improvements  | STABLE |
 | m5cores3-basic | Basic builtin Camera/Display test | STABLE |
-| m5cores3-espnow | ESPNow built-in camera transmitter | INPROGRESS |
+| m5cores3-espnow | ESPNow built-in camera transmitter | STABLE |
 | m5cores3-espnow-stats |Basic stats via ESPNowJoystick [1] | STABLE |
-| m5cores3-espnow-receiver | Video receiver via ESPNow [2] |INPROGRESS |
-| core2-espnow-receiver | Video receiver via ESPNow  | INPROGRESS |
-||||
-
+| m5cores3-espnow-receiver | Video receiver via ESPNow [2] | STABLE|
+| core2-espnow-receiver | Video receiver via ESPNow  | STABLE |
 
 [1] For receive the stats, configure other ESP32 how is explained here: [ESPNowJoystick Library](https://github.com/hpsaturn/espnow-joystick#readme)
 
@@ -59,9 +57,17 @@ pio run -e m5cores3-espnow-receiver --target upload
 
 ## TODO
 
-- [ ] NanoPb possible issue #1 (payload size)
-- [ ] Unified ESPNow in an one class for all transmitters and receivers
+- [x] NanoPb possible issue #1 (payload size)
+- [x] Unified ESPNow in an one class for all transmitters and receivers
+- [ ] Add sender callback to improve speed
+- [ ] Isolate the ESPNow Receiver and Transmitter in a seperated library
 - [ ] Migration to esp_wifi_80211_tx() to improve Payload
+
+## ESPNow Transmitter and Receiver
+
+The last version has many improvements, and right now is stable. It needs some tiny changes but now it supports ~9FPS with JPG Quality 12.
+
+![ESPNow Camera Video](pictures/espnow_video.gif)
 
 ## Troubleshooting
 
