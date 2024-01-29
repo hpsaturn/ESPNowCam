@@ -1,10 +1,17 @@
+/**************************************************
+ * ESP32Cam Freenove ESPNow Transmitter
+ * by @hpsaturn Copyright (C) 2024
+ * This file is part ESP32S3 camera tests project:
+ * https://github.com/hpsaturn/esp32s3-cam
+**************************************************/
+
 #include "ESPNowSender.h"
 
 uint8_t send_buffer[256];
 uint8_t chunk_size = CHUNKSIZE;
 uint32_t chunk_pos = 0;
 
-uint8_t * outdata = NULL;
+uint8_t *outdata = NULL;
 size_t outdata_len = 0;
 
 bool sendMessage(uint32_t msglen, const uint8_t *mac);
@@ -54,20 +61,17 @@ bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *con
   return pb_encode_string(stream, (uint8_t *)(outdata + chunk_pos), chunk_size);
 }
 
-bool ESPNowSender::sendData(uint8_t * data, uint32_t lenght) {
-
+bool ESPNowSender::sendData(uint8_t *data, uint32_t lenght) {
   outdata = data;
   outdata_len = lenght;
 
-  // Serial.println("Encoded Frame:");
   uint32_t chunk_left = outdata_len;
   Frame msg = Frame_init_zero;
   while (chunk_left > 0) {
     if (chunk_left <= chunk_size) {
       chunk_size = chunk_left;
       msg.lenght = outdata_len;
-    }
-    else {
+    } else {
       chunk_left = chunk_left - chunk_size;
       msg.lenght = 0;
     }
@@ -88,13 +92,8 @@ bool ESPNowSender::sendData(uint8_t * data, uint32_t lenght) {
   return true;
 }
 
-/// general buffer for msg sender
-
-// uint32_t framesum = 0;
-// uint32_t bytecount = 0;
-
-bool ESPNowSender::setTarget(uint8_t * macAddress) {
-
+bool ESPNowSender::setTarget(uint8_t *macAddress) {
+  memcpy(targetAddress, macAddress, 6);
   return false;
 }
 
@@ -105,10 +104,12 @@ bool ESPNowSender::init() {
   WiFi.disconnect();
   delay(100);
 
-  while (esp_now_init() != ESP_OK) {
-    Serial.print(".");
-  } 
-  Serial.println("\r\nESPNow Init Success");
-  return true;
+  if (esp_now_init() == ESP_OK) {
+    Serial.println("ESPNow Init Success");
+    return true;
+  } else {
+    Serial.println("ESPNow Init Failed");
+    delay(100);
+    return false;
+  }
 }
-
