@@ -1,4 +1,4 @@
-# ESPNowCam - ESP32 Camera vis ESPNow
+# ESPNowCam - Camera streamer via ESPNow
 
 [![PlatformIO](https://github.com/hpsaturn/esp32s3-cam/workflows/PlatformIO/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) ![ViewCount](https://views.whatilearened.today/views/github/hpsaturn/esp32s3-cam.svg)  
 
@@ -39,15 +39,35 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
 
 [2] Use with freenove or M5CoreS3 espnow sender sample
 
-## Usage and Install
+### Install examples
 
-Please install first [PlatformIO](http://platformio.org/) open source ecosystem for IoT development compatible with **Arduino** IDE and its command line tools (Windows, MacOs and Linux). Also, you may need to install [git](http://git-scm.com/) in your system.
+For install and run these tests, first install [PlatformIO](http://platformio.org/) open source ecosystem for IoT development compatible with **Arduino** IDE and its command line tools (Windows, MacOs and Linux). Also, you may need to install [git](http://git-scm.com/) in your system.
 
 For compile and install each sample, only choose one of them envs names in the table, and run the next command in the root of this project, like that:
 
 ```bash
 pio run -e m5cores3-espnow-receiver --target upload
 ```
+
+### Library installation
+
+**PlatformIO**:
+
+Add the following line to the lib_deps option of your [env:] section:
+
+```python
+hpsaturn/EspNowCam@^0.1.0
+```
+
+Or via command line:  
+
+```python
+pio pkg install --library "hpsaturn/EspNowCam@^0.1.0"
+```
+
+**Arduino IDE**:
+
+For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need first download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file, and then with the **Library Manager** find **ESPNowCam**
 
 ## TODO
 
