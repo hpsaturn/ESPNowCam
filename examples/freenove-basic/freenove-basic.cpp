@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <WiFi.h>
 #include <CamFreenove.h>
 
 // #define CONVERT_TO_JPEG
