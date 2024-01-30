@@ -14,7 +14,7 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
 
 [![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
 
-## Supported devices
+## Tested devices
 
 **Cameras:**
 
@@ -33,11 +33,14 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
 | ENV Name   |    Target      |  Status |
 |:-----------------|:--------------:|:----------:|
 | freenove-espnow-sender  | ESPNow camera transmitter | STABLE |
+| freenove-hvga-sender  | ESPNow camera transmitter | <6 FPS |
 | m5cores3-espnow-sender | ESPNow built-in camera transmitter | STABLE |
-| m5cores3-espnow-receiver | Video receiver via ESPNow [2] | STABLE|
-| m5core2-espnow-receiver | Video receiver via ESPNow [2] | STABLE |
+| m5cores3-espnow-receiver | Video receiver via ESPNow [1] | STABLE|
+| m5core2-espnow-receiver | Video receiver via ESPNow [1] | STABLE |
+| makerfabs-basic-receiver | Video receiver via ESPNow [2] | STABLE |  
 
-[2] Use with freenove or M5CoreS3 espnow sender sample
+[1] Use with freenove or M5CoreS3 espnow sender sample  
+[2] Use with freenove HVGA sender sample
 
 ### Install examples
 
@@ -48,6 +51,8 @@ For compile and install each sample, only choose one of them envs names in the t
 ```bash
 pio run -e m5cores3-espnow-receiver --target upload
 ```
+
+Some examples, only needs run `pio run --target upload` into each directory
 
 ### Library installation
 
@@ -62,7 +67,7 @@ hpsaturn/EspNowCam@^0.1.0
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/EspNowCam@^0.1.0"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.1"
 ```
 
 **Arduino IDE**:
@@ -74,6 +79,7 @@ For `Arduino IDE` is a little bit more complicated because the Arduino IDE depen
 - [x] NanoPb possible issue #1 (payload size)
 - [x] Unified ESPNow in an one class for all transmitters and receivers
 - [x] Isolate the ESPNow Receiver and Transmitter in a seperated library
+- [x] Unified and migrated to only one header `ESPNowCam.h`
 - [ ] Add sender callback to improve speed
 - [ ] Migration to esp_wifi_80211_tx() to improve Payload and Quality
 
@@ -86,5 +92,7 @@ The last version has many improvements, and right now is stable. It needs some t
 ## Troubleshooting
 
 The Freenove camera sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
+
+For Arduino IDE users, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
 
 ---
