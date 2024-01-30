@@ -7,10 +7,10 @@
 
 #include <Arduino.h>
 #include <M5Unified.h>
-#include "ESPNowReceiver.h"
+#include "ESPNowCam.h"
 #include "Utils.h"
 
-ESPNowReceiver radio;
+ESPNowCam radio;
 
 // frame buffer
 uint8_t *fb; 
