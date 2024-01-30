@@ -7,17 +7,17 @@
 
 #include <M5CoreS3.h>
 #include "esp_camera.h"
-#include "ESPNowSender.h"
+#include "ESPNowCam.h"
 #include "Utils.h"
 
-ESPNowSender radio;
+ESPNowCam radio;
 int32_t dw, dh;
 
 void processFrame() {
   if (CoreS3.Camera.get()) {
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
-    frame2jpg(CoreS3.Camera.fb, 12, &out_jpg, &out_jpg_len);
+    frame2jpg(CoreS3.Camera.fb, 18, &out_jpg, &out_jpg_len);
     CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
     radio.sendData(out_jpg, out_jpg_len);
     // printFPS("CAM:");

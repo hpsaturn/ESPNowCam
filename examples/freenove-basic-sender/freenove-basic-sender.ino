@@ -7,11 +7,11 @@
 
 #include <Arduino.h>
 #include "CamFreenove.h"
-#include "ESPNowSender.h"
+#include "ESPNowCam.h"
 #include "Utils.h"
 
 CamFreenove Camera;
-ESPNowSender radio;
+ESPNowCam radio;
 
 void processFrame() {
   if (Camera.get()) {

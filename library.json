@@ -1,6 +1,6 @@
 {
-  "name": "EspNowCam",
-  "version": "0.1.0",
+  "name": "ESPNowCam",
+  "version": "0.1.1",
   "homepage":"https://github.com/hpsaturn/esp32s3-cam",
   "keywords": 
   [ 

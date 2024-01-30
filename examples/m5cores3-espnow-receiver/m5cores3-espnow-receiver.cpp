@@ -6,10 +6,10 @@
 **************************************************/
 
 #include <M5CoreS3.h>
-#include "ESPNowReceiver.h"
+#include "ESPNowCam.h"
 #include "Utils.h"
 
-ESPNowReceiver radio;
+ESPNowCam radio;
 
 // frame buffer
 uint8_t *fb; 
@@ -18,6 +18,7 @@ int32_t dw, dh;
 
 void onDataReady(uint32_t lenght) {
   CoreS3.Display.drawJpg(fb, lenght , 0, 0, dw, dh);
+  printFPS("M5CoreS3: ");
 }
 
 void setup() {

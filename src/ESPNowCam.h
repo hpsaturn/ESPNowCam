@@ -1,17 +1,27 @@
+#ifndef ESPNOWCAM_H
+#define ESPNOWCAM_H
+
 #include <WiFi.h>
 #include <esp_now.h>
+#include <pb_decode.h>
 #include <pb_encode.h>
-
 #include "frame.pb.h"
 
-#define CHUNKSIZE 245
+extern "C" {
+typedef void (*RecvCb)(uint32_t lenght);
+}
 
-class ESPNowSender {
+#define CHUNKSIZE 244
+
+class ESPNowCam {
  private:
   uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
  public:
+  void setRecvCallback(RecvCb cb);
+  void setRecvBuffer(uint8_t *fb);
   bool sendData(uint8_t* data, uint32_t lenght);
   bool setTarget(uint8_t* macAddress);
   bool init();
 };
+
+#endif
