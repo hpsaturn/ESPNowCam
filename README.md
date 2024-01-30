@@ -4,6 +4,9 @@
 
 ESPNowCam library, is a straightforward video streamer for popular ESP32Cam models, leveraging the ESPNow protocol. No need for IPs, routers, or credentials—keeping it simple! :D
 
+
+**This library is for general purpose**, as it receives pointers to data, such as buffers, strings, images, or any byte-formatted content. This versatility allows you to transmit larger packages. For example, a buffer of 4000 bytes takes approximately 1/9 of a second, achieving a frame rate of around 9FPS
+
 <table>
   <tr>
     <td>
@@ -11,8 +14,6 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
     </td>
   </tr>
 </table>
-
-[![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
 
 ## Tested devices
 
@@ -27,6 +28,8 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
 - [x] M5CoreS3
 - [x] Makerfabs Parallel using LGFX
 - [ ] Maybe any TFT with LGFX support (better with PSRAM)
+
+[![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
 
 ## Examples and Tests
 
