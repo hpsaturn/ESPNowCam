@@ -13,6 +13,9 @@ typedef void (*RecvCb)(uint32_t lenght);
 
 #define CHUNKSIZE 244
 
+#define CSL_VERSION "0.1.1"
+#define CSL_REVISION 089
+
 class ESPNowCam {
  private:
   uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
