@@ -30,7 +30,6 @@ void msgSentCb(const uint8_t *macAddr, esp_now_send_status_t  status) {
   msgReady = true;
 }
 
-
 bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
   outdata = data;
   outdata_len = lenght;
@@ -54,7 +53,6 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
       chunk_left = 0;
       chunk_size = CHUNKSIZE;
     }
-    // delay(4);
   }
   chunk_pos = 0;
   return true;
