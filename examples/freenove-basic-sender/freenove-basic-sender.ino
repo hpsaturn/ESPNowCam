@@ -35,7 +35,9 @@ void setup() {
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
-  
+
+  // uint8_t macRecv[6] = {0xB8,0xFF,0x09,0xC6,0x0E,0xCC};
+  // radio.setTarget(macRecv);
   radio.init();
   
   if (!Camera.begin()) {

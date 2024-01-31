@@ -88,7 +88,7 @@ For `Arduino IDE` is a little bit more complicated because the Arduino IDE depen
 
 ## ESPNow Transmitter and Receiver
 
-The last version has many improvements, and right now is stable. It needs some tiny changes but now it supports ~9FPS with JPG Quality 12.
+The last version has many improvements, and right now is very stable. It needs some tiny changes but now it supports ~9FPS with JPG Quality 18.
 
 ![ESPNow Camera Video](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/espnow_video.gif)
 

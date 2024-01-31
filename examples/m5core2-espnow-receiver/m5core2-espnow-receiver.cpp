@@ -1,5 +1,5 @@
 /**************************************************
- * ESP32Cam video ESPNow Receiver
+ * ESPNowCam video Receiver
  * by @hpsaturn Copyright (C) 2024
  * This file is part ESP32S3 camera tests project:
  * https://github.com/hpsaturn/esp32s3-cam
@@ -19,6 +19,7 @@ int32_t dw, dh;
 
 void onDataReady(uint32_t lenght) {
   M5.Display.drawJpg(fb, lenght , 0, 0, dw, dh);
+  printFPS("M5Core2:");
 }
 
 void setup() {
