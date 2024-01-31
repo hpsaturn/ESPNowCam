@@ -15,6 +15,7 @@ uint8_t chunk_size = CHUNKSIZE;
 uint32_t chunk_pos = 0;
 uint8_t *outdata = NULL;
 size_t outdata_len = 0;
+bool msgReady = false;
 
 bool sendMessage(uint32_t msglen, const uint8_t *mac);
 size_t encodeMsg(Frame msg);
@@ -23,6 +24,10 @@ bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *con
   if (!pb_encode_tag_for_field(stream, field))
     return false;
   return pb_encode_string(stream, (uint8_t *)(outdata + chunk_pos), chunk_size);
+}
+
+void msgSentCb(const uint8_t *macAddr, esp_now_send_status_t  status) {
+  msgReady = true;
 }
 
 bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
@@ -40,13 +45,14 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
       msg.lenght = 0;
     }
     msg.data.funcs.encode = &encode_uint8_array;
+    msgReady = false;
     sendMessage(encodeMsg(msg), this->targetAddress);
+    while(!msgReady)delayMicroseconds(1);
     chunk_pos = outdata_len - chunk_left;
     if (msg.lenght == outdata_len) {
       chunk_left = 0;
       chunk_size = CHUNKSIZE;
     }
-    delay(4);
   }
   chunk_pos = 0;
   return true;
@@ -160,6 +166,7 @@ bool ESPNowCam::init() {
   if (esp_now_init() == ESP_OK) {
     Serial.println("ESPNow Init Success");
     esp_now_register_recv_cb(msgReceiveCb);
+    esp_now_register_send_cb(msgSentCb);
     return true;
   } else {
     Serial.println("ESPNow Init Failed");

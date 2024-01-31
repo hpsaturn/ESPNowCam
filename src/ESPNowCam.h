@@ -13,8 +13,8 @@ typedef void (*RecvCb)(uint32_t lenght);
 
 #define CHUNKSIZE 244
 
-#define CSL_VERSION "0.1.1"
-#define CSL_REVISION 089
+#define CSL_VERSION "0.1.2"
+#define CSL_REVISION 057
 
 class ESPNowCam {
  private:

@@ -1,5 +1,5 @@
 /**************************************************
- * ESP32Cam ESPNow Transmitter
+ * ESPNowCam video Transmitter
  * by @hpsaturn Copyright (C) 2024
  * This file is part ESP32S3 camera tests project:
  * https://github.com/hpsaturn/esp32s3-cam
@@ -13,14 +13,30 @@
 ESPNowCam radio;
 int32_t dw, dh;
 
+static void drawFPS() {
+  static uint_least64_t timeStamp = 0;
+  frame++;
+  if (millis() - timeStamp > 1000) {
+    timeStamp = millis();
+    char bf [10];
+    sprintf(bf,"FPS: %i",frame);
+    CoreS3.Display.clear();
+    CoreS3.Display.drawString(String(bf), dw / 2, dh / 2);
+    // Serial.printf("%s %2d FPS\r\n",msg, frame);
+    frame = 0;
+  } 
+}
+
 void processFrame() {
   if (CoreS3.Camera.get()) {
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
-    frame2jpg(CoreS3.Camera.fb, 12, &out_jpg, &out_jpg_len);
-    CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
+    frame2jpg(CoreS3.Camera.fb, 18, &out_jpg, &out_jpg_len);
+    // Serial.printf("JPG len %i\r\n",out_jpg_len);
+    // CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
     radio.sendData(out_jpg, out_jpg_len);
     // printFPS("CAM:");
+    drawFPS();
     free(out_jpg);
     CoreS3.Camera.free();
   }
@@ -49,7 +65,7 @@ void setup() {
   if (!CoreS3.Camera.begin()) {
     CoreS3.Display.drawString("Camera Init Fail", dw / 2, dh / 2);
   }
-  CoreS3.Display.drawString("Camera Init Success", dw / 2, dh / 2);
+  // CoreS3.Display.drawString("Camera Init Success", dw / 2, dh / 2);
   CoreS3.Camera.sensor->set_framesize(CoreS3.Camera.sensor, FRAMESIZE_QVGA);
 
   delay(500);
