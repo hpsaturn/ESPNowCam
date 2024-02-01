@@ -7,7 +7,7 @@ static void printDataChksum(uint8_t * jpg_data, uint32_t jpg_len){
     checksum = checksum + (uint8_t) jpg_data[i];
     Serial.printf("%i ", jpg_data[i]);
   }
-  Serial.printf("\r\nJPG lenght: %u cheksum: %u\r\n", jpg_data, checksum);
+  Serial.printf("\r\nJPG lenght: %u cheksum: %u\r\n", jpg_len, checksum);
 }
 
 static uint16_t frame = 0;
