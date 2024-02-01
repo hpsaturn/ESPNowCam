@@ -4,7 +4,6 @@
 
 ESPNowCam library, is a straightforward video streamer for popular ESP32Cam models, leveraging the ESPNow protocol. No need for IPs, routers, or credentials—keeping it simple! :D
 
-
 **This library is for general purpose**, as it receives pointers to data, such as buffers, strings, images, or any byte-formatted content. This versatility allows you to transmit larger packages. For example, a buffer of 4000 bytes takes approximately 1/9 of a second, achieving a frame rate of around 9FPS
 
 <table>
@@ -15,23 +14,29 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
   </tr>
 </table>
 
-## Tested devices
+## Library installation
 
-**Cameras:**
+**PlatformIO**:
 
-- [x] ESP32S3 Cam Freenove
-- [x] M5CoreS3 builtin Camera
+Add the following line to the lib_deps option of your [env:] section:
 
-**Receivers:**
+```python
+hpsaturn/EspNowCam@^0.1.0
+```
 
-- [x] M5Core2 (AWS tested)
-- [x] M5CoreS3
-- [x] Makerfabs Parallel using LGFX
-- [ ] Maybe any TFT with LGFX support (better with PSRAM)
+Or via command line:  
 
-[![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
+```python
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.1"
+```
+
+**Arduino IDE**:
+
+For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need first download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file, and then with the **Library Manager** find **ESPNowCam**
 
 ## Examples and Tests
+
+[![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
 
 | ENV Name   |    Target      |  Status |
 |:-----------------|:--------------:|:----------:|
@@ -57,25 +62,20 @@ pio run -e m5cores3-espnow-receiver --target upload
 
 Some examples, only needs run `pio run --target upload` into each directory
 
-### Library installation
+## Tested devices
 
-**PlatformIO**:
+**Cameras:**
 
-Add the following line to the lib_deps option of your [env:] section:
+- [x] ESP32S3 Cam Freenove
+- [x] M5CoreS3 builtin Camera
 
-```python
-hpsaturn/EspNowCam@^0.1.0
-```
+**Receivers:**
 
-Or via command line:  
+- [x] M5Core2 (AWS tested)
+- [x] M5CoreS3
+- [x] Makerfabs Parallel using LGFX
+- [ ] Maybe any TFT with LGFX support (better with PSRAM)
 
-```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.1"
-```
-
-**Arduino IDE**:
-
-For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need first download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file, and then with the **Library Manager** find **ESPNowCam**
 
 ## TODO
 
@@ -97,5 +97,7 @@ The last version has many improvements, and right now is very stable. It needs s
 The Freenove camera sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
 
 For Arduino IDE users, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
+
+This library was tested on PlatformIO and works with its manifest, on the other hand, in Arduino IDE (I'm not use it), was compiled ok there using Espressif 2.0.11 y Arduino IDE 2.2.1. I suggest to use PlatformIO instead Arduino IDE, because this last one mix everything, is so buggy and it's more complicated. Thanks to @ElectroZeusTIC to test it on Arduino IDE. 
 
 ---
