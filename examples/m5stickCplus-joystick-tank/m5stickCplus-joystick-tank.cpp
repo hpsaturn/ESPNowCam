@@ -16,15 +16,11 @@ float receiverBattVolt = 0.0;
 uint16_t receiverBattLevel = 0;
 uint_least32_t heartBeatStamp = 0;
 
-// default mac address (broadcasting)
-// uint8_t macAdd [6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 uint8_t macAdd [6] = {0x34, 0x85, 0x18, 0x6F, 0x23, 0xF4};
-// 
-// mac address selected
-int macAddSelected = 0;
 
 M5Canvas disp;
 M5Canvas list;
+
 int w;
 int h;
 int ix = 21;

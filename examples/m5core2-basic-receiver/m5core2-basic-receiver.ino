@@ -7,10 +7,10 @@
 
 #include <Arduino.h>
 #include <M5Unified.h>
-#include "ESPNowReceiver.h"
+#include "ESPNowCam.h"
 #include "Utils.h"
 
-ESPNowReceiver radio;
+ESPNowCam radio;
 
 // frame buffer
 uint8_t *fb; 
@@ -19,6 +19,7 @@ int32_t dw, dh;
 
 void onDataReady(uint32_t lenght) {
   M5.Display.drawJpg(fb, lenght , 0, 0, dw, dh);
+  printFPS("M5Core2:");
 }
 
 void setup() {

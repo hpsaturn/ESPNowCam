@@ -11,9 +11,7 @@ extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
 }
 
-#define CHUNKSIZE 244
-
-#define CSL_VERSION "0.1.2"
+#define CSL_VERSION "0.1.3"
 #define CSL_REVISION 057
 
 class ESPNowCam {
@@ -24,7 +22,7 @@ class ESPNowCam {
   void setRecvBuffer(uint8_t *fb);
   bool sendData(uint8_t* data, uint32_t lenght);
   bool setTarget(uint8_t* macAddress);
-  bool init();
+  bool init(uint8_t chunksize = 244);
 };
 
 #endif

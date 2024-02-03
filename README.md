@@ -27,7 +27,7 @@ hpsaturn/EspNowCam@^0.1.0
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.1"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.3"
 ```
 
 **Arduino IDE**:
@@ -40,14 +40,19 @@ For `Arduino IDE` is a little bit more complicated because the Arduino IDE depen
 
 | ENV Name   |    Target      |  Status |
 |:-----------------|:--------------:|:----------:|
-| freenove-espnow-sender  | ESPNow camera transmitter | STABLE |
-| freenove-hvga-sender  | ESPNow camera transmitter | <6 FPS |
-| m5cores3-espnow-sender | ESPNow built-in camera transmitter | STABLE |
-| m5cores3-espnow-receiver | Video receiver via ESPNow [1] | STABLE|
+| freenove-basic-sender  | ESPNow camera transmitter (QVGA) | STABLE |
+| freenove-hvga-sender  | ESPNow camera transmitter (HVGA) | <6 FPS |
+| freenove-nojpg-sender  | ESPNow camera transmitter (NOJPG) | DEMO ONLY (<2FPS) |
+| freenove-tank  | Advanced sample. Sender/Receiver | INPROGRESS |
+| m5core2-basic-receiver | Video receiver via ESPNow [1] | STABLE |
 | m5core2-espnow-receiver | Video receiver via ESPNow [1] | STABLE |
+| m5cores3-espnow-receiver | Video receiver via ESPNow [1] | STABLE|
+| m5cores3-espnow-sender | ESPNow built-in camera transmitter | STABLE |
+| m5stickCplus-joystick-tank | Advanced sample. Custom payload | INPROGRESS |  
 | makerfabs-basic-receiver | Video receiver via ESPNow [2] | STABLE |  
+| makerfabs-nojpg-receiver | Video receiver via ESPNow [2] | DEMO ONLY (<2FPS) |  
 
-[1] Use with freenove or M5CoreS3 espnow sender sample  
+[1] Use with freenove or M5CoreS3 senders sample  
 [2] Use with freenove HVGA sender sample
 
 ### Install examples
@@ -98,6 +103,6 @@ The Freenove camera sometimes needs good power cable and also takes some seconds
 
 For Arduino IDE users, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
 
-This library was tested on PlatformIO and works with its manifest, on the other hand, in Arduino IDE (I'm not use it), was compiled ok there using Espressif 2.0.11 y Arduino IDE 2.2.1. I suggest to use PlatformIO instead Arduino IDE, because this last one mix everything, is so buggy and it's more complicated. Thanks to @ElectroZeusTIC to test it on Arduino IDE. 
+This library was tested on PlatformIO and works with its manifest, on the other hand, in Arduino IDE (I'm not use it), was compiled ok there using Espressif 2.0.11 y Arduino IDE 2.2.1. I suggest to use PlatformIO instead Arduino IDE, because this last one mix everything, is so buggy and it's more complicated. Thanks to @ElectroZeusTIC to test it on Arduino IDE.  
 
 ---

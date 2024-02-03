@@ -5,6 +5,11 @@
  * https://github.com/hpsaturn/esp32s3-cam
 **************************************************/
 
+// N O T E:
+// -------
+// Don't forget first install NanoPb library!
+// and also review the README.md file.
+
 #include <Arduino.h>
 #include "CamFreenove.h"
 #include "ESPNowCam.h"

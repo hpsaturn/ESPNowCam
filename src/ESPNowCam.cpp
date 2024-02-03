@@ -11,7 +11,8 @@
  * S E N D E R  S E C T I O N
 ************************************/
 uint8_t send_buffer[256];
-uint8_t chunk_size = CHUNKSIZE;
+uint8_t chunksize = 244;
+uint8_t chunk_size_left = chunksize;
 uint32_t chunk_pos = 0;
 uint8_t *outdata = NULL;
 size_t outdata_len = 0;
@@ -23,7 +24,7 @@ size_t encodeMsg(Frame msg);
 bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
   if (!pb_encode_tag_for_field(stream, field))
     return false;
-  return pb_encode_string(stream, (uint8_t *)(outdata + chunk_pos), chunk_size);
+  return pb_encode_string(stream, (uint8_t *)(outdata + chunk_pos), chunk_size_left);
 }
 
 void msgSentCb(const uint8_t *macAddr, esp_now_send_status_t  status) {
@@ -34,24 +35,24 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
   outdata = data;
   outdata_len = lenght;
 
-  uint32_t chunk_left = outdata_len;
+  uint32_t frame_left = outdata_len;
   Frame msg = Frame_init_zero;
-  while (chunk_left > 0) {
-    if (chunk_left <= chunk_size) {
-      chunk_size = chunk_left;
+  while (frame_left > 0) {
+    if (frame_left <= chunk_size_left) {
+      chunk_size_left = frame_left;
       msg.lenght = outdata_len;
     } else {
-      chunk_left = chunk_left - chunk_size;
+      frame_left = frame_left - chunk_size_left;
       msg.lenght = 0;
     }
     msg.data.funcs.encode = &encode_uint8_array;
     msgReady = false;
     sendMessage(encodeMsg(msg), this->targetAddress);
     while(!msgReady)delayMicroseconds(1);
-    chunk_pos = outdata_len - chunk_left;
+    chunk_pos = outdata_len - frame_left;
     if (msg.lenght == outdata_len) {
-      chunk_left = 0;
-      chunk_size = CHUNKSIZE;
+      frame_left = 0;
+      chunk_size_left = chunksize;
     }
   }
   chunk_pos = 0;
@@ -102,7 +103,7 @@ bool ESPNowCam::setTarget(uint8_t *macAddress) {
 }
 
 /***********************************
- * S E N D E R  S E C T I O N
+ * R E C E I V E R  S E C T I O N
 ************************************/
 uint8_t recv_buffer[256];
 uint32_t fbpos = 0;
@@ -125,7 +126,6 @@ bool decode_data(pb_istream_t *stream, const pb_field_t *field, void **arg) {
 bool decodeMessage(uint16_t message_length) {
   pb_istream_t stream = pb_istream_from_buffer(recv_buffer, message_length);
   msg_recv.data.funcs.decode = &decode_data;
-  // msg.data.arg = (void*) "array: \"%d\"\r\n";
   bool status = pb_decode(&stream, Frame_fields, &msg_recv);
   if (!status) {
     Serial.printf("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
@@ -155,7 +155,9 @@ void ESPNowCam::setRecvBuffer(uint8_t *fb) {
  * C O M M O N  S E C T I O N
 ************************************/
 
-bool ESPNowCam::init() {
+bool ESPNowCam::init(uint8_t chunk_size) {
+  chunksize = chunk_size; 
+  chunk_size_left = chunk_size;
   WiFi.mode(WIFI_STA);
   Serial.println("ESPNow Init");
   Serial.println(WiFi.macAddress());
