@@ -5,19 +5,21 @@
  * https://github.com/hpsaturn/esp32s3-cam
 **************************************************/
 
-// N O T E:
-// -------
-// Don't forget first install NanoPb library!
-// and also review the README.md file.
-
 #include <Arduino.h>
 #include "CamFreenove.h"
 #include "ESPNowCam.h"
+#include "comm.pb.h"
 #include "Utils.h"
 
 CamFreenove Camera;
 ESPNowCam radio;
 
+// buffer for control commands from joystick
+uint8_t *recv_buff;
+// Joystick meessage for store the commands
+JoystickMessage jm = JoystickMessage_init_zero;
+
+// main method to frames send
 void processFrame() {
   if (Camera.get()) {
     uint8_t *out_jpg = NULL;
@@ -28,6 +30,23 @@ void processFrame() {
     Camera.free();
     // printFPS("CAM:");
   }
+}
+
+bool decodeMsg(uint16_t message_length) {
+  pb_istream_t stream = pb_istream_from_buffer(recv_buff, message_length);
+  bool status = pb_decode(&stream, JoystickMessage_fields, &jm);
+  if (!status) {
+    Serial.printf("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
+    return false;
+  }
+  Serial.printf("cmds: ax:%i ay:%i az:%i\r\n",jm.ax, jm.ay, jm.az);
+  return true;
+}
+
+// control commands data
+void onDataReady(uint32_t lenght) {
+  // Serial.printf("onDataReady: len %i\r\n",lenght);
+  decodeMsg(lenght);
 }
 
 void setup() {
@@ -41,9 +60,15 @@ void setup() {
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
 
-  // uint8_t macRecv[6] = {0xB8,0xFF,0x09,0xC6,0x0E,0xCC};
-  // radio.setTarget(macRecv);
-  radio.init();
+  
+  // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
+  recv_buff = (uint8_t*)  ps_malloc(100* sizeof( uint8_t ) ) ;
+  radio.setRecvBuffer(recv_buff);
+  radio.setRecvCallback(onDataReady);
+
+  uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  radio.setTarget(macRecv);
+  radio.init(244);
   
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");

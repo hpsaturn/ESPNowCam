@@ -4,7 +4,6 @@
 
 ESPNowCam library, is a straightforward video streamer for popular ESP32Cam models, leveraging the ESPNow protocol. No need for IPs, routers, or credentials—keeping it simple! :D
 
-
 **This library is for general purpose**, as it receives pointers to data, such as buffers, strings, images, or any byte-formatted content. This versatility allows you to transmit larger packages. For example, a buffer of 4000 bytes takes approximately 1/9 of a second, achieving a frame rate of around 9FPS
 
 <table>
@@ -14,6 +13,59 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
     </td>
   </tr>
 </table>
+
+## Library installation
+
+**PlatformIO**:
+
+Add the following line to the lib_deps option of your [env:] section:
+
+```python
+hpsaturn/EspNowCam@^0.1.0
+```
+
+Or via command line:  
+
+```python
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.3"
+```
+
+**Arduino IDE**:
+
+For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need first download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file, and then with the **Library Manager** find **ESPNowCam**
+
+## Examples and Tests
+
+[![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
+
+| ENV Name   |    Target      |  Status |
+|:-----------------|:--------------:|:----------:|
+| freenove-basic-sender  | ESPNow camera transmitter (QVGA) | STABLE |
+| freenove-hvga-sender  | ESPNow camera transmitter (HVGA) | <6 FPS |
+| freenove-nojpg-sender  | ESPNow camera transmitter (NOJPG) | DEMO ONLY (<2FPS) |
+| freenove-tank  | Advanced sample. Sender/Receiver | INPROGRESS |
+| m5core2-basic-receiver | Video receiver via ESPNow [1] | STABLE |
+| m5core2-espnow-receiver | Video receiver via ESPNow [1] | STABLE |
+| m5cores3-espnow-receiver | Video receiver via ESPNow [1] | STABLE|
+| m5cores3-espnow-sender | ESPNow built-in camera transmitter | STABLE |
+| m5stickCplus-joystick-tank | Advanced sample. Custom payload | INPROGRESS |  
+| makerfabs-basic-receiver | Video receiver via ESPNow [2] | STABLE |  
+| makerfabs-nojpg-receiver | Video receiver via ESPNow [2] | DEMO ONLY (<2FPS) |  
+
+[1] Use with freenove or M5CoreS3 senders sample  
+[2] Use with freenove HVGA sender sample
+
+### Install examples
+
+For install and run these tests, first install [PlatformIO](http://platformio.org/) open source ecosystem for IoT development compatible with **Arduino** IDE and its command line tools (Windows, MacOs and Linux). Also, you may need to install [git](http://git-scm.com/) in your system.
+
+For compile and install each sample, only choose one of them envs names in the table, and run the next command in the root of this project, like that:
+
+```bash
+pio run -e m5cores3-espnow-receiver --target upload
+```
+
+Some examples, only needs run `pio run --target upload` into each directory
 
 ## Tested devices
 
@@ -29,53 +81,6 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
 - [x] Makerfabs Parallel using LGFX
 - [ ] Maybe any TFT with LGFX support (better with PSRAM)
 
-[![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
-
-## Examples and Tests
-
-| ENV Name   |    Target      |  Status |
-|:-----------------|:--------------:|:----------:|
-| freenove-espnow-sender  | ESPNow camera transmitter | STABLE |
-| freenove-hvga-sender  | ESPNow camera transmitter | <6 FPS |
-| m5cores3-espnow-sender | ESPNow built-in camera transmitter | STABLE |
-| m5cores3-espnow-receiver | Video receiver via ESPNow [1] | STABLE|
-| m5core2-espnow-receiver | Video receiver via ESPNow [1] | STABLE |
-| makerfabs-basic-receiver | Video receiver via ESPNow [2] | STABLE |  
-
-[1] Use with freenove or M5CoreS3 espnow sender sample  
-[2] Use with freenove HVGA sender sample
-
-### Install examples
-
-For install and run these tests, first install [PlatformIO](http://platformio.org/) open source ecosystem for IoT development compatible with **Arduino** IDE and its command line tools (Windows, MacOs and Linux). Also, you may need to install [git](http://git-scm.com/) in your system.
-
-For compile and install each sample, only choose one of them envs names in the table, and run the next command in the root of this project, like that:
-
-```bash
-pio run -e m5cores3-espnow-receiver --target upload
-```
-
-Some examples, only needs run `pio run --target upload` into each directory
-
-### Library installation
-
-**PlatformIO**:
-
-Add the following line to the lib_deps option of your [env:] section:
-
-```python
-hpsaturn/EspNowCam@^0.1.0
-```
-
-Or via command line:  
-
-```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.1"
-```
-
-**Arduino IDE**:
-
-For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need first download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file, and then with the **Library Manager** find **ESPNowCam**
 
 ## TODO
 
@@ -97,5 +102,7 @@ The last version has many improvements, and right now is very stable. It needs s
 The Freenove camera sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
 
 For Arduino IDE users, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
+
+This library was tested on PlatformIO and works with its manifest, on the other hand, in Arduino IDE (I'm not use it), was compiled ok there using Espressif 2.0.11 y Arduino IDE 2.2.1. I suggest to use PlatformIO instead Arduino IDE, because this last one mix everything, is so buggy and it's more complicated. Thanks to @ElectroZeusTIC to test it on Arduino IDE.  
 
 ---

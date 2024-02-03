@@ -33,10 +33,10 @@ void processFrame() {
     size_t out_jpg_len = 0;
     frame2jpg(CoreS3.Camera.fb, 18, &out_jpg, &out_jpg_len);
     // Serial.printf("JPG len %i\r\n",out_jpg_len);
-    // CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
+    CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
     radio.sendData(out_jpg, out_jpg_len);
     // printFPS("CAM:");
-    drawFPS();
+    // drawFPS();
     free(out_jpg);
     CoreS3.Camera.free();
   }

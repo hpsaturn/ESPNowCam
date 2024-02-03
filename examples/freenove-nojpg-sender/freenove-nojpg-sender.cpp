@@ -1,14 +1,12 @@
 /**************************************************
- * ESP32Cam Freenove ESPNow Transmitter
+ * ESPNowCam Transmitter without JPG compression (very slow)
+ *
+ * Use with: makerfabs-nojpg-receiver example
+ * 
  * by @hpsaturn Copyright (C) 2024
- * This file is part ESP32S3 camera tests project:
+ * This file is part ESPNowCam examples:
  * https://github.com/hpsaturn/esp32s3-cam
 **************************************************/
-
-// N O T E:
-// -------
-// Don't forget first install NanoPb library!
-// and also review the README.md file.
 
 #include <Arduino.h>
 #include "CamFreenove.h"
@@ -20,11 +18,7 @@ ESPNowCam radio;
 
 void processFrame() {
   if (Camera.get()) {
-    uint8_t *out_jpg = NULL;
-    size_t out_jpg_len = 0;
-    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len);
-    radio.sendData(out_jpg, out_jpg_len);
-    free(out_jpg);
+    radio.sendData(Camera.fb->buf,Camera.fb->len);
     Camera.free();
     // printFPS("CAM:");
   }
@@ -40,9 +34,7 @@ void setup() {
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
-
-  // uint8_t macRecv[6] = {0xB8,0xFF,0x09,0xC6,0x0E,0xCC};
-  // radio.setTarget(macRecv);
+  
   radio.init();
   
   if (!Camera.begin()) {

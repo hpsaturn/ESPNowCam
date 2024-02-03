@@ -1,0 +1,35 @@
+// A very simple protocol definition, consisting of only
+// one message for handling the joystick data
+
+syntax = "proto2";
+
+message JoystickMessage {
+    required sint32 ax = 1;  // left stick x position
+    required sint32 ay = 2;  // left stick y position
+    required sint32 az = 3;  // right stick z position
+    required sint32 aw = 4;  // right stick w position
+    required int32 bA = 5;   // buttonA data
+    required int32 bB = 6;   // buttonB data
+    required int32 bX = 7;   // buttonX data
+    required int32 bY = 8;   // buttonY data
+    required int32 bL = 9;   // buttonL data
+    required int32 bR = 10;  // buttonR data
+    required int32 bU = 11;  // buttonUp data
+    required int32 bD = 12;  // buttonDown data
+    required int32 ck = 13;  // check data
+}
+
+message TelemetryMessage {
+    required uint32 btl = 1; // battery level
+    required float  btv = 2; // battery voltage
+    required sint32 x = 3;   // x position
+    required sint32 y = 4;   // y position
+    required sint32 z = 5;   // z position
+    required bool e1 = 6;    // event1 data
+    required bool e2 = 7;    // event2 data
+    required bool e3 = 8;    // event3 data
+    required float t1 = 9;   // variable1 data
+    required float t2 = 10;  // variable2 data
+    required uint32 ck = 11; // check data
+}
+
