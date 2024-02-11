@@ -79,19 +79,19 @@ void setSpeed(int16_t Vy, int16_t Wt) {
   spdL = map(spdL, -100, 100, degreesMinL, degreesMaxL);
   spdR = map(spdR, -100, 100, degreesMinR, degreesMaxR);
 
+  // if (spdL != deathBand) {
   if (abs(spdL - degreesCenterL) > deathBand) {
     attachServoLeft();
     servoLeft.write(spdL);
   } else {
-    servoLeft.write(degreesCenterL);
     servoLeft.detach();
   }
 
+  // if (spdR != degreesCenterR) {
   if (abs(spdR - degreesCenterR) > deathBand) {
     attachServoRight();
     servoRight.write(spdR);
   } else {
-    servoLeft.write(degreesCenterR);
     servoRight.detach();
   }
 
