@@ -17,7 +17,7 @@ void processFrame() {
   if (Camera.get()) {
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
-    frame2jpg(Camera.fb, 8, &out_jpg, &out_jpg_len);
+    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len);
     radio.sendData(out_jpg, out_jpg_len);
     free(out_jpg);
     Camera.free();
