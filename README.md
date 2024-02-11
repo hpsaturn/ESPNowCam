@@ -14,6 +14,16 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
   </tr>
 </table>
 
+## Performance
+
+The current version tested with:
+
+| Sender | Receiver | Frame size | JPG Quality | Status |
+|:-----------------|:-----------:|:-------:|:-----:|:------:|
+| Freenove S3 Camera | M5Core2 / M5CoreS3 | QVGA | 12 | ~10 FPS |
+| M5CoreS3 builtin Camera | M5Core2 | QVGA | 12  | ~11 FPS |
+| Freenove S3 Camera | Makerfabs | HVGA | 12 | ~6 FPS |
+
 ## Library installation
 
 **PlatformIO**:
@@ -32,7 +42,12 @@ pio pkg install --library "hpsaturn/ESPNowCam@^0.1.3"
 
 **Arduino IDE**:
 
-For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need first download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file, and then with the **Library Manager** find **ESPNowCam**
+For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need:
+
+1. Download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file
+2. and then with the **Library Manager** find **ESPNowCam** and install it.  
+
+Note: Nanobp is not included as a dependency because, despite being 25 years after the invention of symbolic links, Arduino IDE does not support these types of files. Consider exploring PlatformIO for your future developments, as it offers a more versatile and modern development environment.
 
 ## Examples and Tests
 
@@ -43,12 +58,12 @@ For `Arduino IDE` is a little bit more complicated because the Arduino IDE depen
 | freenove-basic-sender  | ESPNow camera transmitter (QVGA) | STABLE |
 | freenove-hvga-sender  | ESPNow camera transmitter (HVGA) | <6 FPS |
 | freenove-nojpg-sender  | ESPNow camera transmitter (NOJPG) | DEMO ONLY (<2FPS) |
-| freenove-tank  | Advanced sample. Sender/Receiver | INPROGRESS |
+| freenove-tank  | Advanced sample. Sender/Receiver | TESTING |
 | m5core2-basic-receiver | Video receiver via ESPNow [1] | STABLE |
 | m5core2-espnow-receiver | Video receiver via ESPNow [1] | STABLE |
 | m5cores3-espnow-receiver | Video receiver via ESPNow [1] | STABLE|
 | m5cores3-espnow-sender | ESPNow built-in camera transmitter | STABLE |
-| m5stickCplus-joystick-tank | Advanced sample. Custom payload | INPROGRESS |  
+| m5stickCplus-joystick-tank | Advanced sample. Custom payload | TESTING |  
 | makerfabs-basic-receiver | Video receiver via ESPNow [2] | STABLE |  
 | makerfabs-nojpg-receiver | Video receiver via ESPNow [2] | DEMO ONLY (<2FPS) |  
 
@@ -79,8 +94,8 @@ Some examples, only needs run `pio run --target upload` into each directory
 - [x] M5Core2 (AWS tested)
 - [x] M5CoreS3
 - [x] Makerfabs Parallel using LGFX
+- [x] TFT 3.5 and 2.5 " using LGFX (ILI9488/9486)
 - [ ] Maybe any TFT with LGFX support (better with PSRAM)
-
 
 ## TODO
 
@@ -88,7 +103,7 @@ Some examples, only needs run `pio run --target upload` into each directory
 - [x] Unified ESPNow in an one class for all transmitters and receivers
 - [x] Isolate the ESPNow Receiver and Transmitter in a seperated library
 - [x] Unified and migrated to only one header `ESPNowCam.h`
-- [ ] Add sender callback to improve speed
+- [x] Add sender callback to improve speed
 - [ ] Migration to esp_wifi_80211_tx() to improve Payload and Quality
 
 ## ESPNow Transmitter and Receiver
@@ -103,6 +118,6 @@ The Freenove camera sometimes needs good power cable and also takes some seconds
 
 For Arduino IDE users, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
 
-This library was tested on PlatformIO and works with its manifest, on the other hand, in Arduino IDE (I'm not use it), was compiled ok there using Espressif 2.0.11 y Arduino IDE 2.2.1. I suggest to use PlatformIO instead Arduino IDE, because this last one mix everything, is so buggy and it's more complicated. Thanks to @ElectroZeusTIC to test it on Arduino IDE.  
+This library was tested on PlatformIO and works with its manifest, on the other hand, in Arduino IDE (I'm not using it), was compiled and excuting ok, there was using Espressif 2.0.11, Arduino IDE 2.2.1 and enabling PSRAM for the Freenove S3 Camera. I suggest to use PlatformIO instead Arduino IDE, because this last one mix everything, is so buggy and it's more complicated. Thanks to @ElectroZeusTIC and @AcoranTf to test it on Arduino IDE.
 
 ---
