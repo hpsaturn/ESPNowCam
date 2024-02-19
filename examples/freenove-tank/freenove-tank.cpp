@@ -6,6 +6,7 @@
 **************************************************/
 
 #include <Arduino.h>
+#include <Sensors.hpp>
 #include <ESP32WifiCLI.hpp>
 #include "CamFreenove.h"
 #include "ESPNowCam.h"
