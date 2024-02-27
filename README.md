@@ -18,11 +18,12 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
 
 The current version tested with:
 
-| Sender | Receiver | Frame size | JPG Quality | Status |
-|:-----------------|:-----------:|:-------:|:-----:|:------:|
-| Freenove S3 Camera | M5Core2 / M5CoreS3 | QVGA | 12 | ~10 FPS |
-| M5CoreS3 builtin Camera | M5Core2 | QVGA | 12  | ~11 FPS |
-| Freenove S3 Camera | Makerfabs | HVGA | 12 | ~6 FPS |
+| Sender | Receiver | Frame size | JPG Quality | FPS | Status |
+|:-----------------|:-----------:|:-------:|:-----:|:------:|:------:| 
+| Freenove S3 Camera | M5Core2 / M5CoreS3 | QVGA | 12 | ~10 FPS | STABLE |
+| M5CoreS3 builtin Camera | M5Core2 | QVGA | 12  | ~11 FPS | STABLE |
+| Freenove S3 Camera | Makerfabs | HVGA | 12 | ~6 FPS | STABLE |
+| XIAO ESP32S3 Camera | M5Core2 / M5CoreS3 | QVGA | 12 | ?? | UNSTABLE |
 
 ## Library installation
 
@@ -66,6 +67,7 @@ Note: Nanobp is not included as a dependency because, despite being 25 years aft
 | m5stickCplus-joystick-tank | Advanced sample. Custom payload | TESTING |  
 | makerfabs-basic-receiver | Video receiver via ESPNow [2] | STABLE |  
 | makerfabs-nojpg-receiver | Video receiver via ESPNow [2] | DEMO ONLY (<2FPS) |  
+| xiao-espnow-sender  | ESPNow camera transmitter (QVGA) | UNSTABLE |
 
 [1] Use with freenove or M5CoreS3 senders sample  
 [2] Use with freenove HVGA sender sample
