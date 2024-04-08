@@ -51,7 +51,8 @@ Note: Nanobp is not included as a dependency because, despite being 25 years aft
 
 ## Examples and Tests
 
-[![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/zXIzP1TGlpA)
+[![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/nhLr7XEUdfU)  
+[[video]](https://youtu.be/nhLr7XEUdfU)
 
 | ENV Name   |    Target      |  Status |
 |:-----------------|:--------------:|:----------:|
@@ -110,7 +111,8 @@ Some examples, only needs run `pio run --target upload` into each directory
 
 The last version has many improvements, and right now is very stable. It needs some tiny changes but now it supports ~9FPS with JPG Quality 18.
 
-[![ESPNow Camera Video](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/espnow_video.gif)](https://youtu.be/zXIzP1TGlpA)
+[![ESPNow Camera Video](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/espnow_video.gif)](https://youtu.be/zXIzP1TGlpA)  
+[[video]](https://youtu.be/zXIzP1TGlpA)
 
 ## Troubleshooting
 
