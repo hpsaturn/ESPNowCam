@@ -1,7 +1,6 @@
 #ifndef CAMXIAO_H
 #define CAMXIAO_H
 
-#define CAMERA_MODEL_XIAO_ESP32S3 // Has PSRAM
 #include "esp_camera.h"
 #include "xiao_pins.h"
 
