@@ -1,9 +1,10 @@
-#ifndef CAMFREENOVE_H
-#define CAMFREENOVE_H
+#ifndef CAMXIAO_H
+#define CAMXIAO_H
 
 #include "esp_camera.h"
+#include "xiao_pins.h"
 
-class CamFreenove {
+class CamXiao {
    private:
    public:
     camera_fb_t* fb;

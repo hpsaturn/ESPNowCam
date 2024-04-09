@@ -1,9 +1,8 @@
 #include <Arduino.h>
-#include <ESP32WifiCLI.hpp>
 #include <Wire.h>
 #include <M5Unified.h>
 #include "ESPNowCam.h"
-#include "comm.pb.h"
+#include <common/comm.pb.h>
 
 ESPNowCam radio;
 

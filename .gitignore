@@ -44,3 +44,4 @@ deploy.sh
 releases
 releases/binaries/
 releases/installer/
+examples/espcamlib

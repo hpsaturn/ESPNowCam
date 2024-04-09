@@ -7,11 +7,11 @@
 
 #include <Arduino.h>
 #include <ESP32WifiCLI.hpp>
-#include "CamFreenove.h"
-#include "ESPNowCam.h"
-#include "comm.pb.h"
+#include <ESPNowCam.h>
+#include <common/comm.pb.h>
+#include <common/ConfigApp.hpp> 
+#include <drivers/CamFreenove.h>
 #include <ESP32Servo.h>
-#include "ConfigApp.hpp"
 #include <Utils.h>
 
 #define BUILTINLED 2
