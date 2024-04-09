@@ -11,7 +11,7 @@
 // and also review the README.md file.
 
 #include <Arduino.h>
-#include "CamFreenove.h"
+#include <drivers/CamFreenove.h>
 #include "ESPNowCam.h"
 #include "Utils.h"
 
