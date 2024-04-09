@@ -204,7 +204,7 @@ void wcli_klist(String opts) {
     String defined = isDefined ? "custom " : "default";
     String value = "";
     if (isDefined) value = cfg.getValue(key);
-    Serial.printf("%11s \t%s \t%s \r\n", key, defined.c_str(), value.c_str());
+    Serial.printf("%11s \t%s \t%s \r\n", key.c_str(), defined.c_str(), value.c_str());
   }
 }
 
