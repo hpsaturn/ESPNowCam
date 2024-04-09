@@ -6,10 +6,9 @@
 **************************************************/
 
 #include <Arduino.h>
-#include <ESP32WifiCLI.hpp>
-#include "ESPNowCam.h"
-#include "CamXiao.h"
-#include "Utils.h"
+#include <ESPNowCam.h>
+#include <drivers/CamXiao.h>
+#include <Utils.h>
 
 CamXiao Camera;
 ESPNowCam radio;
