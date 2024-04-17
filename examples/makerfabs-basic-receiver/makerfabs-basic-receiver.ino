@@ -6,10 +6,10 @@
 **************************************************/
 
 #include <Arduino.h>
+#include <ESPNowCam.h>
 #include "S3_Parallel16_ili9488.h"
 #include <LGFX_TFT_eSPI.hpp>
-#include "ESPNowCam.h"
-#include "Utils.h"
+// #include "Utils.h"
 
 ESPNowCam radio;
 LGFX tft;
@@ -25,7 +25,7 @@ int32_t dw, dh;
 
 void onDataReady(uint32_t lenght) {
   tft.drawJpg(fb, lenght , 0, 0, dw, dh);
-  printFPS("MF:");
+  // printFPS("MF:");
 }
 
 void setup() {

@@ -6,9 +6,9 @@
 **************************************************/
 
 #include <Arduino.h>
-#include "CamFreenove.h"
-#include "ESPNowCam.h"
-#include "Utils.h"
+#include <ESPNowCam.h>
+#include <drivers/CamFreenove.h>
+// #include "Utils.h"
 
 CamFreenove Camera;
 ESPNowCam radio;
@@ -37,6 +37,8 @@ void setup() {
   }
   
   radio.init();
+
+  Camera.config->frame_size = FRAMESIZE_HVGA;
   
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");

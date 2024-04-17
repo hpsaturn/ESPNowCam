@@ -2,9 +2,9 @@
 
 [![PlatformIO](https://github.com/hpsaturn/esp32s3-cam/workflows/PlatformIO/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) ![ViewCount](https://views.whatilearened.today/views/github/hpsaturn/esp32s3-cam.svg)  
 
-ESPNowCam library, is a straightforward video streamer for popular ESP32Cam models, leveraging the ESPNow protocol. No need for IPs, routers, or credentials—keeping it simple! :D
+The ESPNowCam library is a simple and direct video streamer designed for popular ESP32Cam models, utilizing the ESPNow protocol. No need for IPs, routers, or credentials—keeping it straightforward and hassle-free! :D
 
-**This library is for general purpose**, as it receives pointers to data, such as buffers, strings, images, or any byte-formatted content. This versatility allows you to transmit larger packages. For example, a buffer of 4000 bytes takes approximately 1/9 of a second, achieving a frame rate of around 9FPS
+**This library is for general purpose**, as it accepts pointers to various types of data, including buffers, strings, images, or any byte-formatted content. This flexibility enables transmission of larger packages across different scenarios, not limited to cameras alone. For instance, a buffer of 4000 bytes takes approximately 1/9 of a second to transmit, resulting in a frame rate of around 9FPS.
 
 <table>
   <tr>
@@ -19,11 +19,11 @@ ESPNowCam library, is a straightforward video streamer for popular ESP32Cam mode
 The current version tested with:
 
 | Sender | Receiver | Frame size | JPG Quality | FPS | Status |
-|:-----------------|:-----------:|:-------:|:-----:|:------:|:------:| 
+|:-----------------|:-----------:|:-------:|:-----:|:------:|:------:|
 | Freenove S3 Camera | M5Core2 / M5CoreS3 | QVGA | 12 | ~10 FPS | STABLE |
 | M5CoreS3 builtin Camera | M5Core2 | QVGA | 12  | ~11 FPS | STABLE |
 | Freenove S3 Camera | Makerfabs | HVGA | 12 | ~6 FPS | STABLE |
-| XIAO ESP32S3 Camera | M5Core2 / M5CoreS3 | QVGA | 12 | ?? | UNSTABLE |
+| XIAO ESP32S3 Camera | M5Core2 / M5CoreS3 | QVGA | 12 | ~9 FPS | STABLE |
 
 ## Library installation
 
@@ -32,13 +32,13 @@ The current version tested with:
 Add the following line to the lib_deps option of your [env:] section:
 
 ```python
-hpsaturn/EspNowCam@^0.1.0
+hpsaturn/EspNowCam@^0.1.6
 ```
 
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.3"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.6"
 ```
 
 **Arduino IDE**:
@@ -61,6 +61,7 @@ Note: Nanobp is not included as a dependency because, despite being 25 years aft
 | freenove-hvga-sender  | ESPNow camera transmitter (HVGA) | <6 FPS |
 | freenove-nojpg-sender  | ESPNow camera transmitter (NOJPG) | DEMO ONLY (<2FPS) |
 | freenove-tank  | Advanced sample. Sender/Receiver | TESTING |
+| xiao-espnow-sender  | ESPNow camera transmitter (QVGA) | STABLE |
 | m5core2-basic-receiver | Video receiver via ESPNow [1] | STABLE |
 | m5core2-espnow-receiver | Video receiver via ESPNow [1] | STABLE |
 | m5cores3-espnow-receiver | Video receiver via ESPNow [1] | STABLE|
@@ -68,7 +69,6 @@ Note: Nanobp is not included as a dependency because, despite being 25 years aft
 | m5stickCplus-joystick-tank | Advanced sample. Custom payload | TESTING |  
 | makerfabs-basic-receiver | Video receiver via ESPNow [2] | STABLE |  
 | makerfabs-nojpg-receiver | Video receiver via ESPNow [2] | DEMO ONLY (<2FPS) |  
-| xiao-espnow-sender  | ESPNow camera transmitter (QVGA) | UNSTABLE |
 
 [1] Use with freenove or M5CoreS3 senders sample  
 [2] Use with freenove HVGA sender sample
@@ -91,6 +91,7 @@ Some examples, only needs run `pio run --target upload` into each directory
 
 - [x] ESP32S3 Cam Freenove
 - [x] M5CoreS3 builtin Camera
+- [x] XIAO ESP32S3 Sense Camera
 
 **Receivers:**
 
@@ -98,7 +99,7 @@ Some examples, only needs run `pio run --target upload` into each directory
 - [x] M5CoreS3
 - [x] Makerfabs Parallel using LGFX
 - [x] TFT 3.5 and 2.5 " using LGFX (ILI9488/9486)
-- [ ] Maybe any TFT with LGFX support (better with PSRAM)
+- [x] Generic TFT with LGFX support (better with PSRAM)
 
 ## TODO
 
@@ -118,10 +119,16 @@ The last version has many improvements, and right now is very stable. It needs s
 
 ## Troubleshooting
 
-The Freenove camera sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
+The **Freenove camera** sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
 
-For Arduino IDE users, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
+The **XIAO camera** experiences thermal issues; after a few minutes, it may stop transmission and won't restart it until it's cooled down.
 
-This library was tested on PlatformIO and works with its manifest, on the other hand, in Arduino IDE (I'm not using it), was compiled and excuting ok, there was using Espressif 2.0.11, Arduino IDE 2.2.1 and enabling PSRAM for the Freenove S3 Camera. I suggest to use PlatformIO instead Arduino IDE, because this last one mix everything, is so buggy and it's more complicated. Thanks to @ElectroZeusTIC and @AcoranTf to test it on Arduino IDE.
+For **Arduino IDE users**, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
+
+This project was developed and thoroughly tested on PlatformIO. While I did compile and execute it successfully on Arduino IDE using Espressif 2.0.11 and Arduino IDE 2.2.1, with PSRAM enabled, I generally avoid using Arduino IDE due to its tendency to mix everything and its buggy nature. Therefore, **I highly recommend using PlatformIO** for a smoother and more reliable development experience.
+
+## Credits
+
+I want to extend my gratitude to @ElectroZeusTIC and @AcoranTf for testing it on Arduino IDE.
 
 ---
