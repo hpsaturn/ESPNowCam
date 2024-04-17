@@ -17,11 +17,9 @@ void processFrame() {
   if (Camera.get()) {
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
-    frame2jpg(Camera.fb, 18, &out_jpg, &out_jpg_len);
-    // Serial.printf("JPG len %i\r\n",out_jpg_len);
+    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len);
     radio.sendData(out_jpg, out_jpg_len);
-    // printFPS("CAM:");
-    // drawFPS();
+    printFPS("CAM:");
     free(out_jpg);
     Camera.free();
   }
@@ -40,6 +38,7 @@ void setup() {
   radio.init();
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
+    ESP.restart();
   }
   delay(500);
 }
