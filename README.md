@@ -38,7 +38,7 @@ hpsaturn/EspNowCam@^0.1.6
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.6"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.7"
 ```
 
 **Arduino IDE**:
