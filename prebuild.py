@@ -14,6 +14,6 @@ os.makedirs(example_lib_dir, 0o755, True)
 if not os.path.exists(dst) and os.name != 'nt':
     os.symlink(src, dst)
     print("Symbolic link created successfully")
-elif os.name == 'nt':
+elif not os.path.exists(dst) and os.name == 'nt':
     shutil.copytree(lib, dst)
     print("Source lib for examples created successfully")
