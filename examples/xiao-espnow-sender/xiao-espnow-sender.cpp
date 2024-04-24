@@ -28,7 +28,7 @@ void processFrame() {
 void setup() {
   Serial.begin(115200);
 
-  delay(5000);
+  delay(5000); // only for debugging 
 
   if(psramFound()){
     size_t psram_size = esp_spiram_get_size() / 1048576;
@@ -38,6 +38,7 @@ void setup() {
   radio.init();
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
+    delay(1000);
     ESP.restart();
   }
   delay(500);
