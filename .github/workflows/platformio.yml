@@ -9,7 +9,7 @@ on:
 
   pull_request:
     branches:
-      - devel
+      - master
     paths-ignore:
       - '**/README.md'
   
