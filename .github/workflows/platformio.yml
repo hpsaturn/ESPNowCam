@@ -3,23 +3,24 @@ name: PlatformIO
 on:
   push:
     branches:
-      - devel
+      - master
     paths-ignore:
       - '**/README.md'
 
   pull_request:
     branches:
-      - master
+      - devel
     paths-ignore:
       - '**/README.md'
   
 jobs:
-  build_linux:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 1
       matrix:
-        python-version: [3.7]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: [3.11]
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python ${{ matrix.python-version }}
@@ -34,27 +35,3 @@ jobs:
       - name: PlatformIO Build Test
         run: |
           pio run
-  build_windows:
-    name: Build binary on Windows 2019
-    runs-on: windows-2019
-    strategy:
-      max-parallel: 1
-      matrix:
-        python-version: [3.7]
-    steps:
-      - uses: actions/checkout@v1
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v1
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -U platformio
-          pio pkg update
-      - name: PlatformIO Build Test
-        run: |
-          pio run
- 
-
- 
