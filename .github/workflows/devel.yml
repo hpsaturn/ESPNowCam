@@ -1,15 +1,9 @@
-name: PlatformIO
+name: Devel
 
 on:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '**/README.md'
-
   pull_request:
     branches:
-      - master
+      - devel
     paths-ignore:
       - '**/README.md'
 
@@ -19,7 +13,7 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/cache@v3
@@ -39,4 +33,4 @@ jobs:
           pio pkg update
       - name: PlatformIO Build Test
         run: |
-          pio run
+          pio run -e freenove-tank

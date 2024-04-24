@@ -1,17 +1,8 @@
-name: PlatformIO
+name: Scheduled
 
 on:
-  push:
-    branches:
-      - master
-    paths-ignore:
-      - '**/README.md'
-
-  pull_request:
-    branches:
-      - master
-    paths-ignore:
-      - '**/README.md'
+  schedule:
+  ¦ - cron:  '30 10 * * 4' 
 
 jobs:
   build:
