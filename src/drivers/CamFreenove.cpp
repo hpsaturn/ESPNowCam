@@ -28,8 +28,7 @@ static camera_config_t camera_config = {
     .jpeg_quality  = 0,
     .fb_count      = 2,
     .fb_location   = CAMERA_FB_IN_PSRAM,
-    .grab_mode     = CAMERA_GRAB_WHEN_EMPTY,
-    .sccb_i2c_port = 0
+    .grab_mode     = CAMERA_GRAB_WHEN_EMPTY
 };
 
 bool CamFreenove::begin() {
