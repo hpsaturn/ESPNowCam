@@ -16,10 +16,11 @@ The ESPNowCam library is a simple and direct video streamer designed for popular
 
 ## Performance
 
-The current version tested with:
+The current version tested with the next cameras:
 
 | Sender | Receiver | Frame size | JPG Quality | FPS | Status |
 |:-----------------|:-----------:|:-------:|:-----:|:------:|:------:|
+| TTGO TJournal Camera (NO PSRAM) | M5Core2 / M5CoreS3 | QVGA | 12 | ~11 FPS | TESTING |
 | Freenove S3 Camera | M5Core2 / M5CoreS3 | QVGA | 12 | ~10 FPS | STABLE |
 | M5CoreS3 builtin Camera | M5Core2 | QVGA | 12  | ~11 FPS | STABLE |
 | Freenove S3 Camera | Makerfabs | HVGA | 12 | ~6 FPS | STABLE |
@@ -57,6 +58,7 @@ Note: Nanobp is not included as a dependency because, despite being 25 years aft
 
 | ENV Name   |    Target      |  Status |
 |:-----------------|:--------------:|:----------:|
+| tjournal-espnow-sender  | ESPNow camera transmitter (QVGA) | TESTING |
 | freenove-basic-sender  | ESPNow camera transmitter (QVGA) | STABLE |
 | freenove-hvga-sender  | ESPNow camera transmitter (HVGA) | <6 FPS |
 | freenove-nojpg-sender  | ESPNow camera transmitter (NOJPG) | DEMO ONLY (<2FPS) |
@@ -89,6 +91,7 @@ Some examples, only needs run `pio run --target upload` into each directory
 
 **Cameras:**
 
+- [x] TTGO T-Journal ESP32 Camera without PSRAM
 - [x] ESP32S3 Cam Freenove
 - [x] M5CoreS3 builtin Camera
 - [x] XIAO ESP32S3 Sense Camera
@@ -108,6 +111,7 @@ Some examples, only needs run `pio run --target upload` into each directory
 - [x] Isolate the ESPNow Receiver and Transmitter in a seperated library
 - [x] Unified and migrated to only one header `ESPNowCam.h`
 - [x] Add sender callback to improve speed
+- [ ] Add callback to Radio send action. issue #20
 - [ ] Migration to esp_wifi_80211_tx() to improve Payload and Quality
 
 ## ESPNow Transmitter and Receiver
