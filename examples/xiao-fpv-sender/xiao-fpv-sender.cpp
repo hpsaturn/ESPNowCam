@@ -16,9 +16,9 @@
 #include <drivers/CamXiao.h>
 #include <Utils.h>
 
-CamXiao Camera;
+CamXiao Camera;  
 ESPNowCam radio;
-OneButton button1(GPIO_NUM_0, true);
+OneButton btnB(GPIO_NUM_0, true);
 
 void processFrame() {
   if (Camera.get()) {
@@ -55,11 +55,11 @@ void setup() {
     delay(1000);
   }
 
-  button1.attachClick([]() { shutdown(); });
+  btnB.attachClick([]() { shutdown(); });
   delay(100);
 }
 
 void loop() {
   processFrame();
-  button1.tick();
+  btnB.tick();
 }

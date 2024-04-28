@@ -1,8 +1,8 @@
-# ESPNowCam - Camera streamer via ESPNow
+# ESPNowCam - Data streamer
 
 [![PlatformIO](https://github.com/hpsaturn/esp32s3-cam/workflows/PlatformIO/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) ![ViewCount](https://views.whatilearened.today/views/github/hpsaturn/esp32s3-cam.svg)  
 
-The ESPNowCam library is a simple and direct video streamer designed for popular ESP32Cam models, utilizing the ESPNow protocol. No need for IPs, routers, or credentials—keeping it straightforward and hassle-free! :D
+The ESPNowCam library is a simple and direct video or data streamer designed for popular ESP32 devices, utilizing the ESPNow protocol. No need for IPs, routers, or credentials—keeping it straightforward and hassle-free! :D
 
 **This library is for general purpose**, as it accepts pointers to various types of data, including buffers, strings, images, or any byte-formatted content. This flexibility enables transmission of larger packages across different scenarios, not limited to cameras alone. For instance, a buffer of 4000 bytes takes approximately 1/9 of a second to transmit, resulting in a frame rate of around 9FPS.
 
@@ -18,13 +18,13 @@ The ESPNowCam library is a simple and direct video streamer designed for popular
 
 The current version tested with the next cameras:
 
-| Sender | Receiver | Frame size | JPG Quality | FPS | Status |
-|:-----------------|:-----------:|:-------:|:-----:|:------:|:------:|
-| TTGO TJournal Camera (NO PSRAM) | M5Core2 / M5CoreS3 | QVGA | 12 | ~11 FPS | TESTING |
-| Freenove S3 Camera | M5Core2 / M5CoreS3 | QVGA | 12 | ~10 FPS | STABLE |
-| M5CoreS3 builtin Camera | M5Core2 | QVGA | 12  | ~11 FPS | STABLE |
-| Freenove S3 Camera | Makerfabs | HVGA | 12 | ~6 FPS | STABLE |
-| XIAO ESP32S3 Camera | M5Core2 / M5CoreS3 | QVGA | 12 | ~9 FPS | STABLE |
+| Sender |  Frame | JPGQ | FPS | Status |
+|:-----------------|:-------:|:-----:|:------:|:------:|
+| TTGO TJournal |  QVGA | 12 | ~11 FPS | TESTING |
+| Freenove S3 | QVGA | 12 | ~10 FPS | STABLE |
+| Freenove S3 | HVGA | 12 | ~6 FPS | STABLE |
+| M5CoreS3  | QVGA | 12  | ~11 FPS | STABLE |
+| XIAO ESP32S3 | QVGA | 12 | ~9 FPS | STABLE |
 
 ## Library installation
 
@@ -91,9 +91,9 @@ Some examples, only needs run `pio run --target upload` into each directory
 
 **Cameras:**
 
-- [x] TTGO T-Journal ESP32 Camera without PSRAM
-- [x] ESP32S3 Cam Freenove
-- [x] M5CoreS3 builtin Camera
+- [x] ESP32 TTGO T-Journal (without PSRAM)
+- [x] ESP32S3 Freenove Camera
+- [x] M5CoreS3 (builtin Camera)
 - [x] XIAO ESP32S3 Sense Camera
 
 **Receivers:**
@@ -116,7 +116,7 @@ Some examples, only needs run `pio run --target upload` into each directory
 
 ## ESPNow Transmitter and Receiver
 
-The last version has many improvements, and right now is very stable. It needs some tiny changes but now it supports ~9FPS with JPG Quality 18.
+The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, and also P2P connections using MAC address. It is possible, using IDs, uses of multiple sources to one receiver.
 
 [![ESPNow Camera Video](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/espnow_video.gif)](https://youtu.be/zXIzP1TGlpA)  
 [[video]](https://youtu.be/zXIzP1TGlpA)
