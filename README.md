@@ -51,19 +51,66 @@ For `Arduino IDE` is a little bit more complicated because the Arduino IDE depen
 
 Note: Nanobp is not included as a dependency because, despite being 25 years after the invention of symbolic links, Arduino IDE does not support these types of files. Consider exploring PlatformIO for your future developments, as it offers a more versatile and modern development environment.
 
-## Examples and Tests
+## Usage
+
+**To send** any kind of data, you only need a buffer and the size to send:
+
+```cpp
+ESPNowCam radio;
+
+radio.init();
+radio.sendData(out_jpg, out_jpg_len);
+```
+
+**To receive** the data, you only need to define a buffer and callback:
+
+```cpp
+radio.setRecvBuffer(fb);
+radio.setRecvCallback(onDataReady);
+radio.init();
+```
+
+```cpp
+void onDataReady(uint32_t lenght) {
+  tft.drawJpg(fb, lenght , 0, 0, dw, dh);
+}
+```
+
+It is also possible to define a specific target:
+
+```cpp
+uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+radio.setTarget(macRecv);
+radio.init();
+```
+
+**Predefined drivers:**
+
+The library includes some pre-defined camera configs to have an easy implementation, for example:
+
+```cpp
+#include <ESPNowCam.h>
+#include <drivers/CamFreenove.h>
+
+CamFreenove Camera;
+```
+
+for now, it includes drivers for FreenoveS3, XIAOS3, and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
+
+## Examples
 
 [![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/nhLr7XEUdfU)  
 [[video]](https://youtu.be/nhLr7XEUdfU)
 
 | ENV Name   |    Target      |  Status |
 |:-----------------|:--------------:|:----------:|
-| tjournal-espnow-sender  | ESPNow camera transmitter (QVGA) | TESTING |
 | freenove-basic-sender  | ESPNow camera transmitter (QVGA) | STABLE |
 | freenove-hvga-sender  | ESPNow camera transmitter (HVGA) | <6 FPS |
 | freenove-nojpg-sender  | ESPNow camera transmitter (NOJPG) | DEMO ONLY (<2FPS) |
-| freenove-tank  | Advanced sample. Sender/Receiver | TESTING |
 | xiao-espnow-sender  | ESPNow camera transmitter (QVGA) | STABLE |
+| xiao-fpv-sender  | Power ON/OFF improvement (QVGA) | STABLE |
+| tjournal-espnow-sender  | Camera without PSRAM (QVGA) | TESTING |
+| freenove-tank  | Advanced sample. Sender/Receiver | TESTING |
 | m5core2-basic-receiver | Video receiver via ESPNow [1] | STABLE |
 | m5core2-espnow-receiver | Video receiver via ESPNow [1] | STABLE |
 | m5cores3-espnow-receiver | Video receiver via ESPNow [1] | STABLE|
@@ -86,6 +133,23 @@ pio run -e m5cores3-espnow-receiver --target upload
 ```
 
 Some examples, only needs run `pio run --target upload` into each directory
+
+## ESPNow Transmitter and Receiver
+
+The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, and also P2P connections using MAC address. It is possible, using IDs, uses of multiple sources to one receiver.
+
+[![ESPNow Camera Video](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/espnow_video.gif)](https://youtu.be/zXIzP1TGlpA)  
+[[video]](https://youtu.be/zXIzP1TGlpA)
+
+## Troubleshooting
+
+The **Freenove camera** sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
+
+The **XIAO camera** experiences thermal issues; after a few minutes, it may stop transmission and won't restart it until it's cooled down.
+
+For **Arduino IDE users**, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
+
+This project was developed and thoroughly tested on PlatformIO. While I did compile and execute it successfully on Arduino IDE using Espressif 2.0.11 and Arduino IDE 2.2.1, with PSRAM enabled, I generally avoid using Arduino IDE due to its tendency to mix everything and its buggy nature. Therefore, **I highly recommend using PlatformIO** for a smoother and more reliable development experience.
 
 ## Tested devices
 
@@ -114,22 +178,7 @@ Some examples, only needs run `pio run --target upload` into each directory
 - [ ] Add callback to Radio send action. issue #20
 - [ ] Migration to esp_wifi_80211_tx() to improve Payload and Quality
 
-## ESPNow Transmitter and Receiver
 
-The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, and also P2P connections using MAC address. It is possible, using IDs, uses of multiple sources to one receiver.
-
-[![ESPNow Camera Video](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/espnow_video.gif)](https://youtu.be/zXIzP1TGlpA)  
-[[video]](https://youtu.be/zXIzP1TGlpA)
-
-## Troubleshooting
-
-The **Freenove camera** sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
-
-The **XIAO camera** experiences thermal issues; after a few minutes, it may stop transmission and won't restart it until it's cooled down.
-
-For **Arduino IDE users**, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
-
-This project was developed and thoroughly tested on PlatformIO. While I did compile and execute it successfully on Arduino IDE using Espressif 2.0.11 and Arduino IDE 2.2.1, with PSRAM enabled, I generally avoid using Arduino IDE due to its tendency to mix everything and its buggy nature. Therefore, **I highly recommend using PlatformIO** for a smoother and more reliable development experience.
 
 ## Credits
 
