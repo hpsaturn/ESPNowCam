@@ -91,7 +91,7 @@ void processFrame() {
 void setup() {
   Serial.begin(115200);
 
-  delay(1000); // only for debugging 
+  delay(5000); // only for debugging 
 
   if(psramFound()){
     has_psram = true;

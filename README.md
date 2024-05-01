@@ -175,6 +175,7 @@ This project was developed and thoroughly tested on PlatformIO. While I did comp
 - [x] ESP32S3 Freenove Camera
 - [x] M5CoreS3 (builtin Camera)
 - [x] XIAO ESP32S3 Sense Camera
+- [x] Unit-CamS3 ([Howto guide](https://zenn.dev/aoya_uta/articles/f8e93d3fbff3d5))
 
 **Receivers:**
 
@@ -189,7 +190,6 @@ This project was developed and thoroughly tested on PlatformIO. While I did comp
 - [x] NanoPb possible issue #1 (payload size)
 - [x] Unified ESPNow in an one class for all transmitters and receivers
 - [x] Isolate the ESPNow Receiver and Transmitter in a seperated library
-- [x] Unified and migrated to only one header `ESPNowCam.h`
 - [x] Add sender callback to improve speed
 - [ ] Add callback to Radio send action. issue #20
 - [ ] Migration to esp_wifi_80211_tx() to improve Payload and Quality

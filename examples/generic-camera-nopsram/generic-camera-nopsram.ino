@@ -72,17 +72,8 @@ bool CameraFree() {
 
 void processFrame() {
   if (CameraGet()) {
-    if (has_psram) {
-      uint8_t *out_jpg = NULL;
-      size_t out_jpg_len = 0;
-      frame2jpg(fb, 12, &out_jpg, &out_jpg_len);
-      radio.sendData(out_jpg, out_jpg_len);
-      free(out_jpg);
-    }
-    else{
-      radio.sendData(fb->buf, fb->len);
-      delay(30); // ==> weird delay for cameras without PSRAM
-    }
+    radio.sendData(fb->buf, fb->len);
+    delay(30); // ==> weird delay for cameras without PSRAM
     printFPS("CAM:");
     CameraFree();
   }
@@ -92,19 +83,6 @@ void setup() {
   Serial.begin(115200);
 
   delay(1000); // only for debugging 
-
-  if(psramFound()){
-    has_psram = true;
-    size_t psram_size = esp_spiram_get_size() / 1048576;
-    Serial.printf("PSRAM size: %dMb\r\n", psram_size);
-    // suggested config with PSRAM
-    camera_config.pixel_format = PIXFORMAT_RGB565;
-    camera_config.fb_location = CAMERA_FB_IN_PSRAM;
-    camera_config.fb_count = 2;
-  }
-  else{
-    Serial.println("PSRAM not found! Basic framebuffer setup.");
-  }
   
   radio.init();
 
