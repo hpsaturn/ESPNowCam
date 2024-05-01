@@ -20,7 +20,7 @@ The current version tested with the next cameras:
 
 | Sender |  Frame | JPGQ | FPS | Status |
 |:-----------------|:-------:|:-----:|:------:|:------:|
-| TTGO TJournal |  QVGA | 12 | ~11 FPS | TESTING |
+| TTGO TJournal |  QVGA | 12 | ~11 FPS | STABLE |
 | Freenove S3 | QVGA | 12 | ~10 FPS | STABLE |
 | Freenove S3 | HVGA | 12 | ~6 FPS | STABLE |
 | M5CoreS3  | QVGA | 12  | ~11 FPS | STABLE |
@@ -102,37 +102,55 @@ for now, it includes drivers for FreenoveS3, XIAOS3, and the TTGO T-Journal came
 [![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/nhLr7XEUdfU)  
 [[video]](https://youtu.be/nhLr7XEUdfU)
 
-| ENV Name   |    Target      |  Status |
+### Transmiter Camera samples
+
+| ENV Name   |    Details      | Frame|   Status |
+|:-----------------|:--------------:|:----------:|:----------:|
+| freenove-basic-sender  | PSRAM, 2FB, JPG | QVGA | STABLE |
+| freenove-hvga-sender  | PSRAM, 2FB, JPG | HVGA | <6 FPS |
+| freenove-nojpg-sender  | PSRAM, 2FB, NOJPG | QVGA | <2FPS |
+| xiao-espnow-sender  |  PSRAM, 2FB, JPG | QVGA | STABLE |
+| xiao-fpv-sender  | POWER ON/OFF, PSRAM, 2FB, JPG | QVGA | STABLE |
+| custom-camera-sender | Custom settings - optional PSRAM | QVGA | STABLE |
+| tjournal-espnow-sender  | NOPSRAM, 1FB, internal JPG | QVGA | STABLE |
+| m5cores3-espnow-sender | PSRAM, 2FB, JPG built-in camera | QVGA | STABLE |
+| | | | |
+
+### Receivers samples
+
+| ENV Name   |    Details      |   Status |
 |:-----------------|:--------------:|:----------:|
-| freenove-basic-sender  | ESPNow camera transmitter (QVGA) | STABLE |
-| freenove-hvga-sender  | ESPNow camera transmitter (HVGA) | <6 FPS |
-| freenove-nojpg-sender  | ESPNow camera transmitter (NOJPG) | DEMO ONLY (<2FPS) |
-| xiao-espnow-sender  | ESPNow camera transmitter (QVGA) | STABLE |
-| xiao-fpv-sender  | Power ON/OFF improvement (QVGA) | STABLE |
-| tjournal-espnow-sender  | Camera without PSRAM (QVGA) | TESTING |
-| freenove-tank  | Advanced sample. Sender/Receiver | TESTING |
-| m5core2-basic-receiver | Video receiver via ESPNow [1] | STABLE |
-| m5core2-espnow-receiver | Video receiver via ESPNow [1] | STABLE |
-| m5cores3-espnow-receiver | Video receiver via ESPNow [1] | STABLE|
-| m5cores3-espnow-sender | ESPNow built-in camera transmitter | STABLE |
-| m5stickCplus-joystick-tank | Advanced sample. Custom payload | TESTING |  
-| makerfabs-basic-receiver | Video receiver via ESPNow [2] | STABLE |  
-| makerfabs-nojpg-receiver | Video receiver via ESPNow [2] | DEMO ONLY (<2FPS) |  
+| m5core2-basic-receiver | Video receiver [1] |  STABLE |
+| m5core2-espnow-receiver | Video receiver [1] |  STABLE |
+| m5cores3-espnow-receiver | Video receiver [1] |  STABLE|
+| makerfabs-basic-receiver | Video receiver [1] [2] |  STABLE |  
+| makerfabs-nojpg-receiver | Video receiver [1] [2] | <2FPS |
+| tft-3.5-basic-receiver | Any TFT display with LGFX [1] | STABLE |
+| | | |
 
-[1] Use with freenove or M5CoreS3 senders sample  
-[2] Use with freenove HVGA sender sample
+[1] Use with any sender sample  
+[2] Use with freenove HVGA sender sample for example.
 
-### Install examples
+### Advanced samples
+
+| ENV Name   |    Details      | Frame|   Status |
+|:-----------------|:--------------:|:----------:|:----------:|
+| xiao-fpv-sender  | POWER ON/OFF, PSRAM, 2FB, JPG | QVGA | STABLE |
+| freenove-tank | sender and custom payload receiver | QVGA | TESTING |
+| m5stickCplus-joystick-tank | custom payload - Telemetry | -- | TESTING |  
+| | | | |
+
+## Running samples
 
 For install and run these tests, first install [PlatformIO](http://platformio.org/) open source ecosystem for IoT development compatible with **Arduino** IDE and its command line tools (Windows, MacOs and Linux). Also, you may need to install [git](http://git-scm.com/) in your system.
 
-For compile and install each sample, only choose one of them envs names in the table, and run the next command in the root of this project, like that:
+For compile and install each sample, only choose one of them envs names in the table, and run the next command in the root of this project, like this:
 
 ```bash
 pio run -e m5cores3-espnow-receiver --target upload
 ```
 
-Some examples, only needs run `pio run --target upload` into each directory
+Some examples, *.ino samples, only needs run `pio run --target upload` into each directory
 
 ## ESPNow Transmitter and Receiver
 
@@ -144,8 +162,6 @@ The last version has many improvements, and right now is very stable. For now, i
 ## Troubleshooting
 
 The **Freenove camera** sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
-
-The **XIAO camera** experiences thermal issues; after a few minutes, it may stop transmission and won't restart it until it's cooled down.
 
 For **Arduino IDE users**, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
 
@@ -162,7 +178,7 @@ This project was developed and thoroughly tested on PlatformIO. While I did comp
 
 **Receivers:**
 
-- [x] M5Core2 (AWS tested)
+- [x] M5Core2 (tested on the AWS version)
 - [x] M5CoreS3
 - [x] Makerfabs Parallel using LGFX
 - [x] TFT 3.5 and 2.5 " using LGFX (ILI9488/9486)
@@ -177,8 +193,6 @@ This project was developed and thoroughly tested on PlatformIO. While I did comp
 - [x] Add sender callback to improve speed
 - [ ] Add callback to Radio send action. issue #20
 - [ ] Migration to esp_wifi_80211_tx() to improve Payload and Quality
-
-
 
 ## Credits
 
