@@ -111,6 +111,7 @@ for now, it includes drivers for FreenoveS3, XIAOS3, and the TTGO T-Journal came
 | freenove-nojpg-sender  | PSRAM, 2FB, NOJPG | QVGA | <2FPS |
 | xiao-espnow-sender  |  PSRAM, 2FB, JPG | QVGA | STABLE |
 | xiao-fpv-sender  | POWER ON/OFF, PSRAM, 2FB, JPG | QVGA | STABLE |
+| unitcams3 | PSRAM, 2FB, JPG | QVGA | TESTING |
 | custom-camera-sender | Custom settings - optional PSRAM | QVGA | STABLE |
 | tjournal-espnow-sender  | NOPSRAM, 1FB, internal JPG | QVGA | STABLE |
 | m5cores3-espnow-sender | PSRAM, 2FB, JPG built-in camera | QVGA | STABLE |
