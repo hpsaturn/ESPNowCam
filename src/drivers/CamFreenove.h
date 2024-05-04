@@ -14,8 +14,8 @@ class CamFreenove : public CameraBase {
     config.pin_pwdn = -1;
     config.pin_reset = -1;
     config.pin_xclk = 15;
-    config.pin_sscb_sda = 4;
-    config.pin_sscb_scl = 5;
+    config.pin_sccb_sda = 4;
+    config.pin_sccb_scl = 5;
     config.pin_d7 = 16;
     config.pin_d6 = 17;
     config.pin_d5 = 18;

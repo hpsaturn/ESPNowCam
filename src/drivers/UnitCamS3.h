@@ -13,8 +13,8 @@ class UnitCamS3 : public CameraBase {
   UnitCamS3() {
     config.pin_reset = 21;
     config.pin_xclk = 11;
-    config.pin_sscb_sda = 17;
-    config.pin_sscb_scl = 41;
+    config.pin_sccb_sda = 17;
+    config.pin_sccb_scl = 41;
     config.pin_d7 = 13;
     config.pin_d6 = 4;
     config.pin_d5 = 10;

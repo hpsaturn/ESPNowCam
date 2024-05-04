@@ -15,8 +15,8 @@ class CamXiao : public CameraBase {
     config.pin_pwdn = PWDN_GPIO_NUM;
     config.pin_reset = RESET_GPIO_NUM;
     config.pin_xclk = XCLK_GPIO_NUM;
-    config.pin_sscb_sda = SIOD_GPIO_NUM;
-    config.pin_sscb_scl = SIOC_GPIO_NUM;
+    config.pin_sccb_sda = SIOD_GPIO_NUM;
+    config.pin_sccb_scl = SIOC_GPIO_NUM;
     config.pin_d7 = Y9_GPIO_NUM;
     config.pin_d6 = Y8_GPIO_NUM;
     config.pin_d5 = Y7_GPIO_NUM;
