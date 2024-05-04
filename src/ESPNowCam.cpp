@@ -79,20 +79,20 @@ bool sendMessage(uint32_t msglen, const uint8_t *mac) {
   esp_err_t result = esp_now_send(mac, send_buffer, msglen);
 
   if (result == ESP_OK) {
-    // Serial.println("send msg success");
+    log_v("send msg success");
     return true;
   } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-    Serial.println("ESPNOW not Init.");
+    log_e("ESPNOW not Init.");
   } else if (result == ESP_ERR_ESPNOW_ARG) {
-    Serial.println("Invalid Argument");
+    log_e("Invalid Argument");
   } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-    Serial.println("Internal Error");
+    log_e("Internal Error");
   } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-    Serial.println("ESP_ERR_ESPNOW_NO_MEM");
+    log_e("ESP_ERR_ESPNOW_NO_MEM");
   } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-    Serial.println("Peer not found.");
+    log_e("Peer not found.");
   } else {
-    Serial.println("Unknown error");
+    log_e("Unknown error");
   }
   return false;
 }
@@ -128,7 +128,7 @@ bool decodeMessage(uint16_t message_length) {
   msg_recv.data.funcs.decode = &decode_data;
   bool status = pb_decode(&stream, Frame_fields, &msg_recv);
   if (!status) {
-    Serial.printf("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
+    log_w("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
     return false;
   }
   return true;
@@ -159,19 +159,19 @@ bool ESPNowCam::init(uint8_t chunk_size) {
   chunksize = chunk_size; 
   chunk_size_left = chunk_size;
   WiFi.mode(WIFI_STA);
-  Serial.println("ESPNow Init");
-  Serial.println(WiFi.macAddress());
+  log_i("ESPNow Init");
+  log_i("%s",WiFi.macAddress().c_str());
   // shutdown wifi
   WiFi.disconnect();
   delay(100);
 
   if (esp_now_init() == ESP_OK) {
-    Serial.println("ESPNow Init Success");
+    log_i("ESPNow Init Success");
     esp_now_register_recv_cb(msgReceiveCb);
     esp_now_register_send_cb(msgSentCb);
     return true;
   } else {
-    Serial.println("ESPNow Init Failed");
+    log_e("ESPNow Init Failed");
     delay(100);
     ESP.restart();
     return false;

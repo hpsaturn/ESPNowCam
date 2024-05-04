@@ -35,7 +35,11 @@ void setup() {
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
   
-  radio.init();
+  if (!radio.init()) {
+    Serial.println("Radio Init Fail");
+    delay(1000);
+  }
+
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
     delay(1000);
