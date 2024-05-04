@@ -32,11 +32,9 @@ void processFrame() {
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
     frame2jpg(CoreS3.Camera.fb, 18, &out_jpg, &out_jpg_len);
-    // Serial.printf("JPG len %i\r\n",out_jpg_len);
-    CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
+    // CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
     radio.sendData(out_jpg, out_jpg_len);
-    // printFPS("CAM:");
-    // drawFPS();
+    printFPS("CAM:");
     free(out_jpg);
     CoreS3.Camera.free();
   }
@@ -65,7 +63,7 @@ void setup() {
   if (!CoreS3.Camera.begin()) {
     CoreS3.Display.drawString("Camera Init Fail", dw / 2, dh / 2);
   }
-  // CoreS3.Display.drawString("Camera Init Success", dw / 2, dh / 2);
+  CoreS3.Display.drawString("Camera Init Success", dw / 2, dh / 2);
   CoreS3.Camera.sensor->set_framesize(CoreS3.Camera.sensor, FRAMESIZE_QVGA);
 
   delay(500);

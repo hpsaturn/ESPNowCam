@@ -95,7 +95,14 @@ The library includes some pre-defined camera configs to have an easy implementat
 CamFreenove Camera;
 ```
 
-for now, it includes drivers for FreenoveS3, XIAOS3, and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
+and you able to change the Camera parameters, e.g:
+
+```cpp
+Camera.config.fb_count = 2;
+Camera.config.frame_size = FRAMESIZE_QQVGA;
+```
+
+For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
 
 ## Examples
 
@@ -192,7 +199,7 @@ This project was developed and thoroughly tested on PlatformIO. While I did comp
 - [x] Unified ESPNow in an one class for all transmitters and receivers
 - [x] Isolate the ESPNow Receiver and Transmitter in a seperated library
 - [x] Add sender callback to improve speed
-- [ ] Add callback to Radio send action. issue #20
+- [x] Added internal drivers for some popular Cameras
 - [ ] Migration to esp_wifi_80211_tx() to improve Payload and Quality
 
 ## Credits

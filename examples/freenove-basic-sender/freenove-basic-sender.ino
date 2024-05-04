@@ -44,6 +44,10 @@ void setup() {
   // uint8_t macRecv[6] = {0xB8,0xFF,0x09,0xC6,0x0E,0xCC};
   // radio.setTarget(macRecv);
   radio.init();
+
+  // You are able to change the Camera config E.g:
+  // Camera.config.fb_count = 2;
+  // Camera.config.frame_size = FRAMESIZE_QQVGA;
   
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
