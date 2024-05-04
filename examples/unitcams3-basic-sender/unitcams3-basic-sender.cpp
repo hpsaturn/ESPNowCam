@@ -28,7 +28,7 @@ void processFrame() {
 void setup() {
   Serial.begin(115200);
 
-  delay(5000); // only for debugging 
+  delay(1000); // only for debugging 
 
   if(psramFound()){
     size_t psram_size = esp_spiram_get_size() / 1048576;
