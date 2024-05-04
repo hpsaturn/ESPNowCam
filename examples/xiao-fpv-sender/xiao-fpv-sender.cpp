@@ -50,6 +50,10 @@ void setup() {
   }
   
   radio.init();
+
+  // You are able to change the Camera config E.g:
+  // Camera.config.frame_size = FRAMESIZE_QQVGA;
+
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
     delay(1000);
