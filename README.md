@@ -23,8 +23,11 @@ The current version tested with the next cameras:
 | TTGO TJournal |  QVGA | 12 | ~11 FPS | STABLE |
 | Freenove S3 | QVGA | 12 | ~10 FPS | STABLE |
 | Freenove S3 | HVGA | 12 | ~6 FPS | STABLE |
-| M5CoreS3  | QVGA | 12  | ~11 FPS | STABLE |
+| M5CoreS3 | QVGA | 12  | ~11 FPS | STABLE |
+| M5UnitCamS3 | QVGA | 12 | ~9 FPS | STABLE |
 | XIAO ESP32S3 | QVGA | 12 | ~9 FPS | STABLE |
+
+[full list of senders and receivers devices](#)
 
 ## Library installation
 
@@ -162,7 +165,7 @@ Some examples, *.ino samples, only needs run `pio run --target upload` into each
 
 ## ESPNow Transmitter and Receiver
 
-The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, and also P2P connections using MAC address. It is possible, using IDs, uses of multiple sources to one receiver.
+The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, and also P2P connections using MAC address. Could works multiple sources to one receiver using an ID for each source
 
 [![ESPNow Camera Video](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/espnow_video.gif)](https://youtu.be/zXIzP1TGlpA)  
 [[video]](https://youtu.be/zXIzP1TGlpA)
@@ -175,7 +178,9 @@ For **Arduino IDE users**, if you have a compiling error, maybe you forget insta
 
 This project was developed and thoroughly tested on PlatformIO. While I did compile and execute it successfully on Arduino IDE using Espressif 2.0.11 and Arduino IDE 2.2.1, with PSRAM enabled, I generally avoid using Arduino IDE due to its tendency to mix everything and its buggy nature. Therefore, **I highly recommend using PlatformIO** for a smoother and more reliable development experience.
 
-## Tested devices
+## Supported Devices
+
+The library was tested on the next devices:
 
 **Cameras:**
 
@@ -183,7 +188,7 @@ This project was developed and thoroughly tested on PlatformIO. While I did comp
 - [x] ESP32S3 Freenove Camera
 - [x] M5CoreS3 (builtin Camera)
 - [x] XIAO ESP32S3 Sense Camera
-- [x] Unit-CamS3 ([Howto guide](https://zenn.dev/aoya_uta/articles/f8e93d3fbff3d5))
+- [x] Unit-CamS3
 
 **Receivers:**
 
@@ -204,6 +209,6 @@ This project was developed and thoroughly tested on PlatformIO. While I did comp
 
 ## Credits
 
-I want to extend my gratitude to @ElectroZeusTIC and @AcoranTf for testing it on Arduino IDE.
+I want to extend my gratitude to @ElectroZeusTIC and @AcoranTf for testing it on Arduino IDE. Also to @UtaAoya for your findings around the M5UnitCam device.
 
 ---
