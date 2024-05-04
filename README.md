@@ -27,7 +27,7 @@ The current version tested with the next cameras:
 | M5UnitCamS3 | QVGA | 12 | ~9 FPS | STABLE |
 | XIAO ESP32S3 | QVGA | 12 | ~9 FPS | STABLE |
 
-[full list of senders and receivers devices](#)
+[Full list of senders and receivers devices supported](#supported-devices)
 
 ## Library installation
 
@@ -36,7 +36,7 @@ The current version tested with the next cameras:
 Add the following line to the lib_deps option of your [env:] section:
 
 ```python
-hpsaturn/EspNowCam@^0.1.6
+hpsaturn/EspNowCam@^0.1.10
 ```
 
 Or via command line:  
@@ -165,7 +165,7 @@ Some examples, *.ino samples, only needs run `pio run --target upload` into each
 
 ## ESPNow Transmitter and Receiver
 
-The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, and also P2P connections using MAC address. Could works multiple sources to one receiver using an ID for each source
+The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, and also P2P connections using MAC address. Could works multiple sources to one receiver using an ID for each source.
 
 [![ESPNow Camera Video](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/espnow_video.gif)](https://youtu.be/zXIzP1TGlpA)  
 [[video]](https://youtu.be/zXIzP1TGlpA)
