@@ -40,6 +40,10 @@ void setup() {
     delay(1000);
   }
 
+  // You are able to change the Camera config E.g:
+  // Camera.config.fb_count = 2;
+  // Camera.config.frame_size = FRAMESIZE_QQVGA;
+
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
     delay(1000);
