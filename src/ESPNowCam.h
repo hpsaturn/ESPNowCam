@@ -8,6 +8,7 @@
 #include "frame.pb.h"
 #include <map>
 #include <vector>
+#include <mutex>
 
 extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
@@ -23,7 +24,7 @@ class ESPNowCam {
  public:
   void setRecvCallback(RecvCb cb);
   void setRecvBuffer(uint8_t *fb);
-  void addMultiSender(uint8_t *fb, const uint8_t *macAddr, RecvCb cb);
+  void setRecvFilter(uint8_t *fb, const uint8_t *macAddr, RecvCb cb);
   bool sendData(uint8_t* data, uint32_t lenght);
   bool setTarget(uint8_t* macAddress);
   bool init(uint8_t chunksize = 244);

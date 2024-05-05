@@ -124,6 +124,8 @@ uint32_t fbpos = 0;
 RecvCb recvCb = nullptr;
 uint8_t *recvBuffer = nullptr;
 
+std::mutex recv_cb_mtx;
+
 Frame msg_recv = Frame_init_zero;
 
 typedef struct struct_receiver {
@@ -133,10 +135,7 @@ typedef struct struct_receiver {
     RecvCb recvCb;
 } struct_receiver;
 
-struct_receiver *curReceiver;
-
-/// receivers map (id,macaddr)
-std::map<uint32_t, std::string> receivers;
+struct_receiver *curReceiver = nullptr;
 
 /// receivers map (id,macaddr)
 typedef std::map<uint32_t, struct_receiver> Buffers;
@@ -200,10 +199,11 @@ bool mulDecodeMessage(uint16_t message_length) {
 
 void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
   // printMacAddress(macAddr); 
+  std::lock_guard<std::mutex> lck(recv_cb_mtx);
   uint32_t id = getReceiverId(macAddr);
   Buffers::const_iterator pos = buffers.find(id);
   if (pos == buffers.end()) {
-    log_e("not receiver regestired");
+    log_v("not receiver regestired");
     return;
   } else {
     curReceiver = (struct_receiver*)(&pos->second);
@@ -218,18 +218,18 @@ void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int dataLen)
 }
 
 bool checkReceiver(const uint8_t *macAddr) {
+  uint32_t id = getReceiverId(macAddr);
+  Buffers::const_iterator pos = buffers.find(id);
   std::map<uint32_t, std::string>::const_iterator iter;
-  iter = receivers.find(getReceiverId(macAddr));
-  if (iter != receivers.end()) return true;
+  if (pos != buffers.end()) return true;
   return false;
 }
 
 void saveReceiver(const uint8_t *macAddr, uint8_t *fb, RecvCb cb) {
   if (!checkReceiver(macAddr)) {
     uint32_t id = getReceiverId(macAddr);
-    Serial.printf("[%02d] New receiverId: %i with MAC: ", receivers.size()+1, id);
+    Serial.printf("[%02d] New receiverId: %i with MAC:\r\n", buffers.size()+1, id);
     printMacAddress(macAddr);
-    receivers.insert(std::make_pair(id, std::string((const char *)macAddr)));
     struct_receiver rcv;
     rcv.fb = fb;
     rcv.fbpos = 0;
@@ -246,7 +246,7 @@ void ESPNowCam::setRecvBuffer(uint8_t *fb) {
   recvBuffer = fb;
 }
 
-void ESPNowCam::addMultiSender(uint8_t *fb, const uint8_t *macAddr, RecvCb cb) {
+void ESPNowCam::setRecvFilter(uint8_t *fb, const uint8_t *macAddr, RecvCb cb) {
   saveReceiver(macAddr, fb, cb);
 }
 
@@ -267,10 +267,13 @@ bool ESPNowCam::init(uint8_t chunk_size) {
   if (esp_now_init() == ESP_OK) {
     log_i("ESPNow Init Success");
 
-    // if(recvCb != nullptr) esp_now_register_recv_cb(msgReceiveCb);
-    esp_now_register_recv_cb(msgReceiveCbByMAC);
-
     esp_now_register_send_cb(msgSentCb);
+    if (recvCb != nullptr) esp_now_register_recv_cb(msgReceiveCb);
+    else if (buffers.size() > 0) esp_now_register_recv_cb(msgReceiveCbByMAC);
+    else {
+      log_e("ESPNow Callback Init Fail!");
+      return false;
+    }
     return true;
   } else {
     log_e("ESPNow Init Failed");
