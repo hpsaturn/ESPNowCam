@@ -8,15 +8,13 @@
 #include "frame.pb.h"
 #include <map>
 #include <vector>
-#include <mutex>
 
 extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
-typedef void (*RecvCbAndMAC)(uint32_t lenght, const uint8_t* macAddress);
 }
 
-#define CSL_VERSION "0.1.10"
-#define CSL_REVISION 075
+#define CSL_VERSION "0.1.11"
+#define CSL_REVISION 076
 
 class ESPNowCam {
  private:

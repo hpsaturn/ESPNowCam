@@ -12,11 +12,9 @@
 
 ESPNowCam radio;
 
-// frame buffer camera1
+// frame buffers cameras:
 uint8_t *fb_camera1; 
-// frame buffer camera2
 uint8_t *fb_camera2; 
-// frame buffer camera2
 uint8_t *fb_camera3;
 // display globals
 int32_t dw, dh;
@@ -27,10 +25,6 @@ void onCamera1DataReady(uint32_t lenght) {
 
 void onCamera2DataReady(uint32_t lenght) {
   M5.Display.drawJpg(fb_camera2, lenght , 161, 0, dw, dh);
-}
-
-void onCamera3DataReady(uint32_t lenght) {
-  M5.Display.drawJpg(fb_camera3, lenght , 0, 121, dw, dh);
 }
 
 void setup() {
@@ -49,21 +43,17 @@ void setup() {
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
   fb_camera1 = (uint8_t*)  ps_malloc(5000* sizeof( uint8_t ) ) ;
   fb_camera2 = (uint8_t*)  ps_malloc(5000* sizeof( uint8_t ) ) ;
-  fb_camera3 = (uint8_t*)  ps_malloc(5000* sizeof( uint8_t ) ) ;
 
   // TJournal Camera  24:0a:c4:2f:8e:90
   uint8_t camera1[6] = {0x24, 0x0A, 0xC4, 0x2F, 0x8E, 0x90};
   // XIAOSense Camera 74:4d:bd:81:4e:fc
   uint8_t camera2[6] = {0x74, 0x4D, 0xBD, 0x81, 0x4E, 0xFC};
-  // M5CoreS3 Camera  f4:12:fa:85:f4:9c
-  uint8_t camera3[6] = {0xF4, 0x12, 0xFA, 0x85, 0xF4, 0x9C};
 
   radio.setRecvFilter(fb_camera1, camera1, onCamera1DataReady);
   radio.setRecvFilter(fb_camera2, camera2, onCamera2DataReady);
-  radio.setRecvFilter(fb_camera3, camera3, onCamera3DataReady);
 
   if (radio.init()) {
-    M5.Display.drawString("ESPNow Init Success", dw / 2, dh / 2 -10);
+    M5.Display.drawString("ESPNow init Success", dw / 2, dh / 2 -10);
   } 
   delay(500);
 }
