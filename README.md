@@ -21,11 +21,11 @@ The current version tested with the next cameras:
 | Sender |  Frame | JPGQ | FPS | Status |
 |:-----------------|:-------:|:-----:|:------:|:------:|
 | TTGO TJournal |  QVGA | 12 | ~11 FPS | STABLE |
+| XIAO ESP32S3 | QVGA | 12 | ~11 FPS | STABLE |
 | Freenove S3 | QVGA | 12 | ~10 FPS | STABLE |
 | Freenove S3 | HVGA | 12 | ~6 FPS | STABLE |
 | M5CoreS3 | QVGA | 12  | ~11 FPS | STABLE |
 | M5UnitCamS3 | QVGA | 12 | ~9 FPS | STABLE |
-| XIAO ESP32S3 | QVGA | 12 | ~9 FPS | STABLE |
 
 [Full list of senders and receivers devices supported](#supported-devices)
 
