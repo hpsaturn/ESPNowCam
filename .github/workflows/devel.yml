@@ -33,4 +33,4 @@ jobs:
           pio pkg update
       - name: PlatformIO Build Test
         run: |
-          pio run -e freenove-tank
+          pio run -e freenove-tank -e makerfabs-multi-receiver -e xiao-camera2
