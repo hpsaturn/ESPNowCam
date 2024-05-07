@@ -6,13 +6,15 @@
 #include <pb_decode.h>
 #include <pb_encode.h>
 #include "frame.pb.h"
+#include <map>
+#include <vector>
 
 extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
 }
 
-#define CSL_VERSION "0.1.10"
-#define CSL_REVISION 075
+#define CSL_VERSION "0.1.11"
+#define CSL_REVISION 076
 
 class ESPNowCam {
  private:
@@ -20,6 +22,7 @@ class ESPNowCam {
  public:
   void setRecvCallback(RecvCb cb);
   void setRecvBuffer(uint8_t *fb);
+  void setRecvFilter(uint8_t *fb, const uint8_t *macAddr, RecvCb cb);
   bool sendData(uint8_t* data, uint32_t lenght);
   bool setTarget(uint8_t* macAddress);
   bool init(uint8_t chunksize = 244);

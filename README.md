@@ -21,11 +21,11 @@ The current version tested with the next cameras:
 | Sender |  Frame | JPGQ | FPS | Status |
 |:-----------------|:-------:|:-----:|:------:|:------:|
 | TTGO TJournal |  QVGA | 12 | ~11 FPS | STABLE |
+| XIAO ESP32S3 | QVGA | 12 | ~11 FPS | STABLE |
 | Freenove S3 | QVGA | 12 | ~10 FPS | STABLE |
 | Freenove S3 | HVGA | 12 | ~6 FPS | STABLE |
 | M5CoreS3 | QVGA | 12  | ~11 FPS | STABLE |
 | M5UnitCamS3 | QVGA | 12 | ~9 FPS | STABLE |
-| XIAO ESP32S3 | QVGA | 12 | ~9 FPS | STABLE |
 
 [Full list of senders and receivers devices supported](#supported-devices)
 
@@ -107,10 +107,22 @@ Camera.config.frame_size = FRAMESIZE_QQVGA;
 
 For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
 
+**Multi camera mode:**
+
+Is possible too configure multiple cameras or senders to only one receiver, N:1 mode, configuring filters by MAC in the receiver:
+
+```cpp
+radio.setRecvFilter(fb_camera1, camera1, onCamera1DataReady);
+radio.setRecvFilter(fb_camera2, camera2, onCamera2DataReady);
+radio.setRecvFilter(fb_camera3, camera3, onCamera3DataReady);
+```
+
+and each camera should have configured the receiver MAC like a target. Fore more details, please follow the [multi-camera-one-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/multi-camera-one-receiver/) directory example.
+
 ## Examples
 
-[![video demo](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/youtube.jpg)](https://youtu.be/nhLr7XEUdfU)  
-[[video]](https://youtu.be/nhLr7XEUdfU)
+[![Tank Example - Video demo](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/tank_example.jpg)](https://youtu.be/nhLr7XEUdfU) [![ESPNowCam Broadcasting - Video demo](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcasting_example.jpg)](https://youtu.be/zXIzP1TGlpA)  
+[[Tank Video]](https://youtu.be/nhLr7XEUdfU) [[Broadcasting Video]](https://youtu.be/zXIzP1TGlpA)
 
 ### Transmiter Camera samples
 
@@ -149,6 +161,10 @@ For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, and the TTGO T
 | xiao-fpv-sender  | POWER ON/OFF, PSRAM, 2FB, JPG | QVGA | STABLE |
 | freenove-tank | sender and custom payload receiver | QVGA | TESTING |
 | m5stickCplus-joystick-tank | custom payload - Telemetry | -- | TESTING |  
+| makerfabs-multi-receiver | N:1 mode, muti camera one receiver | -- | TESTING |  
+| m5cores3-camera1 | One target only for multi-receiver sample | QVGA | TESTING |  
+| tjournal-camera2 | One target only for multi-receiver sample | QQVGA | TESTING |  
+| xiao-camera3 | One target only for multi-receiver sample | QQVGA | TESTING |  
 | | | | |
 
 ## Running samples
@@ -163,12 +179,12 @@ pio run -e m5cores3-espnow-receiver --target upload
 
 Some examples, *.ino samples, only needs run `pio run --target upload` into each directory
 
-## ESPNow Transmitter and Receiver
+## Transmitter and Receiver modes
 
-The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, and also P2P connections using MAC address. Could works multiple sources to one receiver using an ID for each source.
+The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, also P2P connections using MAC address, and multi camera mode with one receiver.
 
-[![ESPNow Camera Video](https://raw.githubusercontent.com/hpsaturn/esp32s3-cam/master/pictures/espnow_video.gif)](https://youtu.be/zXIzP1TGlpA)  
-[[video]](https://youtu.be/zXIzP1TGlpA)
+[![ESPNow Camera Video](pictures/espnow_video.gif)](https://youtu.be/zXIzP1TGlpA)  
+[[1:N mode]](https://youtu.be/zXIzP1TGlpA)
 
 ## Troubleshooting
 

@@ -1,5 +1,5 @@
 /**************************************************
- * ESPNowCam Freenove Transmitter
+ * ESPNowCam video Transmitter
  * by @hpsaturn Copyright (C) 2024
  * This file is part ESP32S3 camera tests project:
  * https://github.com/hpsaturn/esp32s3-cam
@@ -7,41 +7,46 @@
 
 #include <Arduino.h>
 #include <ESPNowCam.h>
-#include <drivers/CamFreenove.h>
-// #include "Utils.h"
+#include <drivers/CamTJournal.h>
+#include <Utils.h>
 
-CamFreenove Camera;
+CamTJournal Camera;
 ESPNowCam radio;
 
 void processFrame() {
   if (Camera.get()) {
-    uint8_t *out_jpg = NULL;
-    size_t out_jpg_len = 0;
-    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len);
-    radio.sendData(out_jpg, out_jpg_len);
-    free(out_jpg);
+    radio.sendData(Camera.fb->buf, Camera.fb->len);
+    delay(60); // ==> weird delay for NOPSRAM camera. 
+    printFPS("CAM:");
     Camera.free();
-    // printFPS("CAM:");
   }
 }
 
 void setup() {
   Serial.begin(115200);
-  Serial.setDebugOutput(true);
-  Serial.println();
-  delay(1000);
+
+  delay(100); // only for debugging 
 
   if(psramFound()){
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
-  
+
+  // M5Core2 receiver MAC: B8:F0:09:C6:0E:CC
+  // uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  // Makerfabs receiver 7C:DF:A1:F3:73:3C
+  uint8_t macRecv[6] = {0x7C,0xDF,0xA1,0xF3,0x73,0x3C};
+  radio.setTarget(macRecv);
   radio.init();
 
-  Camera.config.frame_size = FRAMESIZE_HVGA;
-  
+  // You are able to change the Camera config E.g:
+  Camera.config.fb_count = 1;
+  Camera.config.frame_size = FRAMESIZE_QQVGA;
+
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
+    delay(1000);
+    ESP.restart();
   }
   delay(500);
 }
