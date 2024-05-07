@@ -121,8 +121,7 @@ and each camera should have configured the receiver MAC like a target. Fore more
 
 ## Examples
 
-[![Tank Example - Video demo](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/tank_example.jpg)](https://youtu.be/nhLr7XEUdfU) [![ESPNowCam Broadcasting - Video demo](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcasting_example.jpg)](https://youtu.be/zXIzP1TGlpA)  
-[[Tank Video]](https://youtu.be/nhLr7XEUdfU) [[Broadcasting Video]](https://youtu.be/zXIzP1TGlpA)
+[![Tank Example - Video demo](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/tank_example.jpg)](https://youtu.be/nhLr7XEUdfU) [![ESPNowCam Broadcasting - Video demo](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcasting_example.jpg)](https://youtu.be/zXIzP1TGlpA) [![Multi camera - Video demo](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/multi-camera.jpg)](https://youtu.be/ip6RohVEg2s)
 
 ### Transmiter Camera samples
 
