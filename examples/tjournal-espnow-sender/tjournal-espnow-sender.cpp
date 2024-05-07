@@ -16,7 +16,7 @@ ESPNowCam radio;
 void processFrame() {
   if (Camera.get()) {
     radio.sendData(Camera.fb->buf, Camera.fb->len);
-    delay(35); // ==> weird delay for NOPSRAM camera. 
+    delay(40); // ==> weird delay for NOPSRAM camera. 
     printFPS("CAM:");
     Camera.free();
   }
@@ -36,7 +36,7 @@ void setup() {
 
   // You are able to change the Camera config E.g:
   // Camera.config.fb_count = 2;
-  // Camera.config.frame_size = FRAMESIZE_QQVGA;
+  // Camera.config.frame_size = FRAMESIZE_QVGA;
 
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");

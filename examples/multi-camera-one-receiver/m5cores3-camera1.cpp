@@ -70,6 +70,7 @@ void setup() {
     CoreS3.Display.drawString("Camera Init Fail", dw / 2, dh / 2);
   }
   CoreS3.Display.drawString("Camera Init Success", dw / 2, dh / 2);
+
   CoreS3.Camera.sensor->set_framesize(CoreS3.Camera.sensor, FRAMESIZE_QVGA);
 
   delay(500);
