@@ -180,10 +180,10 @@ Some examples, *.ino samples, only needs run `pio run --target upload` into each
 
 ## Transmitter and Receiver modes
 
-The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, also P2P connections using MAC address, and multi camera mode with one receiver.
+The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, also P2P connections using MAC address, and multi camera mode with one receiver:
 
-[![ESPNow Camera Video](pictures/espnow_video.gif)](https://youtu.be/zXIzP1TGlpA)  
-[[1:N mode]](https://youtu.be/zXIzP1TGlpA)
+[![ESPNowCam broadcast camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcast-camera-mode.gif)](https://youtu.be/zXIzP1TGlpA) [![ESPNowCam multi camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/multi-camera-mode.gif)](https://youtu.be/ip6RohVEg2s)  
+[[1:N mode]](https://youtu.be/zXIzP1TGlpA) [[N:1 mode]](https://youtu.be/ip6RohVEg2s)
 
 ## Troubleshooting
 
