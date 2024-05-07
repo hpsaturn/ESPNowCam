@@ -38,7 +38,7 @@ void setup() {
   
   radio.init();
 
-  Camera.config->frame_size = FRAMESIZE_HVGA;
+  Camera.config.frame_size = FRAMESIZE_HVGA;
   
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");

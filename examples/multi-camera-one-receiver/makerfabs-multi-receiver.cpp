@@ -85,9 +85,9 @@ void setup() {
   }
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb_camera1 = (uint8_t *)ps_malloc(5000 * sizeof(uint8_t));
-  fb_camera2 = (uint8_t *)malloc(5000 * sizeof(uint8_t));
-  fb_camera3 = (uint8_t *)malloc(5000 * sizeof(uint8_t));
+  fb_camera1 = (uint8_t *)ps_malloc(20000 * sizeof(uint8_t));
+  fb_camera2 = (uint8_t *)ps_malloc(10000 * sizeof(uint8_t));
+  fb_camera3 = (uint8_t *)ps_malloc(10000 * sizeof(uint8_t));
 
   // M5CoreS3 Camera  f4:12:fa:85:f4:9c
   uint8_t camera1[6] = {0xF4, 0x12, 0xFA, 0x85, 0xF4, 0x9C};
