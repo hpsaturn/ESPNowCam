@@ -7,7 +7,6 @@
 
 #include <M5CoreS3.h>
 #include "ESPNowCam.h"
-#include "Utils.h"
 
 ESPNowCam radio;
 
@@ -16,9 +15,24 @@ uint8_t *fb;
 // display globals
 int32_t dw, dh;
 
+static uint32_t frame_camera1 = 0;
+static uint_fast64_t time_stamp_camera1 = 0;
+
+static void print_FPS(int x, int y, const char *msg, uint32_t &frame, uint_fast64_t &time_stamp, uint32_t len) {
+  frame++;
+  if (millis() - time_stamp > 1000) {
+    time_stamp = millis();
+    char output[40];
+    sprintf(output, "%s %2d FPS   JPG: %05d\r\n",msg, frame, len);
+    // M5.Display.drawString(output, x, y);
+    frame = 0;
+    Serial.print(output);
+  } 
+}
+
 void onDataReady(uint32_t lenght) {
   CoreS3.Display.drawJpg(fb, lenght , 0, 0, dw, dh);
-  printFPS("M5CoreS3: ");
+  print_FPS(0,0,"cam1",frame_camera1,time_stamp_camera1,lenght);
 }
 
 void setup() {
@@ -39,7 +53,7 @@ void setup() {
   }
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = (uint8_t*)  ps_malloc(5000* sizeof( uint8_t ) ) ;
+  fb = (uint8_t *)ps_malloc(5000 * sizeof(uint8_t));
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);

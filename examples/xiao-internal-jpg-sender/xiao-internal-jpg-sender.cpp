@@ -1,17 +1,24 @@
 /**************************************************
- * ESPNowCam video Transmitter
+ * ESPNowCam video Transmitter.
+ * ----------------------------
+ * 
+ * XIAO FPV ESPNow transmitter uses some extra features of
+ * this board to have some power consumption improvements 
+ *
  * by @hpsaturn Copyright (C) 2024
  * This file is part ESP32S3 camera tests project:
  * https://github.com/hpsaturn/esp32s3-cam
 **************************************************/
 
 #include <Arduino.h>
+#include <OneButton.h>
 #include <ESPNowCam.h>
-#include <drivers/CamTJournal.h>
+#include <drivers/CamXiao.h>
 #include <Utils.h>
 
-CamTJournal Camera;
+CamXiao Camera;  
 ESPNowCam radio;
+OneButton btnB(GPIO_NUM_0, true);
 
 void processFrame() {
   if (Camera.get()) {
@@ -20,6 +27,22 @@ void processFrame() {
     printFPS("CAM:");
     Camera.free();
   }
+  // if (Camera.get()) {
+  //   uint8_t *out_jpg = NULL;
+  //   size_t out_jpg_len = 0;
+  //   frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len);
+  //   radio.sendData(out_jpg, out_jpg_len);
+  //   printFPS("CAM:");
+  //   free(out_jpg);
+  //   Camera.free();
+  // }
+}
+
+void shutdown() {
+  Serial.println("shutdown..");
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_0,0);
+  delay(1000);
+  esp_deep_sleep_start();
 }
 
 void setup() {
@@ -38,17 +61,21 @@ void setup() {
   radio.init();
 
   // You are able to change the Camera config E.g:
-  // Camera.config.fb_count = 2;
-  // Camera.config.frame_size = FRAMESIZE_HVGA;
+  Camera.config.pixel_format = PIXFORMAT_JPEG;
+  Camera.config.frame_size = FRAMESIZE_QVGA;
+  Camera.config.fb_count = 2;
+  Camera.config.fb_location = CAMERA_FB_IN_DRAM;
 
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
     delay(1000);
-    ESP.restart();
   }
-  delay(500);
+
+  btnB.attachClick([]() { shutdown(); });
+  delay(100);
 }
 
 void loop() {
   processFrame();
+  btnB.tick();
 }

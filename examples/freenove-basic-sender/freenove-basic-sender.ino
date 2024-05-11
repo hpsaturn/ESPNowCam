@@ -41,8 +41,10 @@ void setup() {
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
 
-  // uint8_t macRecv[6] = {0xB8,0xFF,0x09,0xC6,0x0E,0xCC};
-  // radio.setTarget(macRecv);
+  // M5Core2 receiver
+  // uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  uint8_t macRecv[6] = {0xF4,0x12,0xFA,0x85,0xF4,0x9C};
+  radio.setTarget(macRecv);
   radio.init();
 
   // You are able to change the Camera config E.g:

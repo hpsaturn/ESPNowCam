@@ -30,8 +30,8 @@ static void print_FPS(int x, int y, const char *msg, uint32_t &frame, uint_fast6
   if (millis() - time_stamp > 1000) {
     time_stamp = millis();
     char output[40];
-    sprintf(output, "%s %2d FPS   JPG: %05d\r\n",msg, frame, len);
-    // tft.drawString(output, x, y);
+    sprintf(output, "%s%2d FPS  JPG: %05d\r\n",msg, frame, len);
+    tft.drawString(output, x, y);
     frame = 0;
     Serial.print(output);
   } 
@@ -64,7 +64,7 @@ void setup() {
   }
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = (uint8_t *)ps_malloc(20000 * sizeof(uint8_t));
+  fb = (uint8_t *)ps_malloc(30000 * sizeof(uint8_t));
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);

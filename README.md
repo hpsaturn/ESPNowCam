@@ -14,9 +14,16 @@ The ESPNowCam library is a simple and direct video or data streamer designed for
   </tr>
 </table>
 
+## Features
+
+The latest version brings numerous enhancements and is currently highly stable. It offers support for various transmission modes, including one transmitter to multiple receivers in real-time using the internal ESPNow broadcasting feature (1:N), peer-to-peer (P2P) connections utilizing MAC address targeting (1:1), and multi-sender mode with one receiver (N:1). It's important to note that the library is versatile and capable of transmitting various types of data, not limited to video.
+
+[![ESPNowCam broadcast camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcast-camera-mode.gif)](https://youtu.be/zXIzP1TGlpA) [![ESPNowCam P2P mode](pictures/p2p-camera-mode.gif)](https://youtu.be/zXIzP1TGlpA) [![ESPNowCam multi camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/multi-camera-mode.gif)](https://youtu.be/ip6RohVEg2s)  
+[[1:N mode video]](https://youtu.be/zXIzP1TGlpA) [[1:1 mode video]]() [[N:1 mode video]](https://youtu.be/ip6RohVEg2s)
+
 ## Performance
 
-The current version tested with the next cameras:
+The current version was tested with the next cameras:
 
 | Sender |  Frame | PSRAM | JPGQ | FPS | Status |
 |:---------|:-----:|:-----:|:------:|:-------:|:------:|
@@ -36,13 +43,13 @@ The current version tested with the next cameras:
 Add the following line to the lib_deps option of your [env:] section:
 
 ```python
-hpsaturn/EspNowCam@^0.1.10
+hpsaturn/EspNowCam@^0.1.11
 ```
 
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.7"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.11"
 ```
 
 **Arduino IDE**:
@@ -87,7 +94,19 @@ radio.setTarget(macRecv);
 radio.init();
 ```
 
-**Predefined drivers:**
+### Multi camera mode:**
+
+Is possible too configure multiple cameras or senders to only one receiver, N:1 mode, configuring filters by MAC in the receiver:
+
+```cpp
+radio.setRecvFilter(fb_cam1, mac_cam1, onCam1DataReady);
+radio.setRecvFilter(fb_cam2, mac_cam2, onCam2DataReady);
+radio.setRecvFilter(fb_cam3, mac_cam3, onCam3DataReady);
+```
+
+and each camera should have configured the receiver MAC like a target. Fore more details, please follow the [multi-camera-one-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/multi-camera-one-receiver/) directory example.
+
+### Predefined drivers
 
 The library includes some pre-defined camera configs to have an easy implementation, for example:
 
@@ -106,18 +125,6 @@ Camera.config.frame_size = FRAMESIZE_QQVGA;
 ```
 
 For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
-
-**Multi camera mode:**
-
-Is possible too configure multiple cameras or senders to only one receiver, N:1 mode, configuring filters by MAC in the receiver:
-
-```cpp
-radio.setRecvFilter(fb_camera1, camera1, onCamera1DataReady);
-radio.setRecvFilter(fb_camera2, camera2, onCamera2DataReady);
-radio.setRecvFilter(fb_camera3, camera3, onCamera3DataReady);
-```
-
-and each camera should have configured the receiver MAC like a target. Fore more details, please follow the [multi-camera-one-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/multi-camera-one-receiver/) directory example.
 
 ## Examples
 
@@ -178,13 +185,6 @@ pio run -e m5cores3-espnow-receiver --target upload
 
 Some examples, *.ino samples, only needs run `pio run --target upload` into each directory
 
-## Transmitter and Receiver modes
-
-The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, also P2P connections using MAC address, and multi camera mode with one receiver:
-
-[![ESPNowCam broadcast camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcast-camera-mode.gif)](https://youtu.be/zXIzP1TGlpA) [![ESPNowCam multi camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/multi-camera-mode.gif)](https://youtu.be/ip6RohVEg2s)  
-[[1:N mode]](https://youtu.be/zXIzP1TGlpA) [[N:1 mode]](https://youtu.be/ip6RohVEg2s)
-
 ## Troubleshooting
 
 The **Freenove camera** sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
@@ -203,7 +203,7 @@ The library was tested on the next devices:
 - [x] ESP32S3 Freenove Camera
 - [x] M5CoreS3 (builtin Camera)
 - [x] XIAO ESP32S3 Sense Camera
-- [x] Unit-CamS3
+- [x] M5UnitCamS3
 
 **Receivers:**
 
@@ -220,6 +220,7 @@ The library was tested on the next devices:
 - [x] Isolate the ESPNow Receiver and Transmitter in a seperated library
 - [x] Add sender callback to improve speed
 - [x] Added internal drivers for some popular Cameras
+- [x] Added multi-camera support with one only target
 - [ ] Migration to esp_wifi_80211_tx() to improve Payload and Quality
 
 ## Credits
