@@ -14,6 +14,13 @@ The ESPNowCam library is a simple and direct video or data streamer designed for
   </tr>
 </table>
 
+## Features
+
+The latest version brings numerous enhancements and is currently highly stable. It offers support for various transmission modes, including one transmitter to multiple receivers in real-time using the internal ESPNow broadcasting feature (1:N), peer-to-peer (P2P) connections utilizing MAC address targeting (1:1), and multi-sender mode with one receiver (N:1). It's important to note that the library is versatile and capable of transmitting various types of data, not limited to video.
+
+[![ESPNowCam broadcast camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcast-camera-mode.gif)](https://youtu.be/zXIzP1TGlpA) [![ESPNowCam P2P mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/p2p-camera-mode.gif)](https://youtu.be/zXIzP1TGlpA) [![ESPNowCam multi camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/multi-camera-mode.gif)](https://youtu.be/ip6RohVEg2s)  
+[[1:N mode video]](https://youtu.be/zXIzP1TGlpA) [[1:1 mode video]]() [[N:1 mode video]](https://youtu.be/ip6RohVEg2s)
+
 ## Performance
 
 The current version was tested with the next cameras:
@@ -177,13 +184,6 @@ pio run -e m5cores3-espnow-receiver --target upload
 ```
 
 Some examples, *.ino samples, only needs run `pio run --target upload` into each directory
-
-## Transmitter and Receiver modes
-
-The last version has many improvements, and right now is very stable. For now, it supports one transmitter and multiple receivers in real time using broadcast, also P2P connections using MAC address, and multi camera mode with one receiver:
-
-[![ESPNowCam broadcast camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcast-camera-mode.gif)](https://youtu.be/zXIzP1TGlpA) [![ESPNowCam multi camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/multi-camera-mode.gif)](https://youtu.be/ip6RohVEg2s)  
-[[1:N mode]](https://youtu.be/zXIzP1TGlpA) [[N:1 mode]](https://youtu.be/ip6RohVEg2s)
 
 ## Troubleshooting
 

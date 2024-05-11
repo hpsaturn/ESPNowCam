@@ -43,6 +43,7 @@ void setup() {
 
   if (radio.init()) {
     M5.Display.drawString("ESPNow Init Success", dw / 2, dh / 2);
+    Serial.println("ESPNow Init Success");
   } 
   delay(500);
 }
