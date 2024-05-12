@@ -94,7 +94,7 @@ radio.setTarget(macRecv);
 radio.init();
 ```
 
-### Multi camera mode:**
+### Multi camera mode
 
 Is possible too configure multiple cameras or senders to only one receiver, N:1 mode, configuring filters by MAC in the receiver:
 
