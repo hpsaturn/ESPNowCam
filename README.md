@@ -43,13 +43,13 @@ The current version was tested with the next cameras:
 Add the following line to the lib_deps option of your [env:] section:
 
 ```python
-hpsaturn/EspNowCam@^0.1.11
+hpsaturn/EspNowCam@^0.1.12
 ```
 
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.11"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.12"
 ```
 
 **Arduino IDE**:
@@ -86,7 +86,11 @@ void onDataReady(uint32_t lenght) {
 }
 ```
 
-It is also possible to define a specific target:
+Note: if you don't define any specific target, the radio will work in broadcasting mode, that means **1:N mode**, for instance one camera sending video to multiple screen receivers.
+
+### P2P mode (1:1)
+
+It's also possible to define a specific target:
 
 ```cpp
 uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
@@ -94,7 +98,9 @@ radio.setTarget(macRecv);
 radio.init();
 ```
 
-### Multi camera mode
+Note: this mode is very recommended to increase the performance, and also it reduces the noise and possible glitches.
+
+### Multi camera mode (N:1)
 
 Is possible too configure multiple cameras or senders to only one receiver, N:1 mode, configuring filters by MAC in the receiver:
 
@@ -124,7 +130,23 @@ Camera.config.fb_count = 2;
 Camera.config.frame_size = FRAMESIZE_QQVGA;
 ```
 
-For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
+For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
+
+### PSRAM or DRAM?
+
+Well, in my last tests with different cameras and using QVGA frame size, sounds that is better using the DRAM and the internal JPG. DRAM is more faster, and the internal compressor
+has a better quality but it uses more bandwidth. The result is so good on P2P mode.
+
+For change to DRAM and the internal JPG, you are able to pre-configure it like this:
+
+```cpp
+Camera.config.pixel_format = PIXFORMAT_JPEG;
+Camera.config.frame_size = FRAMESIZE_QVGA;
+Camera.config.fb_count = 2;
+Camera.config.fb_location = CAMERA_FB_IN_DRAM;
+```
+
+more details in the sample [xiao-internal-jpg-sender](examples/xiao-internal-jpg-sender/).
 
 ## Examples
 
@@ -134,16 +156,15 @@ For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, and the TTGO T
 
 | ENV Name   |    Details      | Frame|   Status |
 |:-----------------|:--------------:|:----------:|:----------:|
-| freenove-basic-sender  | PSRAM, 2FB, JPG | QVGA | STABLE |
+| freenove-p2p-sender  | PSRAM, 2FB, JPG | QVGA | STABLE |
 | freenove-hvga-sender  | PSRAM, 2FB, JPG | HVGA | <6 FPS |
 | freenove-nojpg-sender  | PSRAM, 2FB, NOJPG | QVGA | <2FPS |
 | xiao-espnow-sender  |  PSRAM, 2FB, JPG | QVGA | STABLE |
-| xiao-fpv-sender  | POWER ON/OFF, PSRAM, 2FB, JPG | QVGA | STABLE |
-| unitcams3 | PSRAM, 2FB, JPG | QVGA | TESTING |
+| unitcams3-basic-sender | PSRAM, 2FB, JPG | QVGA | TESTING |
 | custom-camera-sender | Custom settings - optional PSRAM | QVGA | STABLE |
 | tjournal-espnow-sender  | NOPSRAM, 1FB, internal JPG | QVGA | STABLE |
 | m5cores3-espnow-sender | PSRAM, 2FB, JPG built-in camera | QVGA | STABLE |
-| | | | |
+| esp32cam-p2p-sender | PSRAM, 1FB, IDF-JPG | QVGA | UNTESTED |
 
 ### Receivers samples
 
@@ -155,7 +176,6 @@ For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, and the TTGO T
 | makerfabs-basic-receiver | Video receiver [1] [2] |  STABLE |  
 | makerfabs-nojpg-receiver | Video receiver [1] [2] | <2FPS |
 | tft-3.5-basic-receiver | Any TFT display with LGFX [1] | STABLE |
-| | | |
 
 [1] Use with any sender sample  
 [2] Use with freenove HVGA sender sample for example.
@@ -165,13 +185,13 @@ For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, and the TTGO T
 | ENV Name   |    Details      | Frame|   Status |
 |:-----------------|:--------------:|:----------:|:----------:|
 | xiao-fpv-sender  | POWER ON/OFF, PSRAM, 2FB, JPG | QVGA | STABLE |
+| xiao-internal-jpg-sender  | POWER ON/OFF, NOPSRAM, 2FB, IDF-JPG | QVGA | STABLE |
 | freenove-tank | sender and custom payload receiver | QVGA | TESTING |
 | m5stickCplus-joystick-tank | custom payload - Telemetry | -- | TESTING |  
 | makerfabs-multi-receiver | N:1 mode, muti camera one receiver | -- | TESTING |  
 | m5cores3-camera1 | One target only for multi-receiver sample | QVGA | TESTING |  
 | tjournal-camera2 | One target only for multi-receiver sample | QQVGA | TESTING |  
 | xiao-camera3 | One target only for multi-receiver sample | QQVGA | TESTING |  
-| | | | |
 
 ## Running samples
 
@@ -186,6 +206,8 @@ pio run -e m5cores3-espnow-receiver --target upload
 Some examples, *.ino samples, only needs run `pio run --target upload` into each directory
 
 ## Troubleshooting
+
+To increase the performance, **the recommended use is the 1:1 mode**, and also is a good practice to configure the other radio senders around of this device in this mode, because if you have other senders in broadcasting mode together, them could be generating interference.
 
 The **Freenove camera** sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
 
@@ -204,6 +226,7 @@ The library was tested on the next devices:
 - [x] M5CoreS3 (builtin Camera)
 - [x] XIAO ESP32S3 Sense Camera
 - [x] M5UnitCamS3
+- [ ] ESP32Cam AI-Thinker (untested. Help wanted)
 
 **Receivers:**
 

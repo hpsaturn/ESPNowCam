@@ -1,8 +1,8 @@
 /**************************************************
  * ESP32Cam Freenove ESPNow Transmitter
  * by @hpsaturn Copyright (C) 2024
- * This file is part ESP32S3 camera tests project:
- * https://github.com/hpsaturn/esp32s3-cam
+ * This file is part ESPNowCam project:
+ * https://github.com/hpsaturn/ESPNowCam
 **************************************************/
 
 // N O T E:
@@ -13,7 +13,6 @@
 #include <Arduino.h>
 #include <ESPNowCam.h>
 #include <drivers/CamFreenove.h>
-// #include <Utils.h>
 
 CamFreenove Camera;
 ESPNowCam radio;
@@ -26,7 +25,6 @@ void processFrame() {
     radio.sendData(out_jpg, out_jpg_len);
     free(out_jpg);
     Camera.free();
-    // printFPS("CAM:");
   }
 }
 
@@ -34,17 +32,17 @@ void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
-  delay(1000);
+
+  delay(1000); // only for debugging.
 
   if(psramFound()){
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
 
-  // M5Core2 receiver
+  // M5Core2 receiver target (P2P or 1:1 mode)
   // uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
-  uint8_t macRecv[6] = {0xF4,0x12,0xFA,0x85,0xF4,0x9C};
-  radio.setTarget(macRecv);
+  // radio.setTarget(macRecv);
   radio.init();
 
   // You are able to change the Camera config E.g:

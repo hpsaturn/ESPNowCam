@@ -1,11 +1,9 @@
 /**************************************************
  * ESPNowCam Transmitter without JPG compression (very slow)
- *
  * Use with: makerfabs-nojpg-receiver example
- * 
  * by @hpsaturn Copyright (C) 2024
- * This file is part ESPNowCam examples:
- * https://github.com/hpsaturn/esp32s3-cam
+ * This file is part ESPNowCam project:
+ * https://github.com/hpsaturn/ESPNowCam
 **************************************************/
 
 #include <Arduino.h>
