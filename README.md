@@ -34,6 +34,8 @@ The current version was tested with the next cameras:
 | M5CoreS3 | QVGA | Yes | 12  | ~11 FPS | STABLE |
 | M5UnitCamS3 | QVGA | Yes | 12 | ~9 FPS | STABLE |
 
+
+
 [Full list of senders and receivers devices supported](#supported-devices)
 
 ## Library installation
@@ -43,13 +45,13 @@ The current version was tested with the next cameras:
 Add the following line to the lib_deps option of your [env:] section:
 
 ```python
-hpsaturn/EspNowCam@^0.1.11
+hpsaturn/EspNowCam@^0.1.12
 ```
 
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.11"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.12"
 ```
 
 **Arduino IDE**:
@@ -86,7 +88,11 @@ void onDataReady(uint32_t lenght) {
 }
 ```
 
-It is also possible to define a specific target:
+Note: if you don't define any specific target, the radio will work in broadcasting mode, that means **1:N mode**, for instance one camera sending video to multiple screen receivers.
+
+### P2P mode (1:1)
+
+It's also possible to define a specific target:
 
 ```cpp
 uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
@@ -94,7 +100,9 @@ radio.setTarget(macRecv);
 radio.init();
 ```
 
-### Multi camera mode
+Note: this mode is very recommended to increase the performance, and also it reduces the noise and possible glitches.
+
+### Multi camera mode (N:1)
 
 Is possible too configure multiple cameras or senders to only one receiver, N:1 mode, configuring filters by MAC in the receiver:
 
@@ -124,7 +132,7 @@ Camera.config.fb_count = 2;
 Camera.config.frame_size = FRAMESIZE_QQVGA;
 ```
 
-For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
+For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
 
 ## Examples
 
@@ -186,6 +194,8 @@ pio run -e m5cores3-espnow-receiver --target upload
 Some examples, *.ino samples, only needs run `pio run --target upload` into each directory
 
 ## Troubleshooting
+
+To increase the performance, **the recommended use is the 1:1 mode**, and also is a good practice to configure the other radio senders around of this device in this mode, because if you have other senders in broadcasting mode together, them could be generating interference.
 
 The **Freenove camera** sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
 
