@@ -134,8 +134,7 @@ For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, ESP32Cam AI-Th
 
 ### PSRAM or DRAM?
 
-Well, in my last tests with different cameras and using QVGA frame size, sounds that is better using the DRAM and the internal JPG. DRAM is more faster, and the internal compressor
-has a better quality but it uses more bandwidth. The result is so good on P2P mode.
+Well, in my last tests with different cameras and using QVGA frame size, seems that is better using the DRAM and the internal JPG. DRAM is more faster than PSRAM, and the internal compressor has a better quality with the same JPGQ level, but it uses more bandwidth, on the other hand the result is so good on P2P mode.
 
 For change to DRAM and the internal JPG, you are able to pre-configure it like this:
 
