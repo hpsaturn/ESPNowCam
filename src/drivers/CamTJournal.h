@@ -13,8 +13,8 @@ class CamTJournal : public CameraBase {
   CamTJournal(){
     config.pin_reset = 15;
     config.pin_xclk = 27;
-    config.pin_sscb_sda = 25;
-    config.pin_sscb_scl = 23;
+    config.pin_sccb_sda = 25;
+    config.pin_sccb_scl = 23;
     config.pin_d7 = 19;
     config.pin_d6 = 36;
     config.pin_d5 = 18;
