@@ -1,8 +1,8 @@
 /**************************************************
- * ESP32Cam Freenove ESPNow Transmitter
+ * ESP32Cam Freenove Tank Transmitter and Receiver
  * by @hpsaturn Copyright (C) 2024
- * This file is part ESP32S3 camera tests project:
- * https://github.com/hpsaturn/esp32s3-cam
+ * This file is part ESPNowCam project:
+ * https://github.com/hpsaturn/ESPNowCam
 **************************************************/
 
 #include <Arduino.h>

@@ -34,8 +34,6 @@ The current version was tested with the next cameras:
 | M5CoreS3 | QVGA | Yes | 12  | ~11 FPS | STABLE |
 | M5UnitCamS3 | QVGA | Yes | 12 | ~9 FPS | STABLE |
 
-
-
 [Full list of senders and receivers devices supported](#supported-devices)
 
 ## Library installation

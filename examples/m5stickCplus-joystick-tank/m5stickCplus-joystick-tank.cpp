@@ -1,3 +1,10 @@
+/**************************************************
+ * ESPNowCam Joystick Transmitter
+ * by @hpsaturn Copyright (C) 2024
+ * This file is part ESPNowCam project:
+ * https://github.com/hpsaturn/ESPNowCam
+**************************************************/
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <M5Unified.h>

@@ -1,8 +1,8 @@
 /**************************************************
  * ESP32Cam Freenove ESPNow Transmitter
  * by @hpsaturn Copyright (C) 2024
- * This file is part ESP32S3 camera tests project:
- * https://github.com/hpsaturn/esp32s3-cam
+ * This file is part ESPNowCam project:
+ * https://github.com/hpsaturn/ESPNowCam
 **************************************************/
 
 // N O T E:
