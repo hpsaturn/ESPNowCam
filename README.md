@@ -134,6 +134,22 @@ Camera.config.frame_size = FRAMESIZE_QQVGA;
 
 For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
 
+### PSRAM or DRAM?
+
+Well, in my last tests with different cameras and using QVGA frame size, sounds that is better using the DRAM and the internal JPG. DRAM is more faster, and the internal compressor
+has a better quality but it uses more bandwidth. The result is so good on P2P mode.
+
+For change to DRAM and the internal JPG, you are able to pre-configure it like this:
+
+```cpp
+Camera.config.pixel_format = PIXFORMAT_JPEG;
+Camera.config.frame_size = FRAMESIZE_QVGA;
+Camera.config.fb_count = 2;
+Camera.config.fb_location = CAMERA_FB_IN_DRAM;
+```
+
+more details in the sample [xiao-internal-jpg-sender](examples/xiao-internal-jpg-sender/).
+
 ## Examples
 
 [![Tank Example - Video demo](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/tank_example.jpg)](https://youtu.be/nhLr7XEUdfU) [![ESPNowCam Broadcasting - Video demo](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcasting_example.jpg)](https://youtu.be/zXIzP1TGlpA) [![Multi camera - Video demo](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/multi-camera.jpg)](https://youtu.be/ip6RohVEg2s)
@@ -142,16 +158,14 @@ For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, ESP32Cam AI-Th
 
 | ENV Name   |    Details      | Frame|   Status |
 |:-----------------|:--------------:|:----------:|:----------:|
-| freenove-basic-sender  | PSRAM, 2FB, JPG | QVGA | STABLE |
+| freenove-p2p-sender  | PSRAM, 2FB, JPG | QVGA | STABLE |
 | freenove-hvga-sender  | PSRAM, 2FB, JPG | HVGA | <6 FPS |
 | freenove-nojpg-sender  | PSRAM, 2FB, NOJPG | QVGA | <2FPS |
 | xiao-espnow-sender  |  PSRAM, 2FB, JPG | QVGA | STABLE |
-| xiao-fpv-sender  | POWER ON/OFF, PSRAM, 2FB, JPG | QVGA | STABLE |
-| unitcams3 | PSRAM, 2FB, JPG | QVGA | TESTING |
+| unitcams3-basic-sender | PSRAM, 2FB, JPG | QVGA | TESTING |
 | custom-camera-sender | Custom settings - optional PSRAM | QVGA | STABLE |
 | tjournal-espnow-sender  | NOPSRAM, 1FB, internal JPG | QVGA | STABLE |
 | m5cores3-espnow-sender | PSRAM, 2FB, JPG built-in camera | QVGA | STABLE |
-| | | | |
 
 ### Receivers samples
 
@@ -163,7 +177,6 @@ For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, ESP32Cam AI-Th
 | makerfabs-basic-receiver | Video receiver [1] [2] |  STABLE |  
 | makerfabs-nojpg-receiver | Video receiver [1] [2] | <2FPS |
 | tft-3.5-basic-receiver | Any TFT display with LGFX [1] | STABLE |
-| | | |
 
 [1] Use with any sender sample  
 [2] Use with freenove HVGA sender sample for example.
@@ -173,13 +186,13 @@ For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, ESP32Cam AI-Th
 | ENV Name   |    Details      | Frame|   Status |
 |:-----------------|:--------------:|:----------:|:----------:|
 | xiao-fpv-sender  | POWER ON/OFF, PSRAM, 2FB, JPG | QVGA | STABLE |
+| xiao-internal-jpg-sender  | POWER ON/OFF, NOPSRAM, 2FB, IDF-JPG | QVGA | STABLE |
 | freenove-tank | sender and custom payload receiver | QVGA | TESTING |
 | m5stickCplus-joystick-tank | custom payload - Telemetry | -- | TESTING |  
 | makerfabs-multi-receiver | N:1 mode, muti camera one receiver | -- | TESTING |  
 | m5cores3-camera1 | One target only for multi-receiver sample | QVGA | TESTING |  
 | tjournal-camera2 | One target only for multi-receiver sample | QQVGA | TESTING |  
 | xiao-camera3 | One target only for multi-receiver sample | QQVGA | TESTING |  
-| | | | |
 
 ## Running samples
 
