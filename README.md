@@ -129,7 +129,7 @@ The library includes some pre-defined camera configs to have an easy implementat
 CamFreenove Camera;
 ```
 
-For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
+For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me :D
 
 ### PSRAM or DRAM?
 
@@ -144,7 +144,7 @@ Camera.config.fb_count = 2;
 Camera.config.fb_location = CAMERA_FB_IN_DRAM;
 ```
 
-more details in the sample [xiao-internal-jpg-sender](examples/xiao-internal-jpg-sender/).
+more details in the sample [xiao-internal-jpg-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-internal-jpg-sender).
 
 ## Examples
 
@@ -158,7 +158,11 @@ Then compile and install each sample, only choose one of them **ENV names** in [
 pio run -e m5cores3-espnow-receiver --target upload
 ```
 
-Some examples are for Arduino users (*.ino samples), but is possible too compile and install it from PlatformIO, only needs run `pio run --target upload` into each directory.
+Some examples are for Arduino users (*.ino samples), but is possible too compile and install it from PlatformIO, only needs run the next command into each directory:
+
+ ```bash
+ pio run --target upload
+ ```
 
 ## Troubleshooting
 
