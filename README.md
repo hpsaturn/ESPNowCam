@@ -34,7 +34,7 @@ The current version was tested with the next cameras:
 | M5CoreS3 | QVGA | Yes | 12  | ~11 FPS | STABLE |
 | M5UnitCamS3 | QVGA | Yes | 12 | ~9 FPS | STABLE |
 
-[Full list of senders and receivers devices supported](#supported-devices)
+[Full list of senders and receivers that was tested](https://github.com/hpsaturn/ESPNowCam/wiki/Supported-Devices)
 
 ## Library installation
 
@@ -123,13 +123,6 @@ The library includes some pre-defined camera configs to have an easy implementat
 CamFreenove Camera;
 ```
 
-and you able to change the Camera parameters, e.g:
-
-```cpp
-Camera.config.fb_count = 2;
-Camera.config.frame_size = FRAMESIZE_QQVGA;
-```
-
 For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
 
 ### PSRAM or DRAM?
@@ -170,27 +163,6 @@ The **Freenove camera** sometimes needs good power cable and also takes some sec
 For **Arduino IDE users**, if you have a compiling error, maybe you forget install NanoPb library. Please see above.
 
 This project was developed and thoroughly tested on PlatformIO. While I did compile and execute it successfully on Arduino IDE using Espressif 2.0.11 and Arduino IDE 2.2.1, with PSRAM enabled, I generally avoid using Arduino IDE due to its tendency to mix everything and its buggy nature. Therefore, **I highly recommend using PlatformIO** for a smoother and more reliable development experience.
-
-## Supported Devices
-
-The library was tested on the next devices:
-
-**Cameras:**
-
-- [x] ESP32 TTGO T-Journal (without PSRAM)
-- [x] ESP32S3 Freenove Camera
-- [x] M5CoreS3 (builtin Camera)
-- [x] XIAO ESP32S3 Sense Camera
-- [x] M5UnitCamS3
-- [ ] ESP32Cam AI-Thinker (untested. Help wanted)
-
-**Receivers:**
-
-- [x] M5Core2 (tested on the AWS version)
-- [x] M5CoreS3
-- [x] Makerfabs Parallel using LGFX
-- [x] TFT 3.5 and 2.5 " using LGFX (ILI9488/9486)
-- [x] Generic TFT with LGFX support (better with PSRAM)
 
 ## TODO
 
