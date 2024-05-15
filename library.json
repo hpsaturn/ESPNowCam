@@ -1,6 +1,6 @@
 {
   "name": "EspNowCam",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "homepage":"https://github.com/hpsaturn/esp32s3-cam",
   "keywords": 
   [ 
@@ -15,6 +15,7 @@
     "Esp32s3",
     "XIAO",
     "AI-Thinker",
+    "Freenove",
     "M5CoreS3",
     "M5Core2",
     "Nanopb"
