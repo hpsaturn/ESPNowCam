@@ -49,13 +49,13 @@ The current version was tested with the next cameras:
 Add the following line to the lib_deps option of your [env:] section:
 
 ```python
-hpsaturn/EspNowCam@^0.1.12
+hpsaturn/EspNowCam@^0.1.13
 ```
 
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.12"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.13"
 ```
 
 **Arduino IDE**:
@@ -129,7 +129,7 @@ The library includes some pre-defined camera configs to have an easy implementat
 CamFreenove Camera;
 ```
 
-For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
+For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](examples/custom-camera-sender/) example. If you can run it in a different camera, please notify me :D
 
 ### PSRAM or DRAM?
 
@@ -158,7 +158,7 @@ Then compile and install each sample, only choose one of them **ENV names** in [
 pio run -e m5cores3-espnow-receiver --target upload
 ```
 
-Some examples, *.ino samples, only needs run `pio run --target upload` into each directory
+Some examples are for Arduino users (*.ino samples), but is possible too compile and install it from PlatformIO, only needs run `pio run --target upload` into each directory.
 
 ## Troubleshooting
 

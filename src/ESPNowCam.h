@@ -13,8 +13,8 @@ extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
 }
 
-#define CSL_VERSION "0.1.12"
-#define CSL_REVISION 077
+#define CSL_VERSION "0.1.13"
+#define CSL_REVISION 078
 
 class ESPNowCam {
  private:
