@@ -12,7 +12,8 @@
 | custom-camera-sender | Custom settings - optional PSRAM | QVGA | STABLE |
 | tjournal-espnow-sender  | NOPSRAM, 1FB, internal JPG | QVGA | STABLE |
 | m5cores3-espnow-sender | PSRAM, 2FB, JPG built-in camera | QVGA | STABLE |
-| esp32cam-p2p-sender | PSRAM, 1FB, IDF-JPG | QVGA | UNTESTED |
+| esp32cam-p2p-sender | PSRAM, 2FB, JPG | QVGA | UNTESTED |
+| freenoveWR-basic-sender | PSRAM, 2FB, JPG | QVGA | UNTESTED |
 
 ### Receivers samples
 
