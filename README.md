@@ -62,13 +62,14 @@ pio pkg install --library "hpsaturn/ESPNowCam@^0.1.13"
 
 **Arduino IDE**:
 
-For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need:
-
-1. Download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file
-2. and then with the **Library Manager** find **ESPNowCam** and install it.  
-
+>[!IMPORTANT]
+>For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need:
+>
+>1. Download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file
+>2. and then with the **Library Manager** find **ESPNowCam** and install it.  
+>
 >[!NOTE]
->Note: Nanobp is not included as a dependency because, despite being 25 years after the invention of symbolic links, Arduino IDE does not support these types of files. Consider exploring PlatformIO for your future developments, as it offers a more versatile and modern development environment.
+>Nanobp is not included as a dependency because, despite being 25 years after the invention of symbolic links, Arduino IDE does not support these types of files. Consider exploring PlatformIO for your future developments, as it offers a more versatile and modern development environment.
 
 ## Usage
 
