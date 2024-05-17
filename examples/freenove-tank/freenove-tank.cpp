@@ -9,7 +9,7 @@
 #include <ESP32WifiCLI.hpp>
 #include <ESPNowCam.h>
 #include <common/comm.pb.h>
-#include <common/ConfigApp.hpp> 
+#include <EasyPreferences.hpp> 
 #include <drivers/CamFreenove.h>
 #include <ESP32Servo.h>
 #include <Utils.h>
@@ -143,62 +143,20 @@ void wcli_reboot(String opts){
   ESP.restart();
 }
 
-void saveInteger(String key, String v) {
-  int32_t value = v.toInt();
-  cfg.saveInt(key, value);
-  Serial.printf("saved: %s:%i\r\n",key.c_str(),value);
-}
-
-void saveFloat(String key, String v) {
-  float value = v.toFloat();
-  cfg.saveFloat(key, value);
-  Serial.printf("saved: %s:%.5f\r\n",key.c_str(),value);
-}
-
-void saveBoolean(String key, String v) {
-  v.toLowerCase();
-  cfg.saveBool(key, v.equals("on") || v.equals("1") || v.equals("enable") || v.equals("true"));
-  Serial.printf("saved: %s:%s\r\n", key.c_str(), cfg.getBool(key, false) ? "true" : "false");
-}
-
-void saveString(String key, String v) {
-  cfg.saveString(key, v);
-  Serial.printf("saved: %s:%s\r\n",key.c_str(),v.c_str());
-}
-
-bool isValidKey(String key) {
-  for (int i = 0; i < KCOUNT; i++) {
-    if (key.equals(cfg.getKey((CONFKEYS)i))) return true;
-  }
-  return false;
-}
-
 void wcli_kset(String opts) {
   maschinendeck::Pair<String, String> operands = maschinendeck::SerialTerminal::ParseCommand(opts);
   String key = operands.first();
   String v = operands.second();
-  if(isValidKey(key)){
-    if(cfg.getKeyType(key) == ConfKeyType::BOOL) saveBoolean(key,v);
-    else if(cfg.getKeyType(key) == ConfKeyType::FLOAT) saveFloat(key,v);
-    else if(cfg.getKeyType(key) == ConfKeyType::INT) saveInteger(key,v);
-    else if(cfg.getKeyType(key) == ConfKeyType::STRING) saveString(key,v);
-    else Serial.println("Invalid key action for: " + key);
-  }
-  else {
-    Serial.printf("invalid key: %s\r\nPlease see the valid keys with klist command.\r\n",key.c_str());
-  }
+  cfg.saveAuto(key,v);
 }
 
 void wcli_klist(String opts) {
   maschinendeck::Pair<String, String> operands = maschinendeck::SerialTerminal::ParseCommand(opts);
   String opt = operands.first();
-  int key_count = KCOUNT;                       // Show all keys to configure 
-  if (opt.equals("basic")) key_count = KBASIC; // Only show the basic keys to configure
   Serial.printf("\n%11s \t%s \t%s \r\n", "KEYNAME", "DEFINED", "VALUE");
   Serial.printf("\n%11s \t%s \t%s \r\n", "=======", "=======", "=====");
 
-  for (int i = 0; i < key_count; i++) {
-    if(i==KBASIC) continue;
+  for (int i = 0; i < KCOUNT; i++) {
     String key = cfg.getKey((CONFKEYS)i);
     bool isDefined = cfg.isKey(key);
     String defined = isDefined ? "custom " : "default";
