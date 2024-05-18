@@ -157,7 +157,7 @@ void wcli_klist(String opts) {
   Serial.printf("\n%11s \t%s \t%s \r\n", "=======", "=======", "=====");
 
   for (int i = 0; i < KCOUNT; i++) {
-    String key = cfg.getKey((CONFKEYS)i);
+    String key = cfg.getKey((PKEYS)i);
     bool isDefined = cfg.isKey(key);
     String defined = isDefined ? "custom " : "default";
     String value = "";
@@ -178,7 +178,7 @@ void wcli_exit(String opts) {
 
 void wcli_debug(String opts) {
   debug = !debug;
-  cfg.saveBool(CONFKEYS::KDEBUG, debug);
+  cfg.saveBool(PKEYS::KDEBUG, debug);
 }
 
 void wcli_servoL(String opts) {
@@ -199,17 +199,17 @@ void wcli_pauseCam(String opts){
 }
 
 void loadVariables() {
-  debug = cfg.getBool(CONFKEYS::KDEBUG, false);
+  debug = cfg.getBool(PKEYS::KDEBUG, false);
 
-  spanLeft = cfg.getInt(CONFKEYS::KLPAN, 18);
-  offsetLeft = cfg.getInt(CONFKEYS::KLOFST, 0);
-  degreesCenterL = cfg.getInt(CONFKEYS::KLCENT, 97);
+  spanLeft = cfg.getInt(PKEYS::KLPAN, 18);
+  offsetLeft = cfg.getInt(PKEYS::KLOFST, 0);
+  degreesCenterL = cfg.getInt(PKEYS::KLCENT, 97);
 
-  spanRight = cfg.getInt(CONFKEYS::KRPAN, 18);
-  offsetRight = cfg.getInt(CONFKEYS::KROFST, 0);
-  degreesCenterR = cfg.getInt(CONFKEYS::KRCENT, 100);
+  spanRight = cfg.getInt(PKEYS::KRPAN, 18);
+  offsetRight = cfg.getInt(PKEYS::KROFST, 0);
+  degreesCenterR = cfg.getInt(PKEYS::KRCENT, 100);
 
-  deathBand = cfg.getInt(CONFKEYS::KDBAND, 2);
+  deathBand = cfg.getInt(PKEYS::KDBAND, 2);
 
   degreesMinL = degreesCenterL - spanLeft + offsetLeft;
   degreesMaxL = degreesCenterL + spanLeft + offsetLeft;
@@ -226,7 +226,7 @@ void wcli_print(String opts) {
   Serial.printf("RIGHT => span: %i offset: %i center: %i\r\n", spanRight, offsetRight, degreesCenterR);
   Serial.printf("RIGHT => degreesMinR: %i degreesMaxR: %i\r\n\n", degreesMinR, degreesMaxR);
   
-  Serial.printf("Others => deathBand: %i periodHertz: %i\r\n", deathBand,cfg.getInt(CONFKEYS::KPHERTZ, 50));
+  Serial.printf("Others => deathBand: %i periodHertz: %i\r\n", deathBand,cfg.getInt(PKEYS::KPHERTZ, 50));
 }
 
 void setup() {
@@ -258,8 +258,8 @@ void setup() {
   ESP32PWM::allocateTimer(2);
   ESP32PWM::allocateTimer(3);
 
-  servoLeft.setPeriodHertz(cfg.getInt(CONFKEYS::KPHERTZ, 50));      // Standard 50hz servo
-  servoRight.setPeriodHertz(cfg.getInt(CONFKEYS::KPHERTZ, 50));      // Standard 50hz servo
+  servoLeft.setPeriodHertz(cfg.getInt(PKEYS::KPHERTZ, 50));      // Standard 50hz servo
+  servoRight.setPeriodHertz(cfg.getInt(PKEYS::KPHERTZ, 50));      // Standard 50hz servo
 
   attachServoLeft();
   attachServoRight();
