@@ -199,7 +199,7 @@ I want to extend my gratitude to:
 
 - @ElectroZeusTIC and @AcoranTf for testing it on Arduino IDE.
 - @UtaAoya for your findings around the M5UnitCam device.
-- @turmandreams for your tests around AIThinker Camera and M5Core receiver.
-- @MeloCuentan for your fixes in AI-Thinker Camera issue.
+- @MeloCuentan by issues fixes in the AI-Thinker Camera and new ESP32S3 RGB receiver.
+- @turmandreams by your tests around AIThinker Camera and M5Core receiver.
 
 ---

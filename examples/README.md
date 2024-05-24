@@ -17,14 +17,18 @@
 
 ### Receivers samples
 
+Some video receivers
+
 | ENV Name   |    Details      |   Status |
 |:-----------------|:--------------:|:----------:|
-| m5core2-basic-receiver | Video receiver [1] |  STABLE |
-| m5core2-espnow-receiver | Video receiver [1] |  STABLE |
-| m5cores3-espnow-receiver | Video receiver [1] |  STABLE|
-| makerfabs-basic-receiver | Video receiver [1] [2] |  STABLE |  
-| makerfabs-nojpg-receiver | Video receiver [1] [2] | <2FPS |
+| m5core2-basic-receiver   | M5Stack M5Core2 [1] |  STABLE |
+| m5core2-espnow-receiver  | M5Stack M5Core2 [1] |  STABLE |
+| m5cores3-espnow-receiver | M5Stack M5CoreS3 [1] |  STABLE |
+| makerfabs-basic-receiver | Makerfabs RGB Parallel [1] [2] |  STABLE |  
+| makerfabs-nojpg-receiver | Makerfabs RGB Parallel [1] [2] | <2FPS |
 | tft-3.5-basic-receiver | Any TFT display with LGFX [1] | STABLE |
+| tft-il9485-basic-receiver | M5Core TFT reciver il9481 [1] [2]| STABLE |
+| ft-rgb-hmi-basic-receiver | ESP32S3_RGB_ESP32-8048S043 [1] [2] | STABLE |
 
 [1] Use with any sender sample  
 [2] Use with freenove HVGA sender sample for example.

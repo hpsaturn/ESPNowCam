@@ -1,6 +1,6 @@
 {
   "name": "EspNowCam",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "homepage":"https://github.com/hpsaturn/esp32s3-cam",
   "keywords": 
   [ 
@@ -18,6 +18,7 @@
     "Freenove",
     "M5CoreS3",
     "M5Core2",
+    "M5Core",
     "Nanopb"
   ],
   "description":"ESPNowCam, a straightforward video streamer for popular ESP32Cam models, leveraging the ESPNow protocol. No need for IPs, routers, or credentials—keeping it simple! :D ESPNowCam supports ESP32 Cameras and displays. **This library is for general purpose**, as it receives pointers to data, such as buffers, strings, images, or any byte-formatted content. This versatility allows you to transmit larger packages.",
