@@ -46,7 +46,7 @@ void shutdown() {
 void setup() {
   Serial.begin(115200);
 
-  delay(1000);  // only for debugging
+  // delay(4000);  // only for debugging
 
   if (psramFound()) {
     size_t psram_size = esp_spiram_get_size() / 1048576;
@@ -54,8 +54,10 @@ void setup() {
   }
 
   // Makerfabs receiver 7C:DF:A1:F3:73:3C
-  uint8_t macRecv[6] = {0x7C, 0xDF, 0xA1, 0xF3, 0x73, 0x3C};
-  radio.setTarget(macRecv);
+  // uint8_t macRecv[6] = {0x7C, 0xDF, 0xA1, 0xF3, 0x73, 0x3C};
+  // M5Core2 receiver B8:F0:09:C6:0E:CC
+  // uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  // radio.setTarget(macRecv);
   radio.init();
 
   // Configuration without using the PSRAM, only DRAM. (more faster)

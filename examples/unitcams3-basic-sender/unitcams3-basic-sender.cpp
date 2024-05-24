@@ -36,6 +36,7 @@ void setup() {
   }
   
   radio.init();
+  
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
     delay(1000);

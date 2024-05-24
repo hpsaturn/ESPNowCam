@@ -57,7 +57,7 @@ void setup() {
 
   if (radio.init()) {
     tft.setTextSize(2);
-    tft.drawString("ESPNow Iniciado Correctamente", dw / 6, dh / 2);
+    tft.drawString("ESPNow Init success", dw / 6, dh / 2);
   }
   delay(1000);
 }
