@@ -12,6 +12,7 @@ class CamAIThinker : public CameraBase {
 
   CamAIThinker(){
     config.pin_reset = -1;
+    config.pin_pwdn = 32;
     config.pin_xclk = 0;
     config.pin_sccb_sda = 26;
     config.pin_sccb_scl = 27;
@@ -26,7 +27,7 @@ class CamAIThinker : public CameraBase {
     config.pin_vsync = 25;
     config.pin_href = 23;
     config.pin_pclk = 22;
-    config.xclk_freq_hz = 20000000;
+    config.xclk_freq_hz = 16000000;
     config.ledc_timer   = LEDC_TIMER_0;
     config.ledc_channel = LEDC_CHANNEL_0;
     config.pixel_format  = PIXFORMAT_RGB565;

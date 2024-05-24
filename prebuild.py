@@ -4,9 +4,9 @@ import os
 import os.path
 import shutil
 
-example_lib_dir = "examples/espcamlib"
-dst = "examples/espcamlib/src"
-src = "../../src"
+example_lib_dir = "examples/lib/espcamlib"
+dst = "examples/lib/espcamlib/src"
+src = "../../../src"
 lib = "src"
 
 os.makedirs(example_lib_dir, 0o755, True)

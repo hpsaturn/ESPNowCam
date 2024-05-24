@@ -195,6 +195,11 @@ Some examples are for Arduino users (*.ino samples), but is possible too compile
 
 ## Credits
 
-I want to extend my gratitude to @ElectroZeusTIC and @AcoranTf for testing it on Arduino IDE. Also to @UtaAoya for your findings around the M5UnitCam device.
+I want to extend my gratitude to:
+
+- @ElectroZeusTIC and @AcoranTf for testing it on Arduino IDE.
+- @UtaAoya for your findings around the M5UnitCam device.
+- @MeloCuentan by issues fixes in the AI-Thinker Camera and new ESP32S3 RGB receiver.
+- @turmandreams by your tests around AIThinker Camera and M5Core receiver.
 
 ---

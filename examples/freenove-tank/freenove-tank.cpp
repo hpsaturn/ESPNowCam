@@ -9,7 +9,7 @@
 #include <ESP32WifiCLI.hpp>
 #include <ESPNowCam.h>
 #include <common/comm.pb.h>
-#include <common/ConfigApp.hpp> 
+#include <EasyPreferences.hpp> 
 #include <drivers/CamFreenove.h>
 #include <ESP32Servo.h>
 #include <Utils.h>
@@ -143,63 +143,21 @@ void wcli_reboot(String opts){
   ESP.restart();
 }
 
-void saveInteger(String key, String v) {
-  int32_t value = v.toInt();
-  cfg.saveInt(key, value);
-  Serial.printf("saved: %s:%i\r\n",key.c_str(),value);
-}
-
-void saveFloat(String key, String v) {
-  float value = v.toFloat();
-  cfg.saveFloat(key, value);
-  Serial.printf("saved: %s:%.5f\r\n",key.c_str(),value);
-}
-
-void saveBoolean(String key, String v) {
-  v.toLowerCase();
-  cfg.saveBool(key, v.equals("on") || v.equals("1") || v.equals("enable") || v.equals("true"));
-  Serial.printf("saved: %s:%s\r\n", key.c_str(), cfg.getBool(key, false) ? "true" : "false");
-}
-
-void saveString(String key, String v) {
-  cfg.saveString(key, v);
-  Serial.printf("saved: %s:%s\r\n",key.c_str(),v.c_str());
-}
-
-bool isValidKey(String key) {
-  for (int i = 0; i < KCOUNT; i++) {
-    if (key.equals(cfg.getKey((CONFKEYS)i))) return true;
-  }
-  return false;
-}
-
 void wcli_kset(String opts) {
   maschinendeck::Pair<String, String> operands = maschinendeck::SerialTerminal::ParseCommand(opts);
   String key = operands.first();
   String v = operands.second();
-  if(isValidKey(key)){
-    if(cfg.getKeyType(key) == ConfKeyType::BOOL) saveBoolean(key,v);
-    else if(cfg.getKeyType(key) == ConfKeyType::FLOAT) saveFloat(key,v);
-    else if(cfg.getKeyType(key) == ConfKeyType::INT) saveInteger(key,v);
-    else if(cfg.getKeyType(key) == ConfKeyType::STRING) saveString(key,v);
-    else Serial.println("Invalid key action for: " + key);
-  }
-  else {
-    Serial.printf("invalid key: %s\r\nPlease see the valid keys with klist command.\r\n",key.c_str());
-  }
+  cfg.saveAuto(key,v);
 }
 
 void wcli_klist(String opts) {
   maschinendeck::Pair<String, String> operands = maschinendeck::SerialTerminal::ParseCommand(opts);
   String opt = operands.first();
-  int key_count = KCOUNT;                       // Show all keys to configure 
-  if (opt.equals("basic")) key_count = KBASIC; // Only show the basic keys to configure
   Serial.printf("\n%11s \t%s \t%s \r\n", "KEYNAME", "DEFINED", "VALUE");
   Serial.printf("\n%11s \t%s \t%s \r\n", "=======", "=======", "=====");
 
-  for (int i = 0; i < key_count; i++) {
-    if(i==KBASIC) continue;
-    String key = cfg.getKey((CONFKEYS)i);
+  for (int i = 0; i < KCOUNT; i++) {
+    String key = cfg.getKey((PKEYS)i);
     bool isDefined = cfg.isKey(key);
     String defined = isDefined ? "custom " : "default";
     String value = "";
@@ -220,7 +178,7 @@ void wcli_exit(String opts) {
 
 void wcli_debug(String opts) {
   debug = !debug;
-  cfg.saveBool(CONFKEYS::KDEBUG, debug);
+  cfg.saveBool(PKEYS::KDEBUG, debug);
 }
 
 void wcli_servoL(String opts) {
@@ -241,17 +199,17 @@ void wcli_pauseCam(String opts){
 }
 
 void loadVariables() {
-  debug = cfg.getBool(CONFKEYS::KDEBUG, false);
+  debug = cfg.getBool(PKEYS::KDEBUG, false);
 
-  spanLeft = cfg.getInt(CONFKEYS::KLPAN, 18);
-  offsetLeft = cfg.getInt(CONFKEYS::KLOFST, 0);
-  degreesCenterL = cfg.getInt(CONFKEYS::KLCENT, 97);
+  spanLeft = cfg.getInt(PKEYS::KLPAN, 18);
+  offsetLeft = cfg.getInt(PKEYS::KLOFST, 0);
+  degreesCenterL = cfg.getInt(PKEYS::KLCENT, 97);
 
-  spanRight = cfg.getInt(CONFKEYS::KRPAN, 18);
-  offsetRight = cfg.getInt(CONFKEYS::KROFST, 0);
-  degreesCenterR = cfg.getInt(CONFKEYS::KRCENT, 100);
+  spanRight = cfg.getInt(PKEYS::KRPAN, 18);
+  offsetRight = cfg.getInt(PKEYS::KROFST, 0);
+  degreesCenterR = cfg.getInt(PKEYS::KRCENT, 100);
 
-  deathBand = cfg.getInt(CONFKEYS::KDBAND, 2);
+  deathBand = cfg.getInt(PKEYS::KDBAND, 2);
 
   degreesMinL = degreesCenterL - spanLeft + offsetLeft;
   degreesMaxL = degreesCenterL + spanLeft + offsetLeft;
@@ -268,7 +226,7 @@ void wcli_print(String opts) {
   Serial.printf("RIGHT => span: %i offset: %i center: %i\r\n", spanRight, offsetRight, degreesCenterR);
   Serial.printf("RIGHT => degreesMinR: %i degreesMaxR: %i\r\n\n", degreesMinR, degreesMaxR);
   
-  Serial.printf("Others => deathBand: %i periodHertz: %i\r\n", deathBand,cfg.getInt(CONFKEYS::KPHERTZ, 50));
+  Serial.printf("Others => deathBand: %i periodHertz: %i\r\n", deathBand,cfg.getInt(PKEYS::KPHERTZ, 50));
 }
 
 void setup() {
@@ -300,8 +258,8 @@ void setup() {
   ESP32PWM::allocateTimer(2);
   ESP32PWM::allocateTimer(3);
 
-  servoLeft.setPeriodHertz(cfg.getInt(CONFKEYS::KPHERTZ, 50));      // Standard 50hz servo
-  servoRight.setPeriodHertz(cfg.getInt(CONFKEYS::KPHERTZ, 50));      // Standard 50hz servo
+  servoLeft.setPeriodHertz(cfg.getInt(PKEYS::KPHERTZ, 50));      // Standard 50hz servo
+  servoRight.setPeriodHertz(cfg.getInt(PKEYS::KPHERTZ, 50));      // Standard 50hz servo
 
   attachServoLeft();
   attachServoRight();
