@@ -197,10 +197,9 @@ Some examples are for Arduino users (*.ino samples), but is possible too compile
 
 I want to extend my gratitude to:
 
-@ElectroZeusTIC and @AcoranTf for testing on Arduino IDE.  
-@UtaAoya for findings related to the M5UnitCam device.  
-@MeloCuentan for fixing issues with the AI-Thinker Camera and the new ESP32S3 RGB receiver.  
-@turmandreams for tests on the AI-Thinker Camera and the M5Core receiver.  
-
+[@ElectroZeusTIC](https://github.com/electrozeustic) and [@AcoranTf](https://github.com/AcoranTf) for testing on Arduino IDE.  
+[@UtaAoya](https://x.com/UtaAoya) for findings related to the M5UnitCam device.  
+[@MeloCuentan](https://github.com/MeloCuentan) for fixing issues with the AI-Thinker Camera and the new ESP32S3 RGB receiver.  
+[@turmandreams](https://github.com/turmandreams) for tests on the AI-Thinker Camera and the M5Core receiver.  
 
 ---
