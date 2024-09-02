@@ -30,7 +30,7 @@ OneButton btnB(GPIO_NUM_0, true);
 void processFrame() {
   if (Camera.get()) {
     radio.sendData(Camera.fb->buf, Camera.fb->len);
-    delay(40);  // ==> weird delay when you are using only DRAM.
+    delay(60);  // ==> weird delay when you are using only DRAM.
     printFPS("CAM:");
     Camera.free();
   }
