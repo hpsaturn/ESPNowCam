@@ -24,7 +24,7 @@ class ESPNowCam {
   void setRecvBuffer(uint8_t *fb);
   void setRecvFilter(uint8_t *fb, const uint8_t *macAddr, RecvCb cb);
   bool sendData(uint8_t* data, uint32_t lenght);
-  bool setTarget(uint8_t* macAddress);
+  bool setTarget(const uint8_t* macAddress);
   bool init(uint8_t chunksize = 244);
 };
 

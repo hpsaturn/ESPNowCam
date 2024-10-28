@@ -35,6 +35,8 @@ class CamTJournal : public CameraBase {
     config.fb_count      = 1;
     config.fb_location   = CAMERA_FB_IN_DRAM;
     config.grab_mode     = CAMERA_GRAB_WHEN_EMPTY;
+    fb = nullptr;
+    sensor = nullptr;
   }
 };
 

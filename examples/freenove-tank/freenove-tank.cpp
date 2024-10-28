@@ -139,19 +139,19 @@ void onDataReady(uint32_t lenght) {
   decodeMsg(lenght);
 }
 
-void wcli_reboot(String opts){
+void wcli_reboot(char *args, Stream *response){
   ESP.restart();
 }
 
-void wcli_kset(String opts) {
-  maschinendeck::Pair<String, String> operands = maschinendeck::SerialTerminal::ParseCommand(opts);
+void wcli_kset(char *args, Stream *response) {
+  Pair<String, String> operands = wcli.parseCommand(args);
   String key = operands.first();
   String v = operands.second();
   cfg.saveAuto(key,v);
 }
 
-void wcli_klist(String opts) {
-  maschinendeck::Pair<String, String> operands = maschinendeck::SerialTerminal::ParseCommand(opts);
+void wcli_klist(char *args, Stream *response) {
+  Pair<String, String> operands = wcli.parseCommand(args);
   String opt = operands.first();
   Serial.printf("\n%11s \t%s \t%s \r\n", "KEYNAME", "DEFINED", "VALUE");
   Serial.printf("\n%11s \t%s \t%s \r\n", "=======", "=======", "=====");
@@ -166,34 +166,34 @@ void wcli_klist(String opts) {
   }
 }
 
-void wcli_setup(String opts) {
+void wcli_setup(char *args, Stream *response) {
   setup_mode = true;
   Serial.println("\r\nSetup Mode Enable (fail-safe mode)\r\n");
 }
 
-void wcli_exit(String opts) {
+void wcli_exit(char *args, Stream *response) {
   setup_time = 0;
   setup_mode = false;
 }
 
-void wcli_debug(String opts) {
+void wcli_debug(char *args, Stream *response) {
   debug = !debug;
   cfg.saveBool(PKEYS::KDEBUG, debug);
 }
 
-void wcli_servoL(String opts) {
-  maschinendeck::Pair<String, String> operands = maschinendeck::SerialTerminal::ParseCommand(opts);
+void wcli_servoL(char *args, Stream *response) {
+  Pair<String, String> operands = wcli.parseCommand(args);
   attachServoLeft();
   servoLeft.write(operands.first().toInt());
 }
 
-void wcli_servoR(String opts) {
-  maschinendeck::Pair<String, String> operands = maschinendeck::SerialTerminal::ParseCommand(opts);
+void wcli_servoR(char *args, Stream *response) {
+  Pair<String, String> operands = wcli.parseCommand(args);
   attachServoRight();
   servoRight.write(operands.first().toInt());
 }
 
-void wcli_pauseCam(String opts){
+void wcli_pauseCam(char *args, Stream *response){
   cam_stopped = !cam_stopped;
   Serial.printf("camera streaming %s\r\n", cam_stopped ? "stopped" : "resumed");
 }
@@ -218,7 +218,7 @@ void loadVariables() {
   degreesMaxR = degreesCenterR + spanRight + offsetRight;  
 }
 
-void wcli_print(String opts) {
+void wcli_print(char *args, Stream *response) {
   loadVariables();
   Serial.printf("LEFT => span: %i offset: %i center: %i\r\n", spanLeft, offsetLeft, degreesCenterL);
   Serial.printf("LEFT => degreesMinL: %i degreesMaxL: %i\r\n\n", degreesMinL, degreesMaxL);
@@ -237,20 +237,20 @@ void setup() {
 
   cfg.init("espnowcam");
 
-  wcli.disableConnectInBoot();
   wcli.setSilentMode(true);  
-  wcli.begin();              
 
-  wcli.term->add("reboot", &wcli_reboot,   "\tperform a ESP32 reboot");
-  wcli.term->add("setup", &wcli_setup,"\tTYPE THIS WORD to start to configure the device :D\n");
-  wcli.term->add("exit", &wcli_exit, "\texit of the setup mode. AUTO EXIT in 10 seg! :)");
-  wcli.term->add("klist", &wcli_klist, "\tlist valid preference keys");
-  wcli.term->add("kset", &wcli_kset, "\tset preference key (e.g on/off or 1/0 or text)");
-  wcli.term->add("print", &wcli_print, "\tprint current variables");
-  wcli.term->add("servoL", &wcli_servoL, "\tset value on servo L");
-  wcli.term->add("servoR", &wcli_servoR, "\tset value on servo R");
-  wcli.term->add("pauseCam", &wcli_pauseCam, "\tstop/resume camera stream");
-  wcli.term->add("debug", &wcli_debug, "\tdebugging flag toggle");
+  wcli.add("reboot", &wcli_reboot,   "\tperform a ESP32 reboot");
+  wcli.add("setup", &wcli_setup,"\tTYPE THIS WORD to start to configure the device :D\n");
+  wcli.add("exit", &wcli_exit, "\texit of the setup mode. AUTO EXIT in 10 seg! :)");
+  wcli.add("klist", &wcli_klist, "\tlist valid preference keys");
+  wcli.add("kset", &wcli_kset, "\tset preference key (e.g on/off or 1/0 or text)");
+  wcli.add("print", &wcli_print, "\tprint current variables");
+  wcli.add("servoL", &wcli_servoL, "\tset value on servo L");
+  wcli.add("servoR", &wcli_servoR, "\tset value on servo R");
+  wcli.add("pauseCam", &wcli_pauseCam, "\tstop/resume camera stream");
+  wcli.add("debug", &wcli_debug, "\tdebugging flag toggle");
+  
+  wcli.begin();              
 
   // Allow allocation of all timers
   ESP32PWM::allocateTimer(0);

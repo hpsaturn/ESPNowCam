@@ -24,7 +24,7 @@ size_t encodeMsg(Frame msg);
 bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
   if (!pb_encode_tag_for_field(stream, field))
     return false;
-  return pb_encode_string(stream, (uint8_t *)(outdata + chunk_pos), chunk_size_left);
+  return pb_encode_string(stream, static_cast<uint8_t*>(outdata + chunk_pos), chunk_size_left);
 }
 
 void msgSentCb(const uint8_t *macAddr, esp_now_send_status_t  status) {
@@ -97,7 +97,7 @@ bool sendMessage(uint32_t msglen, const uint8_t *mac) {
   return false;
 }
 
-bool ESPNowCam::setTarget(uint8_t *macAddress) {
+bool ESPNowCam::setTarget(const uint8_t *macAddress) {
   memcpy(targetAddress, macAddress, 6);
   return false;
 }
