@@ -4,8 +4,8 @@
  * Use with: freenove-nojpg-sender example
  *  
  * by @hpsaturn Copyright (C) 2024
- * This file is part ESP32S3 camera tests project:
- * https://github.com/hpsaturn/esp32s3-cam
+ * This file is part ESPNowCam tests project:
+ * https://github.com/hpsaturn/ESPNowCam.git
 **************************************************/
 
 #include <Arduino.h>

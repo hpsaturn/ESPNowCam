@@ -2,7 +2,7 @@
  * ESPNowCam video Receiver
  * by @hpsaturn Copyright (C) 2024
  * This file is part ESP32S3 camera tests project:
- * https://github.com/hpsaturn/esp32s3-cam
+ * https://github.com/hpsaturn/ESPNowCam.git
 **************************************************/
 
 #include <Arduino.h>
@@ -41,13 +41,13 @@ void setup() {
   }
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb_camera1 = (uint8_t*)  ps_malloc(5000* sizeof( uint8_t ) ) ;
-  fb_camera2 = (uint8_t*)  ps_malloc(5000* sizeof( uint8_t ) ) ;
+  fb_camera1 = static_cast<uint8_t*>(ps_malloc(5000 * sizeof(uint8_t)));
+  fb_camera2 = static_cast<uint8_t*>(ps_malloc(5000 * sizeof(uint8_t)));
 
   // TJournal Camera  24:0a:c4:2f:8e:90
-  uint8_t camera1[6] = {0x24, 0x0A, 0xC4, 0x2F, 0x8E, 0x90};
+  const uint8_t camera1[6] = {0x24, 0x0A, 0xC4, 0x2F, 0x8E, 0x90};
   // XIAOSense Camera 74:4d:bd:81:4e:fc
-  uint8_t camera2[6] = {0x74, 0x4D, 0xBD, 0x81, 0x4E, 0xFC};
+  const uint8_t camera2[6] = {0x74, 0x4D, 0xBD, 0x81, 0x4E, 0xFC};
 
   radio.setRecvFilter(fb_camera1, camera1, onCamera1DataReady);
   radio.setRecvFilter(fb_camera2, camera2, onCamera2DataReady);

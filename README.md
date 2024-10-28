@@ -104,7 +104,7 @@ void onDataReady(uint32_t lenght) {
 It's also possible to define a specific target:
 
 ```cpp
-uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
 radio.setTarget(macRecv);
 radio.init();
 ```
@@ -136,7 +136,7 @@ CamFreenove Camera;
 ```
 
 >[!TIP]
->For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me :D
+>For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me via a [GitHub issue](https://github.com/hpsaturn/ESPNowCam/issues/new) or please contribute with the project sending a pull request :D
 
 ### PSRAM or DRAM?
 
@@ -197,10 +197,9 @@ Some examples are for Arduino users (*.ino samples), but is possible too compile
 
 I want to extend my gratitude to:
 
-@ElectroZeusTIC and @AcoranTf for testing on Arduino IDE.  
-@UtaAoya for findings related to the M5UnitCam device.  
-@MeloCuentan for fixing issues with the AI-Thinker Camera and the new ESP32S3 RGB receiver.  
-@turmandreams for tests on the AI-Thinker Camera and the M5Core receiver.  
-
+[@ElectroZeusTIC](https://github.com/electrozeustic) and [@AcoranTf](https://github.com/AcoranTf) for testing on Arduino IDE.  
+[@UtaAoya](https://x.com/UtaAoya) for findings related to the M5UnitCam device.  
+[@MeloCuentan](https://github.com/MeloCuentan) for fixing issues with the AI-Thinker Camera and the new ESP32S3 RGB receiver.  
+[@turmandreams](https://github.com/turmandreams) for tests on the AI-Thinker Camera and the M5Core receiver.  
 
 ---

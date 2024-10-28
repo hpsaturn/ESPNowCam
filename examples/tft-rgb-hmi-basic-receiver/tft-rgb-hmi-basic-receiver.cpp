@@ -37,7 +37,7 @@ void setup(void) {
   tft.setTextColor(TFT_WHITE);
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = (uint8_t *)malloc(30000 * sizeof(uint8_t));
+  fb = static_cast<uint8_t*>(malloc(30000 * sizeof(uint8_t)));
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);

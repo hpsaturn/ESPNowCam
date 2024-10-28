@@ -1,8 +1,8 @@
 /**************************************************
  * ESPNowCam video Receiver
  * by @hpsaturn Copyright (C) 2024
- * This file is part ESP32S3 camera tests project:
- * https://github.com/hpsaturn/esp32s3-cam
+ * This file is part ESPNowCam tests project:
+ * https://github.com/hpsaturn/ESPNowCam
 **************************************************/
 
 #include <Arduino.h>
@@ -64,7 +64,7 @@ void setup() {
   }
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = (uint8_t *)ps_malloc(30000 * sizeof(uint8_t));
+  fb = static_cast<uint8_t*>(ps_malloc(30000 * sizeof(uint8_t)));
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);

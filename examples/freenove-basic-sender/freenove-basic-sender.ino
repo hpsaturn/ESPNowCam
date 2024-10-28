@@ -41,7 +41,7 @@ void setup() {
   }
 
   // M5Core2 receiver target (P2P or 1:1 mode)
-  // uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  // const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
   // radio.setTarget(macRecv);
   radio.init();
 

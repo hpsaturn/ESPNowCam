@@ -37,6 +37,8 @@ class CamXiao : public CameraBase {
     config.fb_count = 2;
     config.fb_location = CAMERA_FB_IN_PSRAM;
     config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
+    fb = nullptr;
+    sensor = nullptr;
   }
 };
 
