@@ -33,7 +33,7 @@ void setup() {
   }
   
   // Makerfabs receiver 7C:DF:A1:F3:73:3C
-  // uint8_t macRecv[6] = {0x7C,0xDF,0xA1,0xF3,0x73,0x3C};
+  // const uint8_t macRecv[6] = {0x7C,0xDF,0xA1,0xF3,0x73,0x3C};
   // radio.setTarget(macRecv);
   radio.init();
 

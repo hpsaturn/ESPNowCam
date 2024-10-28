@@ -15,7 +15,14 @@ camera_fb_t* fb;
 
 bool has_psram = false;
 
-// Please change this to your Camera pins:
+// !! N O T E !! 
+// Please change this for your Camera pins if your camera
+// is not listed in the examples or driver directory.
+
+// If your new config works and it is not included in the
+// drivers section, please notify it via an issue or please
+// contribute to the proyect with a pull request. Thanks!
+
 camera_config_t camera_config = {
     .pin_pwdn = -1,
     .pin_reset = 15,

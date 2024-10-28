@@ -49,8 +49,8 @@ void setup() {
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
 
-  // M5Core2 receiver B8:F0:09:C6:0E:CC
-  // uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  // Optional M5Core2 receiver B8:F0:09:C6:0E:CC
+  // const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
   // radio.setTarget(macRecv);
   radio.init();
 

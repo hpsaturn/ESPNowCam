@@ -53,10 +53,10 @@ void setup() {
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
 
-  // Makerfabs receiver 7C:DF:A1:F3:73:3C
-  // uint8_t macRecv[6] = {0x7C, 0xDF, 0xA1, 0xF3, 0x73, 0x3C};
-  // M5Core2 receiver B8:F0:09:C6:0E:CC
-  // uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  // Optional Makerfabs receiver 7C:DF:A1:F3:73:3C
+  // const uint8_t macRecv[6] = {0x7C, 0xDF, 0xA1, 0xF3, 0x73, 0x3C};
+  // Optional M5Core2 receiver B8:F0:09:C6:0E:CC
+  // const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
   // radio.setTarget(macRecv);
   radio.init();
 

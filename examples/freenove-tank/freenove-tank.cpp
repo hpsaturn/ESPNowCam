@@ -287,11 +287,11 @@ void setup() {
   delay(1000);
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  recv_buff = (uint8_t*)  ps_malloc(100* sizeof( uint8_t ) ) ;
+  recv_buff = static_cast<uint8_t*>(ps_malloc(100 * sizeof(uint8_t)));
   radio.setRecvBuffer(recv_buff);
   radio.setRecvCallback(onDataReady);
 
-  uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
   radio.setTarget(macRecv);
   radio.init(244);
   
