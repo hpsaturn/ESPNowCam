@@ -1,6 +1,6 @@
 
 
-static void printDataChksum(uint8_t * jpg_data, uint32_t jpg_len){
+static inline void printDataChksum(uint8_t * jpg_data, uint32_t jpg_len){
   uint32_t checksum = 0;
   Serial.println("JPG Frame:");
   for (int i = 0; i < jpg_len; i++) {
@@ -12,7 +12,7 @@ static void printDataChksum(uint8_t * jpg_data, uint32_t jpg_len){
 
 static uint16_t frame = 0;
 
-static void printFPS(const char *msg) {
+static inline void printFPS(const char *msg) {
   static uint_least64_t timeStamp = 0;
   frame++;
   if (millis() - timeStamp > 1000) {
