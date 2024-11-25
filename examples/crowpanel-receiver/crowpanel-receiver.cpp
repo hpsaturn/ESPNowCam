@@ -128,7 +128,7 @@ void setup() {
   // }
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = static_cast<uint8_t*>(malloc(50000 * sizeof(uint8_t)));
+  fb = static_cast<uint8_t*>(malloc(10000 * sizeof(uint8_t)));
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);
