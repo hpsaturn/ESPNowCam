@@ -29,6 +29,7 @@ Some video receivers
 | tft-3.5-basic-receiver | Any TFT display with LGFX [1] | STABLE |
 | tft-il9485-basic-receiver | M5Core TFT reciver il9481 [1] [2]| STABLE |
 | ft-rgb-hmi-basic-receiver | ESP32S3_RGB_ESP32-8048S043 [1] [2] | STABLE |
+| crowpanel-receiver | Elecrow round panel 320x240 [1] | TESTING |
 
 [1] Use with any sender sample  
 [2] Use with freenove HVGA sender sample for example.
