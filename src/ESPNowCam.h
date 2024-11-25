@@ -13,8 +13,8 @@ extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
 }
 
-#define ENC_VERSION "0.1.15"
-#define ENC_REVISION 080
+#define ENC_VERSION "0.1.16"
+#define ENC_REVISION 081
 
 class ESPNowCam {
  private:
