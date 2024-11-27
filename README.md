@@ -35,12 +35,12 @@ The current version was tested with the next cameras:
 
 | Sender |  Frame | PSRAM | JPGQ | FPS | Status |
 |:---------|:-----:|:-----:|:------:|:-------:|:------:|
-| TTGO TJournal |  QVGA | No | 12 | ~11 FPS | STABLE |
-| XIAO Sense S3 | QVGA | Yes | 12 | ~11 FPS | STABLE |
-| Freenove S3 | QVGA | Yes | 12 | ~10 FPS | STABLE |
-| Freenove S3 | HVGA | Yes | 12 | ~6 FPS | STABLE |
-| M5CoreS3 | QVGA | Yes | 12  | ~11 FPS | STABLE |
-| M5UnitCamS3 | QVGA | Yes | 12 | ~9 FPS | STABLE |
+| [TTGO TJournal](https://lilygo.cc/products/t-journal)                           |  QVGA | No | 12 | ~11 FPS | STABLE |
+| [XIAO ESP32S3 Sense](https://www.seeedstudio.com/XIAO-ESP32S3-Sense-p-5639.html)| QVGA | Yes | 12 | ~11 FPS | STABLE |
+| Freenove S3       | QVGA | Yes | 12 | ~10 FPS | STABLE |
+| Freenove S3       | HVGA | Yes | 12 | ~6 FPS | STABLE |
+| M5CoreS3          | QVGA | Yes | 12  | ~11 FPS | STABLE |
+| M5UnitCamS3       | QVGA | Yes | 12 | ~9 FPS | STABLE |
 
 [Full list of senders and receivers that was tested](https://github.com/hpsaturn/ESPNowCam/wiki/Supported-Devices)
 
