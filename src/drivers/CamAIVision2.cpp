@@ -1,4 +1,5 @@
-#include "CamIAVision2.h"
+#ifdef AIVISION2
+#include "CamAIVision2.h"
 
 PtrBuffer PB;
 StatInfo SI;
@@ -133,7 +134,7 @@ static void proxyCallback(const char* resp, size_t len) {
   log_i("Received %u bytes...", len);
 }
 
-bool CamIAVision2::get() {
+bool CamAIVision2::get() {
   if (!AI.invoke(-1,0,0)) {
     AI.fetch(proxyCallback);
     return true;
@@ -141,7 +142,7 @@ bool CamIAVision2::get() {
   else return false;
 }
 
-bool CamIAVision2::sendCmd(const char * command, int len) {
+bool CamAIVision2::sendCmd(const char * command, int len) {
 
   TickType_t ticks = xTaskGetTickCount();
   char cmd_tag_buf[32] = {0};
@@ -155,7 +156,7 @@ bool CamIAVision2::sendCmd(const char * command, int len) {
   return true;
 }
 
-bool CamIAVision2::begin() {
+bool CamAIVision2::begin() {
   static HardwareSerial atSerial(0);
   // the esp32 arduino library may have a bug in setRxBufferSize
   // we cannot set the buffer size larger than uint16_t max value
@@ -163,5 +164,7 @@ bool CamIAVision2::begin() {
   //     esp32/hardware/esp32/2.0.14/cores/esp32/esp32-hal-uart.c
   atSerial.setRxBufferSize(COM_BUFFER_SIZE);
   log_i("starting AI vision Serial interface..");
-  return AI.begin(&atSerial, D3);
+  return AI.begin(&atSerial);
 }
+
+#endif

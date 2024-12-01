@@ -1,5 +1,6 @@
 #ifndef CAMAIVISION_H
 #define CAMAIVISION_H
+#ifdef AIVISION2
 
 #include <Seeed_Arduino_SSCMA.h>
 #include <Wire.h>
@@ -83,7 +84,7 @@ struct StatInfo {
   SemaphoreHandle_t mutex;
 };
 
-class CamIAVision2 : public CameraBase {
+class CamAIVision2 : public CameraBase {
  public:
 
   using CameraBase::free;
@@ -91,7 +92,7 @@ class CamIAVision2 : public CameraBase {
   bool get(); 
   bool sendCmd(const char * command, int len);
 
-  CamIAVision2() {
+  CamAIVision2() {
     config.xclk_freq_hz = 20000000;
     config.ledc_timer = LEDC_TIMER_0;
     config.ledc_channel = LEDC_CHANNEL_0;
@@ -109,4 +110,5 @@ class CamIAVision2 : public CameraBase {
   
 };
 
+#endif
 #endif
