@@ -93,7 +93,7 @@ public:
       cfg.pin_int = GPIO_NUM_18;
       cfg.bus_shared = false;
       cfg.offset_rotation = 0;
-      // conexión I2C
+      // I2C
       cfg.i2c_port = I2C_NUM_1;
       cfg.pin_sda = GPIO_NUM_19;
       cfg.pin_scl = GPIO_NUM_20;
