@@ -262,6 +262,9 @@ void ESPNowCam::setRecvFilter(uint8_t *fb, const uint8_t *macAddr, RecvCb cb) {
 /***********************************
  * C O M M O N  S E C T I O N
 ************************************/
+void ESPNowCam::setChannel(uint8_t channel) {
+  _channel = channel;
+}
 
 bool ESPNowCam::init(uint8_t chunk_size) {
   chunksize = chunk_size; 
@@ -272,6 +275,11 @@ bool ESPNowCam::init(uint8_t chunk_size) {
   // shutdown wifi
   WiFi.disconnect();
   delay(100);
+
+  if (_channel != -1) {
+    log_i("Set custom channel: %i", _channel);
+    esp_wifi_set_channel(_channel, WIFI_SECOND_CHAN_NONE);
+  }
 
   if (esp_now_init() == ESP_OK) {
     log_i("ESPNow Init Success");
