@@ -20,7 +20,7 @@ typedef void (*RecvCb)(uint32_t lenght);
 class ESPNowCam {
  private:
   uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-  uint8_t channel = -1;
+  int8_t _channel = -1;
  public:
   void setRecvCallback(RecvCb cb);
   void setRecvBuffer(uint8_t *fb);
