@@ -83,7 +83,6 @@ ESPNowCam radio;
 radio.init();
 radio.sendData(data, data_len);
 ```
-
 [full sender implementation example](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/xiao-espnow-sender/xiao-espnow-sender.cpp)
 
 **To receive** the data, you only need to define a buffer and callback:
