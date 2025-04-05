@@ -81,7 +81,7 @@ pio pkg install --library "hpsaturn/ESPNowCam@^0.1.13"
 ESPNowCam radio;
 
 radio.init();
-radio.sendData(out_jpg, out_jpg_len);
+radio.sendData(data, data_len);
 ```
 
 [full sender implementaton example](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/xiao-espnow-sender/xiao-espnow-sender.cpp)
