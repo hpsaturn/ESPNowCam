@@ -76,11 +76,16 @@ pio pkg install --library "hpsaturn/ESPNowCam@^0.1.13"
 **To send** any kind of data, you only need a buffer and the size to send:
 
 ```cpp
+#include <ESPNowCam.h>
+
 ESPNowCam radio;
 
 radio.init();
 radio.sendData(out_jpg, out_jpg_len);
 ```
+
+[full sender implementaton example](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/xiao-espnow-sender/xiao-espnow-sender.cpp)
+
 
 **To receive** the data, you only need to define a buffer and callback:
 
@@ -95,6 +100,7 @@ void onDataReady(uint32_t lenght) {
   tft.drawJpg(fb, lenght , 0, 0, dw, dh);
 }
 ```
+[full receiver implementation example](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/m5core2-basic-receiver/m5core2-basic-receiver.ino)
 
 >[!NOTE]
 >If you don't define any specific target, the radio will work in broadcasting mode, that means **1:N mode**, for instance one camera sending video to multiple screen receivers.
