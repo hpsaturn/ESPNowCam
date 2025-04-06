@@ -144,7 +144,7 @@ CamFreenove Camera;
 
 ### Channel
 
-Is possible to configure the radio channel or the WiFi channel. You should put the same channel in the devices. This setting is optional, and it is not mandatory, but could improve the connection.
+Is possible to configure the radio channel or the WiFi channel. You should put the same channel on all devices. This setting is optional, and it is not mandatory, but could improve the connection.
 
 ```cpp
 radio.setChannel(2);
