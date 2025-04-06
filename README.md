@@ -184,9 +184,9 @@ Some examples are for Arduino users (*.ino samples), but is possible too compile
  pio run --target upload
  ```
 
-#### Camera CLI
+### Camera CLI
 
-Also I'm working in a complete Camera configurator and test suite for this library and alos other features around the ESP Cameras. It is a project in progress, but you are able to configure and test all ESPNowCam features more easy using a CLI and manager that runs into the Camera:
+Also I'm working in a complete Camera configurator and test suite for this library and also other features around the ESP Cameras. It is a project in progress, but you are able to configure and test all ESPNowCam features more easy using a CLI and manager that runs into the Camera:
 
 ![ESP32 Camera CLI](pictures/esp32_camera_cli_preview.jpg)
 more [here](https://github.com/hpsaturn/esp32-camera-cli).
