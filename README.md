@@ -83,9 +83,7 @@ ESPNowCam radio;
 radio.init();
 radio.sendData(data, data_len);
 ```
-
-[full sender implementaton example](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/xiao-espnow-sender/xiao-espnow-sender.cpp)
-
+[full sender implementation example](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/xiao-espnow-sender/xiao-espnow-sender.cpp)
 
 **To receive** the data, you only need to define a buffer and callback:
 
@@ -144,6 +142,15 @@ CamFreenove Camera;
 >[!TIP]
 >For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me via a [GitHub issue](https://github.com/hpsaturn/ESPNowCam/issues/new) or please contribute with the project sending a pull request :D
 
+### Channel
+
+Is possible to configure the radio channel or the WiFi channel. You should put the same channel on all devices. This setting is optional, and it is not mandatory, but could improve the connection.
+
+```cpp
+radio.setChannel(2);
+radio.init();
+```
+
 ### PSRAM or DRAM?
 
 Well, in my last tests with different cameras and using QVGA frame size, seems that is better using the DRAM and the internal JPG. DRAM is more faster than PSRAM, and the internal compressor has a better quality with the same JPGQ level, but it uses more bandwidth, on the other hand the result is so good on P2P mode.
@@ -176,6 +183,13 @@ Some examples are for Arduino users (*.ino samples), but is possible too compile
  ```bash
  pio run --target upload
  ```
+
+### Camera CLI
+
+Also I'm working in a complete Camera configurator and test suite for this library and also other features around the ESP Cameras. It is a project in progress, but you are able to configure and test all ESPNowCam features more easy using a CLI and manager that runs into the Camera:
+
+![ESP32 Camera CLI](pictures/esp32_camera_cli_preview.jpg)
+more [here](https://github.com/hpsaturn/esp32-camera-cli).
 
 ## Troubleshooting
 
