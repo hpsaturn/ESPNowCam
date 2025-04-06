@@ -55,6 +55,6 @@
   "license": "GPL-3.0-only",
   "dependencies":
   [
-    {"name":"Nanopb", "owner":"nanopb", "version":"0.4.8"}
+    {"name":"Nanopb", "owner":"nanopb", "version":"0.4.91"}
   ]
 }
