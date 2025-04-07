@@ -51,13 +51,13 @@ The current version was tested with the next cameras:
 Add the following line to the lib_deps option of your [env:] section:
 
 ```python
-hpsaturn/EspNowCam@^0.1.13
+hpsaturn/EspNowCam@^0.1.17
 ```
 
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.13"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.1.17"
 ```
 
 **Arduino IDE**:
@@ -186,10 +186,13 @@ Some examples are for Arduino users (*.ino samples), but is possible too compile
 
 ### Camera CLI
 
-Also I'm working in a complete Camera configurator and test suite for this library and also other features around the ESP Cameras. It is a project in progress, but you are able to configure and test all ESPNowCam features more easy using a CLI and manager that runs into the Camera:
+Also I'm working in a complete Camera configurator and test suite for this library and also other features around the ESP Cameras. It is a project in progress, but you are able to configure and test all ESPNowCam features more easy using a [CLI and manager](https://github.com/hpsaturn/esp32-camera-cli) that runs into the Camera:
 
-![ESP32 Camera CLI](pictures/esp32_camera_cli_preview.jpg)
-more [here](https://github.com/hpsaturn/esp32-camera-cli).
+[![ESP32 Camera CLI](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/refs/heads/master/pictures/esp32_camera_cli_preview.jpg)](https://github.com/hpsaturn/esp32-camera-cli)
+
+[![ESP32 Camera CLI Demo](https://img.youtube.com/vi/ibuKil7jjsg/maxresdefault.jpg)](https://youtu.be/ibuKil7jjsg)
+
+[video demo](https://youtu.be/ibuKil7jjsg)
 
 ## Troubleshooting
 
