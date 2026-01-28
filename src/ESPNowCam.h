@@ -2,8 +2,6 @@
 #define ESPNOWCAM_H
 
 #include <WiFi.h>
-#include <esp_now.h>
-#include <esp_wifi.h>
 #include <pb_decode.h>
 #include <pb_encode.h>
 
@@ -11,6 +9,7 @@
 #include <vector>
 
 #include "frame.pb.h"
+#include "ESPNowInterface.h"
 
 extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
@@ -23,8 +22,16 @@ class ESPNowCam {
  private:
   uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   int8_t _channel = -1;
+  ESPNowInterface* espnow = nullptr;
 
  public:
+  /// @brief Constructor with optional custom ESPNow interface
+  /// @param interface Pointer to ESPNowInterface implementation (nullptr for default)
+  ESPNowCam(ESPNowInterface* interface = nullptr);
+  
+  /// @brief Destructor
+  ~ESPNowCam();
+
   /// @brief send data to the target device or broadcast if targetAddress is not set.
   /// @param data pointer to the data to be sent
   /// @param lenght length of the data to be sent
@@ -58,3 +65,4 @@ class ESPNowCam {
 };
 
 #endif
+
