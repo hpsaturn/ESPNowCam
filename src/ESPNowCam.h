@@ -9,7 +9,8 @@
 #include <vector>
 
 #include "frame.pb.h"
-#include "ESPNowInterface.h"
+#include "CommInterface.h"
+#include "ESPNowComm.h"
 
 extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
@@ -22,12 +23,12 @@ class ESPNowCam {
  private:
   uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   int8_t _channel = -1;
-  ESPNowInterface* espnow = nullptr;
+  CommInterface* comm = nullptr;
 
  public:
-  /// @brief Constructor with optional custom ESPNow interface
-  /// @param interface Pointer to ESPNowInterface implementation (nullptr for default)
-  ESPNowCam(ESPNowInterface* interface = nullptr);
+  /// @brief Constructor with optional custom communication interface
+  /// @param interface Pointer to CommInterface implementation (nullptr for default ESPNow)
+  ESPNowCam(CommInterface* interface = nullptr);
   
   /// @brief Destructor
   ~ESPNowCam();
@@ -59,10 +60,9 @@ class ESPNowCam {
   /// @param channel WiFi channel to be used
   void setChannel(uint8_t channel);
 
-  /// @brief initialize the ESP-NOW communication.
+  /// @brief initialize the communication.
   /// @param chunksize size of the chunks to be sent. Default is 244 bytes.
   bool init(uint8_t chunksize = 244);
 };
 
 #endif
-

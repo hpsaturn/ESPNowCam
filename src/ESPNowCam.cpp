@@ -6,11 +6,11 @@
 **************************************************/
 
 #include "ESPNowCam.h"
-#include "ESPNowInterface.h"
+#include "CommInterface.h"
 #include <algorithm>
 
 // Static instance of default ESPNow implementation
-static ESPNowConcrete defaultESPNow;
+static ESPNowComm defaultESPNow;
 
 /***********************************
  * S E N D E R  S E C T I O N
@@ -23,7 +23,7 @@ uint8_t *outdata = NULL;
 size_t outdata_len = 0;
 bool msgReady = false;
 
-bool sendMessage(uint32_t msglen, const uint8_t *mac, ESPNowInterface* espnow);
+bool sendMessage(uint32_t msglen, const uint8_t *mac, CommInterface* comm);
 size_t encodeMsg(Frame msg);
 
 bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
@@ -32,16 +32,16 @@ bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *con
   return pb_encode_string(stream, static_cast<uint8_t*>(outdata + chunk_pos), chunk_size_left);
 }
 
-void msgSentCb(const uint8_t *macAddr, espnow_send_status_t  status) {
+void msgSentCb(const uint8_t *macAddr, comm_send_status_t  status) {
   msgReady = true;
 }
 
 // Constructor and Destructor
-ESPNowCam::ESPNowCam(ESPNowInterface* interface) {
+ESPNowCam::ESPNowCam(CommInterface* interface) {
   if (interface == nullptr) {
-    espnow = &defaultESPNow;
+    comm = &defaultESPNow;
   } else {
-    espnow = interface;
+    comm = interface;
   }
 }
 
@@ -65,7 +65,7 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
     }
     msg.data.funcs.encode = &encode_uint8_array;
     msgReady = false;
-    sendMessage(encodeMsg(msg), this->targetAddress, espnow);
+    sendMessage(encodeMsg(msg), this->targetAddress, comm);
     while(!msgReady)delayMicroseconds(1);
     chunk_pos = outdata_len - frame_left;
     if (msg.lenght == outdata_len) {
@@ -88,26 +88,26 @@ size_t encodeMsg(Frame msg) {
   return message_length;
 }
 
-bool sendMessage(uint32_t msglen, const uint8_t *mac, ESPNowInterface* espnow) {
-  ESPNowPeerInfo peerInfo = {};
+bool sendMessage(uint32_t msglen, const uint8_t *mac, CommInterface* comm) {
+  CommPeerInfo peerInfo = {};
   memcpy(&peerInfo.peer_addr, mac, 6);
-  if (!espnow->isPeerExist(mac)) {
-    espnow->addPeer(&peerInfo);
+  if (!comm->isPeerExist(mac)) {
+    comm->addPeer(&peerInfo);
   }
-  esp_err_t result = espnow->send(mac, send_buffer, msglen);
+  esp_err_t result = comm->send(mac, send_buffer, msglen);
 
-  if (result == ESPNOW_OK) {
+  if (result == COMM_OK) {
     log_v("send msg success");
     return true;
-  } else if (result == ESPNOW_ERR_NOT_INIT) {
+  } else if (result == COMM_ERR_NOT_INIT) {
     log_e("ESPNOW not Init.");
-  } else if (result == ESPNOW_ERR_ARG) {
+  } else if (result == COMM_ERR_ARG) {
     log_e("Invalid Argument");
-  } else if (result == ESPNOW_ERR_INTERNAL) {
+  } else if (result == COMM_ERR_INTERNAL) {
     log_e("Internal Error");
-  } else if (result == ESPNOW_ERR_NO_MEM) {
-    log_e("ESPNOW_ERR_NO_MEM");
-  } else if (result == ESPNOW_ERR_NOT_FOUND) {
+  } else if (result == COMM_ERR_NO_MEM) {
+    log_e("COMM_ERR_NO_MEM");
+  } else if (result == COMM_ERR_NOT_FOUND) {
     log_e("Peer not found.");
   } else {
     log_e("Unknown error");
@@ -167,7 +167,7 @@ bool decodeMessage(uint16_t message_length) {
 }
 
 void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
-  int msgLen = min(ESPNOW_MAX_DATA_LEN, dataLen);
+  int msgLen = min(COMM_MAX_DATA_LEN, dataLen);
   memcpy(recv_buffer, data, msgLen);
   if (decodeMessage(msgLen) && msg_recv.lenght > 0) {
     if (recvCb != nullptr) recvCb(msg_recv.lenght);
@@ -236,7 +236,7 @@ void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int dataLen)
     return;
   } else {
     curReceiver = (struct_receiver*)(&pos->second);
-    int msgLen = min(ESPNOW_MAX_DATA_LEN, dataLen);
+    int msgLen = min(COMM_MAX_DATA_LEN, dataLen);
     memcpy(recv_buffer, data, msgLen);
     if (mulDecodeMessage(msgLen) && msg_recv.lenght > 0) {
       if (curReceiver->recvCb != nullptr) curReceiver->recvCb(msg_recv.lenght);
@@ -296,18 +296,18 @@ bool ESPNowCam::init(uint8_t chunk_size) {
 
   if (_channel != -1) {
     log_i("Set custom channel: %i", _channel);
-    espnow->setChannel(_channel);
+    comm->setChannel(_channel);
   }
 
-  if (espnow->init() == ESPNOW_OK) {
+  if (comm->init() == COMM_OK) {
     log_i("ESPNow Init Success");
 
-    espnow->registerSendCallback(msgSentCb);
+    comm->registerSendCallback(msgSentCb);
     // Only for receivers devices
     if (recvCb != nullptr)
-      espnow->registerRecvCallback(msgReceiveCb);
+      comm->registerRecvCallback(msgReceiveCb);
     else if (buffers.size() > 0)
-      espnow->registerRecvCallback(msgReceiveCbByMAC);
+      comm->registerRecvCallback(msgReceiveCbByMAC);
 
     return true;
 
