@@ -82,7 +82,7 @@ size_t encodeMsg(Frame msg) {
   bool status = pb_encode(&stream, Frame_fields, &msg);
   size_t message_length = stream.bytes_written;
   if (!status) {
-    printf("Encoding failed: %s\\r\\n", PB_GET_ERROR(&stream));
+    printf("Encoding failed: %s\r\n", PB_GET_ERROR(&stream));
     return 0;
   }
   return message_length;
@@ -160,14 +160,14 @@ bool decodeMessage(uint16_t message_length) {
   msg_recv.data.funcs.decode = &decode_data;
   bool status = pb_decode(&stream, Frame_fields, &msg_recv);
   if (!status) {
-    log_w("Decoding msg failed: %s\\r\\n", PB_GET_ERROR(&stream));
+    log_w("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
     return false;
   }
   return true;
 }
 
 void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
-  int msgLen = std::min(ESPNOW_MAX_DATA_LEN, dataLen);
+  int msgLen = min(ESPNOW_MAX_DATA_LEN, dataLen);
   memcpy(recv_buffer, data, msgLen);
   if (decodeMessage(msgLen) && msg_recv.lenght > 0) {
     if (recvCb != nullptr) recvCb(msg_recv.lenght);
@@ -220,7 +220,7 @@ bool mulDecodeMessage(uint16_t message_length) {
   msg_recv.data.funcs.decode = &mul_decode_data;
   bool status = pb_decode(&stream, Frame_fields, &msg_recv);
   if (!status) {
-    log_w("Decoding msg failed: %s\\r\\n", PB_GET_ERROR(&stream));
+    log_w("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
     return false;
   }
   return true;
@@ -236,7 +236,7 @@ void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int dataLen)
     return;
   } else {
     curReceiver = (struct_receiver*)(&pos->second);
-    int msgLen = std::min(ESPNOW_MAX_DATA_LEN, dataLen);
+    int msgLen = min(ESPNOW_MAX_DATA_LEN, dataLen);
     memcpy(recv_buffer, data, msgLen);
     if (mulDecodeMessage(msgLen) && msg_recv.lenght > 0) {
       if (curReceiver->recvCb != nullptr) curReceiver->recvCb(msg_recv.lenght);
