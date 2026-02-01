@@ -11,6 +11,7 @@
 #include "frame.pb.h"
 #include "CommInterface.h"
 #include "ESPNowComm.h"
+#include "WiFiRawComm.h"
 
 extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
