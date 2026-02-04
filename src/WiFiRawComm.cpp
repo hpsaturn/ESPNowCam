@@ -198,22 +198,22 @@ comm_err_t WiFiRawComm::init() {
     ESP_ERROR_CHECK(ret);
     Serial.println("✓ NVS flash initialized");
 
-    Serial.println("[2/4] Initializing TCP/IP stack...");
-    ESP_ERROR_CHECK(esp_netif_init());
-    Serial.println("✓ TCP/IP stack initialized");
+    // Serial.println("[2/4] Initializing TCP/IP stack...");
+    // ESP_ERROR_CHECK(esp_netif_init());
+    // Serial.println("✓ TCP/IP stack initialized");
 
-    Serial.println("[3/4] Creating event loop...");
+    // Serial.println("[3/4] Creating event loop...");
     // Try to create event loop, but don't fail if it already exists
-    esp_err_t event_loop_ret = esp_event_loop_create_default();
-    if (event_loop_ret == ESP_OK) {
-        Serial.println("✓ Event loop created");
-    } else if (event_loop_ret == ESP_ERR_INVALID_STATE) {
-        Serial.println("✓ Event loop already exists");
-    } else {
+    // esp_err_t event_loop_ret = esp_event_loop_create_default();
+    // if (event_loop_ret == ESP_OK) {
+        // Serial.println("✓ Event loop created");
+    // } else if (event_loop_ret == ESP_ERR_INVALID_STATE) {
+        // Serial.println("✓ Event loop already exists");
+    // } else {
         // Some other error
-        Serial.printf("✗ Event loop error: %d\n", event_loop_ret);
-        return COMM_ERR_INTERNAL;
-    }
+        // Serial.printf("✗ Event loop error: %d\n", event_loop_ret);
+        // return COMM_ERR_INTERNAL;
+    // }
     
     Serial.println("[4/4] Initializing WiFi...");
     esp_netif_create_default_wifi_sta();
@@ -291,6 +291,9 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
     // Send using esp_wifi_80211_tx
     // Note: en_sys_seq = false for raw frames without connection
     esp_err_t esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, false);
+    log_i("80211_tx esp_err_t: %s", esp_err_to_name(esp_err));
+
+    vTaskDelay(5 / portTICK_PERIOD_MS);
     
     if (esp_err != ESP_OK) {
         return WIFI_RAW_ERR_TX_FAILED;
