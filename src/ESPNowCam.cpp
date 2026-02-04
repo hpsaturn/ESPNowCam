@@ -97,7 +97,7 @@ bool sendMessage(uint32_t msglen, const uint8_t *mac, CommInterface* comm) {
   esp_err_t result = comm->send(mac, send_buffer, msglen);
 
   if (result == COMM_OK) {
-    log_v("send msg success");
+    // log_v("send msg success");
     return true;
   } else if (result == COMM_ERR_NOT_INIT) {
     log_e("ESPNOW not Init.");
@@ -299,19 +299,18 @@ bool ESPNowCam::init(uint8_t chunk_size) {
     comm->setChannel(_channel);
   }
 
+  comm->registerSendCallback(msgSentCb);
+  // Only for receivers devices
+  if (recvCb != nullptr)
+    comm->registerRecvCallback(msgReceiveCb);
+  else if (buffers.size() > 0)
+    comm->registerRecvCallback(msgReceiveCbByMAC);
+
   if (comm->init() == COMM_OK) {
-    log_i("ESPNow Init Success");
-
-    comm->registerSendCallback(msgSentCb);
-    // Only for receivers devices
-    if (recvCb != nullptr)
-      comm->registerRecvCallback(msgReceiveCb);
-    else if (buffers.size() > 0)
-      comm->registerRecvCallback(msgReceiveCbByMAC);
-
+    log_i("ESPNow Init Success"); 
     return true;
-
-  } else {
+  } 
+  else {
     log_e("ESPNow Init Failed");
     delay(100);
     ESP.restart();

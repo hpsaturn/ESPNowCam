@@ -1,9 +1,10 @@
 #include "WiFiRawComm.h"
 #include "Arduino.h"
+#include "esp_heap_caps.h"
 
 // Configuration
 #define WIFI_CHANNEL 6
-#define PACKET_SIZE 512
+#define PACKET_SIZE 256
 #define TEST_DURATION_MS 10000
 
 // Initialize static members
@@ -151,10 +152,10 @@ void init_sender() {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     
     // IMPORTANT: For large packets, we need dynamic buffers
-    cfg.tx_buf_type = 1;           // Dynamic buffers
-    cfg.dynamic_tx_buf_num = 32;   // Enough buffers for continuous transmission
-    cfg.static_tx_buf_num = 0;     // No static buffers
-    cfg.beacon_max_len = PACKET_SIZE;  // MUST match packet size
+    cfg.tx_buf_type = 0;           // Dynamic buffers
+    cfg.dynamic_tx_buf_num = 0;   // Enough buffers for continuous transmission
+    cfg.static_tx_buf_num = 32;     // No static buffers
+    cfg.beacon_max_len = sizeof(WiFiRawFrame) + WIFI_RAW_MAX_DATA_LEN;  // MUST match packet size
     cfg.cache_tx_buf_num = 4;      // Cache for performance
     
     // Disable features we don't need
@@ -288,14 +289,48 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
     
     create_raw_frame(frame_buffer, mac_addr, local_mac, data, len, &frame_len);
     
+    // Memory exhaustion detection - check heap before sending
+    size_t free_heap_before = esp_get_free_heap_size();
+    // log_i("Memory before send: free_heap=%d, frame_len=%d", free_heap_before, frame_len);
+    
     // Send using esp_wifi_80211_tx
     // Note: en_sys_seq = false for raw frames without connection
     esp_err_t esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, false);
-    log_i("80211_tx esp_err_t: %s", esp_err_to_name(esp_err));
-
-    vTaskDelay(5 / portTICK_PERIOD_MS);
+    // log_i("80211_tx esp_err_t: %s", esp_err_to_name(esp_err));
+    
+    // Check memory after sending
+    size_t free_heap_after = esp_get_free_heap_size();
+    // log_i("Memory after send: free_heap=%d, delta=%d", free_heap_after, free_heap_before - free_heap_after);
+    
+    // Handle ESP_ERR_NO_MEM with retry logic
+    if (esp_err == ESP_ERR_NO_MEM) {
+        log_w("Memory exhausted! Free heap: %d, waiting for recovery...", free_heap_after);
+        
+        // Exponential backoff retry
+        for (int retry = 0; retry < 3; retry++) {
+            vTaskDelay((50 * (1 << retry)) / portTICK_PERIOD_MS); // 50ms, 100ms, 200ms
+            
+            // Check if memory has recovered
+            size_t current_heap = esp_get_free_heap_size();
+            log_i("Retry %d: free_heap=%d", retry + 1, current_heap);
+            
+            esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, false);
+            log_i("80211_tx retry %d: %s", retry + 1, esp_err_to_name(esp_err));
+            
+            if (esp_err == ESP_OK) {
+                log_i("Memory recovered after %d retries", retry + 1);
+                break;
+            }
+        }
+    }
+    
+    // vTaskDelay(5 / portTICK_PERIOD_MS);
+    delay(5);
     
     if (esp_err != ESP_OK) {
+        // Log detailed error information
+        log_e("Send failed with error: %s (0x%x)", esp_err_to_name(esp_err), esp_err);
+        log_e("Frame length: %d, Free heap: %d", frame_len, esp_get_free_heap_size());
         return WIFI_RAW_ERR_TX_FAILED;
     }
     
@@ -315,6 +350,7 @@ comm_err_t WiFiRawComm::registerSendCallback(comm_send_cb_t cb) {
 
 // Register receive callback
 comm_err_t WiFiRawComm::registerRecvCallback(comm_recv_cb_t cb) {
+    log_i("Registering receive callback");
     user_recv_cb = cb;
     return COMM_OK;
 }
