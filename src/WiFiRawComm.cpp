@@ -18,7 +18,7 @@ std::vector<CommPeerInfo> WiFiRawComm::peers;
 
 // Print MAC address
 void print_mac_address(const uint8_t* mac) {
-    Serial.printf("MAC: %02X:%02X:%02X:%02X:%02X:%02X\n",
+    log_i("MAC: %02X:%02X:%02X:%02X:%02X:%02X",
                  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
@@ -152,9 +152,9 @@ void init_sender() {
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     
     // IMPORTANT: For large packets, we need dynamic buffers
-    cfg.tx_buf_type = 0;           // Dynamic buffers
-    cfg.dynamic_tx_buf_num = 0;   // Enough buffers for continuous transmission
-    cfg.static_tx_buf_num = 32;     // No static buffers
+    cfg.tx_buf_type = 1;           // Dynamic buffers
+    cfg.dynamic_tx_buf_num = 32;   // Enough buffers for continuous transmission
+    cfg.static_tx_buf_num = 8;     // No static buffers
     cfg.beacon_max_len = sizeof(WiFiRawFrame) + WIFI_RAW_MAX_DATA_LEN;  // MUST match packet size
     cfg.cache_tx_buf_num = 4;      // Cache for performance
     
@@ -163,13 +163,13 @@ void init_sender() {
     cfg.ampdu_tx_enable = 0;
     cfg.amsdu_tx_enable = 0;
     
-    Serial.printf("Config: dynamic buffers=%d, beacon_max_len=%d\n", cfg.dynamic_tx_buf_num, cfg.beacon_max_len);
+    log_i("Config: dynamic buffers=%d, beacon_max_len=%d", cfg.dynamic_tx_buf_num, cfg.beacon_max_len);
     
     // Initialize WiFi
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     
-    Serial.println("✓ WiFi system fully initialized for transmiting");
+    log_i("initialized for transmiting");
 }
 
 void init_receiver() {
@@ -180,7 +180,7 @@ void init_receiver() {
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_promiscuous(true));
     
-    Serial.println("✓ WiFi system fully initialized in promiscuous mode");
+    log_i("initialized in promiscuous mode");
 }
 
 // Initialize WiFi Raw communication
@@ -188,7 +188,6 @@ comm_err_t WiFiRawComm::init() {
     if (initialized) {
         return COMM_OK;
     }
-    Serial.println("\n=== Initializing WiFi ===");
     
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
@@ -197,26 +196,19 @@ comm_err_t WiFiRawComm::init() {
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK(ret);
-    Serial.println("✓ NVS flash initialized");
+    log_i("NVS flash initialized");
 
-    // Serial.println("[2/4] Initializing TCP/IP stack...");
     // ESP_ERROR_CHECK(esp_netif_init());
-    // Serial.println("✓ TCP/IP stack initialized");
-
-    // Serial.println("[3/4] Creating event loop...");
-    // Try to create event loop, but don't fail if it already exists
-    // esp_err_t event_loop_ret = esp_event_loop_create_default();
-    // if (event_loop_ret == ESP_OK) {
-        // Serial.println("✓ Event loop created");
-    // } else if (event_loop_ret == ESP_ERR_INVALID_STATE) {
-        // Serial.println("✓ Event loop already exists");
-    // } else {
-        // Some other error
-        // Serial.printf("✗ Event loop error: %d\n", event_loop_ret);
-        // return COMM_ERR_INTERNAL;
-    // }
+    esp_err_t event_loop_ret = esp_event_loop_create_default();
+    if (event_loop_ret == ESP_OK) {
+        log_i("Event loop created");
+    } else if (event_loop_ret == ESP_ERR_INVALID_STATE) {
+        log_i("Event loop already exists");
+    } else {
+        log_e("Event loop error: %d", event_loop_ret);
+        return COMM_ERR_INTERNAL;
+    }
     
-    Serial.println("[4/4] Initializing WiFi...");
     esp_netif_create_default_wifi_sta();
 
     if (user_recv_cb != nullptr) {
@@ -235,7 +227,7 @@ comm_err_t WiFiRawComm::init() {
     }
     print_mac_address(mac);
     
-    Serial.printf("✓ WiFi initialized. Free heap: %d bytes\n", esp_get_free_heap_size());
+    log_i("WiFi initialized. Free heap: %d bytes", esp_get_free_heap_size());
     initialized = true;
     return COMM_OK;    
 }
