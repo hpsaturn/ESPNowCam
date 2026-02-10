@@ -287,11 +287,11 @@ void ESPNowCam::setChannel(uint8_t channel) {
 bool ESPNowCam::init(uint8_t chunk_size) {
   chunksize = chunk_size; 
   chunk_size_left = chunk_size;
-  // WiFi.mode(WIFI_STA);
-  // log_i("ESPNow Init");
-  // log_i("%s",WiFi.macAddress().c_str());
+  WiFi.mode(WIFI_STA);
+  log_i("ESPNow Init");
+  log_i("%s",WiFi.macAddress().c_str());
   // shutdown wifi
-  // WiFi.disconnect();
+  WiFi.disconnect();
   delay(100);
 
   if (_channel != -1) {
@@ -299,15 +299,15 @@ bool ESPNowCam::init(uint8_t chunk_size) {
     comm->setChannel(_channel);
   }
 
-  comm->registerSendCallback(msgSentCb);
-  // Only for receivers devices
-  if (recvCb != nullptr)
-    comm->registerRecvCallback(msgReceiveCb);
-  else if (buffers.size() > 0)
-    comm->registerRecvCallback(msgReceiveCbByMAC);
-
   if (comm->init() == COMM_OK) {
-    log_i("ESPNow Init Success"); 
+    log_i("ESPNow Init Success");
+
+    comm->registerSendCallback(msgSentCb);
+    // Only for receivers devices
+    if (recvCb != nullptr)
+      comm->registerRecvCallback(msgReceiveCb);
+    else if (buffers.size() > 0)
+      comm->registerRecvCallback(msgReceiveCbByMAC);
     return true;
   } 
   else {
