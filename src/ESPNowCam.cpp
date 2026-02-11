@@ -7,6 +7,7 @@
 
 #include "ESPNowCam.h"
 #include "CommInterface.h"
+#include "typeinfo"
 #include <algorithm>
 
 // Static instance of default ESPNow implementation
@@ -280,6 +281,16 @@ void ESPNowCam::setRecvFilter(uint8_t *fb, const uint8_t *macAddr, RecvCb cb) {
 /***********************************
  * C O M M O N  S E C T I O N
 ************************************/
+void ESPNowCam::registerCallbacks() {
+  // Only for receivers devices
+  if (recvCb != nullptr)
+    comm->registerRecvCallback(msgReceiveCb);
+  else if (buffers.size() > 0)
+    comm->registerRecvCallback(msgReceiveCbByMAC);
+  // Default send callback
+  comm->registerSendCallback(msgSentCb);
+}
+
 void ESPNowCam::setChannel(uint8_t channel) {
   _channel = channel;
 }
@@ -287,27 +298,30 @@ void ESPNowCam::setChannel(uint8_t channel) {
 bool ESPNowCam::init(uint8_t chunk_size) {
   chunksize = chunk_size; 
   chunk_size_left = chunk_size;
-  WiFi.mode(WIFI_STA);
-  log_i("ESPNow Init");
-  log_i("%s",WiFi.macAddress().c_str());
-  // shutdown wifi
-  WiFi.disconnect();
-  delay(100);
 
   if (_channel != -1) {
     log_i("Set custom channel: %i", _channel);
     comm->setChannel(_channel);
   }
 
+  if (comm != &defaultESPNow) {
+    log_i("Using custom CommInterface");
+    registerCallbacks();
+  } else {
+    log_i("Using default ESPNowComm");
+    WiFi.mode(WIFI_STA);
+    log_i("ESPNow Init");
+    log_i("%s", WiFi.macAddress().c_str());
+    // shutdown wifi
+    WiFi.disconnect();
+    delay(100);
+  }
+
   if (comm->init() == COMM_OK) {
     log_i("ESPNow Init Success");
-
-    comm->registerSendCallback(msgSentCb);
-    // Only for receivers devices
-    if (recvCb != nullptr)
-      comm->registerRecvCallback(msgReceiveCb);
-    else if (buffers.size() > 0)
-      comm->registerRecvCallback(msgReceiveCbByMAC);
+    if (comm == &defaultESPNow) {
+      registerCallbacks();
+    }
     return true;
   } 
   else {

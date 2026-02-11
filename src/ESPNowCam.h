@@ -25,6 +25,8 @@ class ESPNowCam {
   uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   int8_t _channel = -1;
   CommInterface* comm = nullptr;
+  
+  void registerCallbacks();
 
  public:
   /// @brief Constructor with optional custom communication interface
