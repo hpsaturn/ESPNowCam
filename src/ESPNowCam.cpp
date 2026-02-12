@@ -161,7 +161,7 @@ bool decodeMessage(uint16_t message_length) {
   msg_recv.data.funcs.decode = &decode_data;
   bool status = pb_decode(&stream, Frame_fields, &msg_recv);
   if (!status) {
-    log_w("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
+    log_w("%s", PB_GET_ERROR(&stream));
     return false;
   }
   return true;
@@ -221,7 +221,7 @@ bool mulDecodeMessage(uint16_t message_length) {
   msg_recv.data.funcs.decode = &mul_decode_data;
   bool status = pb_decode(&stream, Frame_fields, &msg_recv);
   if (!status) {
-    log_w("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
+    log_w("%s", PB_GET_ERROR(&stream));
     return false;
   }
   return true;

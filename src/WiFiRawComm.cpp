@@ -6,6 +6,7 @@
 #define WIFI_CHANNEL 6
 #define PACKET_SIZE 256
 #define TEST_DURATION_MS 10000
+#define FCS_SIZE 4  // Frame Check Sequence size in bytes
 
 // Initialize static members
 comm_send_cb_t WiFiRawComm::user_send_cb = nullptr;
@@ -58,7 +59,7 @@ void WiFiRawComm::create_raw_frame(uint8_t* buffer, const uint8_t* dest_mac,
     frame->sequence[0] = 0x00;
     frame->sequence[1] = 0x00;
     
-    // LLC/SNAP header
+    // LLC/SNAP header (optional - can be disabled)
     frame->llc_dsap = 0xAA;            // DSAP
     frame->llc_ssap = 0xAA;            // SSAP
     frame->llc_control = 0x03;         // Unnumbered Information
@@ -76,14 +77,19 @@ void WiFiRawComm::create_raw_frame(uint8_t* buffer, const uint8_t* dest_mac,
     *frame_len = sizeof(WiFiRawFrame) + data_len;
 }
 
-// Helper: Parse raw 802.11 frame
+// Helper: Parse raw 802.11 frame with FCS handling
 void WiFiRawComm::parse_raw_frame(const uint8_t* frame, size_t frame_len,
                                  uint8_t* src_mac, uint8_t* dest_mac,
                                  const uint8_t** payload, size_t* payload_len) {
-    if (frame_len < sizeof(WiFiRawFrame)) {
+    // CRITICAL FIX: frame_len includes FCS (4 bytes) at the end
+    // We need to subtract FCS_SIZE to get the actual frame length
+    if (frame_len < sizeof(WiFiRawFrame) + FCS_SIZE) {
         *payload_len = 0;
         return;
     }
+    
+    // Adjust frame length to exclude FCS
+    size_t actual_frame_len = frame_len - FCS_SIZE;
     
     const WiFiRawFrame* wifi_frame = reinterpret_cast<const WiFiRawFrame*>(frame);
     
@@ -91,22 +97,31 @@ void WiFiRawComm::parse_raw_frame(const uint8_t* frame, size_t frame_len,
     memcpy(dest_mac, wifi_frame->addr1, 6);  // Receiver address
     memcpy(src_mac, wifi_frame->addr2, 6);   // Transmitter address
     
-    // Check if this is our frame type
-    if (wifi_frame->llc_dsap == 0xAA && wifi_frame->llc_ssap == 0xAA && 
-        wifi_frame->llc_control == 0x03 &&
-        wifi_frame->snap_oui[0] == 0x00 && wifi_frame->snap_oui[1] == 0x00 && 
-        wifi_frame->snap_oui[2] == 0x00 &&
-        wifi_frame->snap_type[0] == 0x08 && wifi_frame->snap_type[1] == 0x00) {
-        
-        // Valid frame, extract payload
+    // REDUCED STRICT FILTERING: Accept frames with or without LLC/SNAP header
+    // Check if this has LLC/SNAP header (optional check)
+    bool has_llc_snap = false;
+    if (actual_frame_len >= sizeof(WiFiRawFrame)) {
+        // Check for LLC/SNAP header pattern
+        if (wifi_frame->llc_dsap == 0xAA && wifi_frame->llc_ssap == 0xAA && 
+            wifi_frame->llc_control == 0x03) {
+            has_llc_snap = true;
+        }
+    }
+    
+    if (has_llc_snap) {
+        // Frame has LLC/SNAP header, extract payload after it
         *payload = wifi_frame->payload;
-        *payload_len = frame_len - sizeof(WiFiRawFrame);
+        *payload_len = actual_frame_len - sizeof(WiFiRawFrame);
     } else {
-        *payload_len = 0;
+        // Frame doesn't have LLC/SNAP header, payload starts right after 802.11 header
+        // 802.11 header is 24 bytes (frame_control to sequence)
+        const uint8_t* payload_start = frame + 24;  // Skip 24-byte 802.11 header
+        *payload = payload_start;
+        *payload_len = actual_frame_len - 24;  // Subtract 802.11 header size
     }
 }
 
-// Promiscuous mode callback wrapper
+// Promiscuous mode callback wrapper with FCS handling
 void WiFiRawComm::wifi_promiscuous_cb_wrapper(void* buf, wifi_promiscuous_pkt_type_t type) {
     if (type != WIFI_PKT_DATA || user_recv_cb == nullptr) {
         return;
@@ -114,13 +129,17 @@ void WiFiRawComm::wifi_promiscuous_cb_wrapper(void* buf, wifi_promiscuous_pkt_ty
     
     wifi_promiscuous_pkt_t* pkt = reinterpret_cast<wifi_promiscuous_pkt_t*>(buf);
     
+    // CRITICAL FIX: pkt->rx_ctrl.sig_len includes FCS (4 bytes)
+    // We need to handle this in parse_raw_frame
+    size_t frame_len_with_fcs = pkt->rx_ctrl.sig_len;
+    
     // Parse the frame
     uint8_t src_mac[6];
     uint8_t dest_mac[6];
     const uint8_t* payload = nullptr;
     size_t payload_len = 0;
     
-    parse_raw_frame(pkt->payload, pkt->rx_ctrl.sig_len, src_mac, dest_mac, &payload, &payload_len);
+    parse_raw_frame(pkt->payload, frame_len_with_fcs, src_mac, dest_mac, &payload, &payload_len);
     
     if (payload_len > 0) {
         // Check if this frame is for us (our MAC or broadcast)
@@ -139,6 +158,11 @@ void WiFiRawComm::wifi_promiscuous_cb_wrapper(void* buf, wifi_promiscuous_pkt_ty
             // For simplicity, we accept all multicast
             for_us = true;
         }
+        // REDUCED FILTERING: Also accept frames not specifically addressed to us
+        // (like ESP-NOW does) - this can be enabled for debugging
+        // else {
+        //     for_us = true;  // Accept all frames in promiscuous mode
+        // }
         
         if (for_us) {
             // Call user callback
@@ -148,39 +172,48 @@ void WiFiRawComm::wifi_promiscuous_cb_wrapper(void* buf, wifi_promiscuous_pkt_ty
 }
 
 void init_sender() {
-    // WiFi configuration - CRITICAL: Use defaults but adjust for large packets
+    // IMPROVED WiFi configuration for raw frame transmission
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     
-    // IMPORTANT: For large packets, we need dynamic buffers
+    // CRITICAL: Increase buffer sizes for better performance
     cfg.tx_buf_type = 1;           // Dynamic buffers
-    cfg.dynamic_tx_buf_num = 32;   // Enough buffers for continuous transmission
-    cfg.static_tx_buf_num = 8;     // No static buffers
-    cfg.beacon_max_len = sizeof(WiFiRawFrame) + WIFI_RAW_MAX_DATA_LEN;  // MUST match packet size
-    cfg.cache_tx_buf_num = 4;      // Cache for performance
+    cfg.dynamic_tx_buf_num = 64;   // More buffers for continuous transmission
+    cfg.static_tx_buf_num = 0;     // No static buffers (use dynamic only)
+    cfg.beacon_max_len = sizeof(WiFiRawFrame) + WIFI_RAW_MAX_DATA_LEN + FCS_SIZE;  // Include FCS
+    cfg.cache_tx_buf_num = 8;      // More cache for better performance
     
-    // Disable features we don't need
-    cfg.ampdu_rx_enable = 0;
-    cfg.ampdu_tx_enable = 0;
-    cfg.amsdu_tx_enable = 0;
+    // Enable AMPDU for better throughput (can be disabled if causing issues)
+    cfg.ampdu_rx_enable = 1;
+    cfg.ampdu_tx_enable = 1;
+    cfg.amsdu_tx_enable = 1;
     
-    log_i("Config: dynamic buffers=%d, beacon_max_len=%d", cfg.dynamic_tx_buf_num, cfg.beacon_max_len);
+    // Increase RX buffer
+    cfg.rx_ba_win = 16;            // Increased BA window size
+    
+    log_v("Improved Config: dynamic buffers=%d, beacon_max_len=%d, AMPDU enabled", 
+          cfg.dynamic_tx_buf_num, cfg.beacon_max_len);
     
     // Initialize WiFi
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     
-    log_i("initialized for transmiting");
+    log_v("initialized for transmitting with improved config");
 }
 
 void init_receiver() {
+    // Improved receiver configuration
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    
+    // Increase buffers for receiver
+    cfg.dynamic_tx_buf_num = 32;   // Still need some for ACKs
+    cfg.rx_ba_win = 16;            // Increased receive window
     
     // Initialize WiFi
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_promiscuous(true));
     
-    log_i("initialized in promiscuous mode");
+    log_i("initialized in promiscuous mode with improved config");
 }
 
 // Initialize WiFi Raw communication
@@ -261,7 +294,7 @@ comm_err_t WiFiRawComm::addPeer(const CommPeerInfo* peer) {
     return COMM_OK;
 }
 
-// Send data using raw 802.11 frames
+// Send data using raw 802.11 frames with improved configuration
 comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_t len) {
     if (!initialized) {
         return COMM_ERR_NOT_INIT;
@@ -275,49 +308,47 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
         return COMM_ERR_ARG;  // Too large
     }
     
-    // Create raw frame buffer
+    // Create raw frame buffer with space for FCS
     size_t frame_len = 0;
-    uint8_t frame_buffer[sizeof(WiFiRawFrame) + WIFI_RAW_MAX_DATA_LEN];
+    uint8_t frame_buffer[sizeof(WiFiRawFrame) + WIFI_RAW_MAX_DATA_LEN + FCS_SIZE];
     
     create_raw_frame(frame_buffer, mac_addr, local_mac, data, len, &frame_len);
     
     // Memory exhaustion detection - check heap before sending
     size_t free_heap_before = esp_get_free_heap_size();
-    // log_i("Memory before send: free_heap=%d, frame_len=%d", free_heap_before, frame_len);
     
-    // Send using esp_wifi_80211_tx
-    // Note: en_sys_seq = false for raw frames without connection
-    esp_err_t esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, false);
-    // log_i("80211_tx esp_err_t: %s", esp_err_to_name(esp_err));
+    // IMPROVED: Use en_sys_seq = true for better reliability
+    // This enables system sequence number management
+    esp_err_t esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, true);
     
     // Check memory after sending
     size_t free_heap_after = esp_get_free_heap_size();
-    // log_i("Memory after send: free_heap=%d, delta=%d", free_heap_after, free_heap_before - free_heap_after);
     
-    // Handle ESP_ERR_NO_MEM with retry logic
+    // Handle ESP_ERR_NO_MEM with improved exponential backoff
     if (esp_err == ESP_ERR_NO_MEM) {
         log_w("Memory exhausted! Free heap: %d, waiting for recovery...", free_heap_after);
         
-        // Exponential backoff retry
-        for (int retry = 0; retry < 3; retry++) {
-            vTaskDelay((50 * (1 << retry)) / portTICK_PERIOD_MS); // 50ms, 100ms, 200ms
+        // Improved exponential backoff with memory checking
+        for (int retry = 0; retry < 5; retry++) {
+            int delay_ms = 10 * (1 << retry); // 10ms, 20ms, 40ms, 80ms, 160ms
+            vTaskDelay(delay_ms / portTICK_PERIOD_MS);
             
-            // Check if memory has recovered
+            // Check if memory has recovered (at least 4KB free)
             size_t current_heap = esp_get_free_heap_size();
-            log_i("Retry %d: free_heap=%d", retry + 1, current_heap);
-            
-            esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, false);
-            log_i("80211_tx retry %d: %s", retry + 1, esp_err_to_name(esp_err));
-            
-            if (esp_err == ESP_OK) {
-                log_i("Memory recovered after %d retries", retry + 1);
-                break;
+            if (current_heap > free_heap_after + 4096) {
+                log_i("Memory recovered after %d ms, retrying...", delay_ms);
+                esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, true);
+                
+                if (esp_err == ESP_OK) {
+                    log_i("Send successful after %d retries", retry + 1);
+                    break;
+                }
             }
         }
     }
     
-    // vTaskDelay(5 / portTICK_PERIOD_MS);
-    delay(5);
+    // Small delay to prevent overwhelming the WiFi stack
+    delay(2);  // Reduced from 5ms to 2ms
     
     if (esp_err != ESP_OK) {
         // Log detailed error information
