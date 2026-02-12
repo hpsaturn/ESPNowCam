@@ -190,14 +190,14 @@ void init_sender() {
     // Increase RX buffer
     cfg.rx_ba_win = 16;            // Increased BA window size
     
-    log_v("Improved Config: dynamic buffers=%d, beacon_max_len=%d, AMPDU enabled", 
+    log_i("Improved Config: dynamic buffers=%d, beacon_max_len=%d, AMPDU enabled", 
           cfg.dynamic_tx_buf_num, cfg.beacon_max_len);
     
     // Initialize WiFi
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     
-    log_v("initialized for transmitting with improved config");
+    log_i("initialized for 802.11_tx() transmitting");
 }
 
 void init_receiver() {
