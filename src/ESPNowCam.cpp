@@ -306,12 +306,12 @@ bool ESPNowCam::init(uint16_t chunk_size) {
   }
 
   if (comm != &defaultESPNow) {
-    log_i("Using custom CommInterface");
+    printf("Using WiFiRawComm 80211tx interface :)\r\n");
     registerCallbacks();
   } else {
-    log_i("Using default ESPNowComm");
+    printf("Using old EspNow implementation :(\r\n");
     WiFi.mode(WIFI_STA);
-    log_i("ESPNow Init");
+    log_i("ESPNowCam Init");
     log_i("%s", WiFi.macAddress().c_str());
     // shutdown wifi
     WiFi.disconnect();

@@ -3,8 +3,6 @@
 #include "esp_heap_caps.h"
 
 // Configuration
-#define WIFI_CHANNEL 6
-#define TEST_DURATION_MS 10000
 #define FCS_SIZE 4  // Frame Check Sequence size in bytes
 
 // Initialize static members
@@ -251,7 +249,7 @@ comm_err_t WiFiRawComm::init() {
     else init_sender();
 
     ESP_ERROR_CHECK(esp_wifi_start());
-    ESP_ERROR_CHECK(esp_wifi_set_channel(WIFI_CHANNEL, WIFI_SECOND_CHAN_NONE));
+    ESP_ERROR_CHECK(esp_wifi_set_channel(current_channel, WIFI_SECOND_CHAN_NONE));
       
     uint8_t mac[6];
     // Get local MAC address
@@ -383,9 +381,6 @@ comm_err_t WiFiRawComm::registerRecvCallback(comm_recv_cb_t cb) {
 void WiFiRawComm::setChannel(uint8_t channel) {
     if (channel >= 1 && channel <= 14) {
         current_channel = channel;
-        if (initialized) {
-            esp_wifi_set_channel(channel, WIFI_SECOND_CHAN_NONE);
-        }
     }
 }
 
