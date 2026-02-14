@@ -182,10 +182,10 @@ void init_sender() {
     cfg.cache_tx_buf_num = 8;      // More cache for better performance
     
     // Enable AMPDU for better throughput (can be disabled if causing issues)
-    cfg.ampdu_rx_enable = 1;
     cfg.ampdu_tx_enable = 1;
     cfg.amsdu_tx_enable = 1;
-    
+    cfg.ampdu_rx_enable = 1;
+ 
     // Increase RX buffer
     cfg.rx_ba_win = 16;            // Increased BA window size
     
@@ -206,6 +206,7 @@ void init_receiver() {
     // Increase buffers for receiver
     cfg.dynamic_tx_buf_num = 32;   // Still need some for ACKs
     cfg.rx_ba_win = 16;            // Increased receive window
+    cfg.ampdu_rx_enable = 1;       // Enable AMPDU reception for better performance
     
     // Initialize WiFi
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -329,7 +330,7 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
         
         // Improved exponential backoff with memory checking
         for (int retry = 0; retry < 15; retry++) {
-            int delay_ms = 1 * (1 << retry); // 10ms, 20ms, 40ms, 80ms, 160ms
+            int delay_ms = 10 * (1 << retry); // 10ms, 20ms, 40ms, 80ms, 160ms
             vTaskDelay(delay_ms / portTICK_PERIOD_MS);
             
             // Check if memory has recovered (at least 4KB free)
@@ -339,7 +340,7 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
                 esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, true);
                 
                 if (esp_err == ESP_OK) {
-                    log_i("Send successful after %d retries", retry + 1);
+                    log_w("Send successful after %d retries", retry + 1);
                     break;
                 }
             }

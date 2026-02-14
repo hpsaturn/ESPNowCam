@@ -39,10 +39,10 @@ void setup() {
   }
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  // fb = static_cast<uint8_t*>(ps_malloc(15000 * sizeof(uint8_t)));
+  fb = static_cast<uint8_t*>(ps_malloc(15000 * sizeof(uint8_t)));
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = (uint8_t*)  ps_malloc(310000 * sizeof( uint8_t ) ) ;
+  // fb = (uint8_t*)  ps_malloc(310000 * sizeof( uint8_t ) ) ;
 
 
 
@@ -56,7 +56,7 @@ void setup() {
   radio.setRecvCallback(onDataReady);
 
   // if (radio.init()) {
-  if (radio.init(512)) {
+  if (radio.init(480)) {
     M5.Display.drawString("ESPNow Init Success", dw / 2, dh / 2);
     Serial.println("ESPNow Init Success");
   } 

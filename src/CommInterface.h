@@ -6,7 +6,7 @@
 
 // Maximum data length (can be overridden by implementations)
 #ifndef COMM_MAX_DATA_LEN
-#define COMM_MAX_DATA_LEN 1024
+#define COMM_MAX_DATA_LEN 512
 #endif
 
 // Simple error type for abstraction

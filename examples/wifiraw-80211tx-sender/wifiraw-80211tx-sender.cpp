@@ -23,7 +23,7 @@ void processFrame() {
   if (Camera.get()) {
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
-    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len); 
+    frame2jpg(Camera.fb, 16, &out_jpg, &out_jpg_len); 
     radio.sendData(out_jpg, out_jpg_len);
     free(out_jpg);
 
@@ -49,7 +49,7 @@ void setup() {
   const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
   radio.setTarget(macRecv);
   // radio.init();
-  radio.init(512);
+  radio.init(480);
 
   // You are able to change the Camera config E.g:
   Camera.config.fb_count = 2;
