@@ -343,7 +343,7 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
     }
   }
 
-  delayMicroseconds(10); // TODO: adjust this delay as needed for better performance
+  // delayMicroseconds(1000); // TODO: adjust this delay as needed for better performance
 
   if (esp_err != ESP_OK) {
     log_e("Send failed with error: %s (0x%x)", esp_err_to_name(esp_err), esp_err);

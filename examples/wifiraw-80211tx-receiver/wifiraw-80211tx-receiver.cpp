@@ -47,8 +47,9 @@ void setup() {
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);
+  radio.setChannel(6);
 
-  if (radio.init(480)) {  // chunk size in bytes (beta feature)
+  if (radio.init(512)) {  // chunk size in bytes (beta feature)
     M5.Display.drawString("ESPNowCam Init Success", dw / 2, dh / 2);
     Serial.println("ESPNowCam Init Success");
   } 

@@ -8,9 +8,7 @@
 #include <M5CoreS3.h>
 #include "ESPNowCam.h"
 
-WiFiRawComm wifiRaw;
-ESPNowCam radio(&wifiRaw);
-// ESPNowCam radio;
+ESPNowCam radio;
 
 // frame buffer
 uint8_t *fb; 
@@ -60,7 +58,7 @@ void setup() {
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);
 
-  if (radio.init(480)) {
+  if (radio.init()) {
     M5.Display.drawString("ESPNowCam Init Success", dw / 2, dh / 2);
   }
   delay(1000);
