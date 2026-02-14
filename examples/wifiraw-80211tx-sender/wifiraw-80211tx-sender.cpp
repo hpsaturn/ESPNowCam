@@ -1,6 +1,6 @@
 /**************************************************
- * ESP32Cam Freenove ESPNow Transmitter
- * by @hpsaturn Copyright (C) 2024
+ * ESPNowCam transmitter using WiFi Raw frames (802.11 Tx)
+ * by @hpsaturn Copyright (C) 2024-2026
  * This file is part ESPNowCam project:
  * https://github.com/hpsaturn/ESPNowCam
 **************************************************/
@@ -17,7 +17,6 @@
 CamFreenove Camera;
 WiFiRawComm wifiRaw;
 ESPNowCam radio(&wifiRaw);
-// ESPNowCam radio;
 
 void processFrame() {
   if (Camera.get()) {
@@ -26,10 +25,6 @@ void processFrame() {
     frame2jpg(Camera.fb, 16, &out_jpg, &out_jpg_len); 
     radio.sendData(out_jpg, out_jpg_len);
     free(out_jpg);
-
-    // radio.sendData(Camera.fb->buf, Camera.fb->len);
-    // delay(10);  // ==> weird delay when you are using only DRAM.
-    
     Camera.free();
   }
 }
@@ -49,7 +44,11 @@ void setup() {
   const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
   radio.setTarget(macRecv);
   // radio.init();
-  radio.init(480);
+  radio.setChannel(6);
+
+  if (radio.init(480)) {
+    Serial.println("ESPNowCam Init Success");
+  }
 
   // You are able to change the Camera config E.g:
   Camera.config.fb_count = 2;
