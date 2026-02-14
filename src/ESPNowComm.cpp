@@ -1,3 +1,10 @@
+/**************************************************
+ * ESPNowCam EspNow (old) Communication Implementation
+ * by @hpsaturn Copyright (C) 2024-2026
+ * This file is part ESP32S3 camera tests project:
+ * https://github.com/hpsaturn/esp32s3-cam
+**************************************************/
+
 #include "ESPNowComm.h"
 #include <esp_now.h>
 #include <esp_wifi.h>

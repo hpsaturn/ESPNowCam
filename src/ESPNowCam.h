@@ -1,3 +1,10 @@
+/**************************************************
+ * ESPNowCam Main Implementation (ESPNow/WiFiRaw unified)
+ * by @hpsaturn Copyright (C) 2024-2026
+ * This file is part ESP32S3 camera tests project:
+ * https://github.com/hpsaturn/esp32s3-cam
+**************************************************/
+
 #ifndef ESPNOWCAM_H
 #define ESPNOWCAM_H
 

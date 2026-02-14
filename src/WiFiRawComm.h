@@ -1,3 +1,10 @@
+/**************************************************
+ * ESPNowCam WiFi Raw 802.11tx Communication Implementation
+ * by @hpsaturn Copyright (C) 2024-2026
+ * This file is part ESP32S3 camera tests project:
+ * https://github.com/hpsaturn/esp32s3-cam
+**************************************************/
+
 #ifndef WIFI_RAW_COMM_H
 #define WIFI_RAW_COMM_H
 
