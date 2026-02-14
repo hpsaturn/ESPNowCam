@@ -20,6 +20,11 @@ typedef void (*RecvCb)(uint32_t lenght);
 #define ENC_VERSION "0.1.17"
 #define ENC_REVISION 082
 
+// Maximum data length (can be overridden by implementations)
+#ifndef COMM_MAX_DATA_LEN
+#define COMM_MAX_DATA_LEN 350
+#endif
+
 class ESPNowCam {
  private:
   uint8_t targetAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -65,7 +70,7 @@ class ESPNowCam {
 
   /// @brief initialize the communication.
   /// @param chunksize size of the chunks to be sent. Default is 244 bytes.
-  bool init(uint8_t chunksize = 244);
+  bool init(uint16_t chunksize = 244);
 };
 
 #endif

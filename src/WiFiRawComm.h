@@ -23,7 +23,6 @@
 #define WIFI_RAW_ERR_TX_FAILED  (WIFI_RAW_ERR_BASE + 7)
 
 // WiFi Raw-specific constants
-#define WIFI_RAW_MAX_DATA_LEN 256  // Max payload for 802.11 frame
 #define WIFI_RAW_ETH_HEADER_LEN 14
 #define WIFI_RAW_80211_HEADER_LEN 24
 #define WIFI_RAW_FRAME_CTRL 0x0800  // Ethernet type for IP

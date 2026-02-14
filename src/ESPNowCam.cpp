@@ -16,10 +16,10 @@ static ESPNowComm defaultESPNow;
 /***********************************
  * S E N D E R  S E C T I O N
 ************************************/
-uint8_t send_buffer[256];
-uint8_t chunksize = 244;
-uint8_t chunk_size_left = chunksize;
-uint32_t chunk_pos = 0;
+uint16_t chunksize = 244;
+uint8_t send_buffer[COMM_MAX_DATA_LEN - 8];
+uint16_t chunk_size_left = chunksize;
+uint16_t chunk_pos = 0;
 uint8_t *outdata = NULL;
 size_t outdata_len = 0;
 bool msgReady = false;
@@ -80,6 +80,7 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
 
 size_t encodeMsg(Frame msg) {
   pb_ostream_t stream = pb_ostream_from_buffer(send_buffer, sizeof(send_buffer));
+  
   bool status = pb_encode(&stream, Frame_fields, &msg);
   size_t message_length = stream.bytes_written;
   if (!status) {
@@ -139,7 +140,7 @@ void printMacAddress(const uint8_t * macAddress){
  * R E C E I V E R  S E C T I O N
  * (for single camera source)
 ************************************/
-uint8_t recv_buffer[256];
+uint8_t recv_buffer[COMM_MAX_DATA_LEN - 8];
 uint32_t fbpos = 0;
 RecvCb recvCb = nullptr;
 uint8_t *recvBuffer = nullptr;
@@ -147,7 +148,7 @@ Frame msg_recv = Frame_init_zero;
 
 bool decode_data(pb_istream_t *stream, const pb_field_t *field, void **arg) {
   /// store the initial bytes left for after update fpos
-  int bytes_left = stream->bytes_left;
+  size_t bytes_left = stream->bytes_left;
 
   if (!pb_read(stream, recvBuffer + fbpos, stream->bytes_left))
     return false;
@@ -167,8 +168,8 @@ bool decodeMessage(uint16_t message_length) {
   return true;
 }
 
-void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
-  int msgLen = min(COMM_MAX_DATA_LEN, dataLen);
+void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int32_t dataLen) {
+  uint32_t msgLen = min(COMM_MAX_DATA_LEN, dataLen);
   memcpy(recv_buffer, data, msgLen);
   if (decodeMessage(msgLen) && msg_recv.lenght > 0) {
     if (recvCb != nullptr) recvCb(msg_recv.lenght);
@@ -227,7 +228,7 @@ bool mulDecodeMessage(uint16_t message_length) {
   return true;
 }
 
-void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
+void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int32_t dataLen) {
   // printMacAddress(macAddr); 
   // std::lock_guard<std::mutex> lck(recv_cb_mtx);
   uint32_t id = getReceiverId(macAddr);
@@ -237,7 +238,7 @@ void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int dataLen)
     return;
   } else {
     curReceiver = (struct_receiver*)(&pos->second);
-    int msgLen = min(COMM_MAX_DATA_LEN, dataLen);
+    uint32_t msgLen = min(COMM_MAX_DATA_LEN, dataLen);
     memcpy(recv_buffer, data, msgLen);
     if (mulDecodeMessage(msgLen) && msg_recv.lenght > 0) {
       if (curReceiver->recvCb != nullptr) curReceiver->recvCb(msg_recv.lenght);
@@ -295,7 +296,7 @@ void ESPNowCam::setChannel(uint8_t channel) {
   _channel = channel;
 }
 
-bool ESPNowCam::init(uint8_t chunk_size) {
+bool ESPNowCam::init(uint16_t chunk_size) {
   chunksize = chunk_size; 
   chunk_size_left = chunk_size;
 

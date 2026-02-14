@@ -4,7 +4,6 @@
 
 // Configuration
 #define WIFI_CHANNEL 6
-#define PACKET_SIZE 256
 #define TEST_DURATION_MS 10000
 #define FCS_SIZE 4  // Frame Check Sequence size in bytes
 
@@ -19,7 +18,7 @@ std::vector<CommPeerInfo> WiFiRawComm::peers;
 
 // Print MAC address
 void print_mac_address(const uint8_t* mac) {
-    log_i("MAC: %02X:%02X:%02X:%02X:%02X:%02X",
+    printf("MAC: %02X:%02X:%02X:%02X:%02X:%02X\r\n",
                  mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
@@ -179,7 +178,7 @@ void init_sender() {
     cfg.tx_buf_type = 1;           // Dynamic buffers
     cfg.dynamic_tx_buf_num = 64;   // More buffers for continuous transmission
     cfg.static_tx_buf_num = 0;     // No static buffers (use dynamic only)
-    cfg.beacon_max_len = sizeof(WiFiRawFrame) + WIFI_RAW_MAX_DATA_LEN + FCS_SIZE;  // Include FCS
+    cfg.beacon_max_len = sizeof(WiFiRawFrame) + COMM_MAX_DATA_LEN + FCS_SIZE;  // Include FCS
     cfg.cache_tx_buf_num = 8;      // More cache for better performance
     
     // Enable AMPDU for better throughput (can be disabled if causing issues)
@@ -304,16 +303,16 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
         return COMM_ERR_ARG;
     }
     
-    if (len > WIFI_RAW_MAX_DATA_LEN) {
+    if (len > COMM_MAX_DATA_LEN) {
         return COMM_ERR_ARG;  // Too large
     }
     
-    // Create raw frame buffer with space for FCS
+    // Create raw frame buffer with exact size needed (not maximum)
     size_t frame_len = 0;
-    uint8_t frame_buffer[sizeof(WiFiRawFrame) + WIFI_RAW_MAX_DATA_LEN + FCS_SIZE];
+    uint8_t frame_buffer[sizeof(WiFiRawFrame) + COMM_MAX_DATA_LEN + FCS_SIZE];
     
     create_raw_frame(frame_buffer, mac_addr, local_mac, data, len, &frame_len);
-    
+
     // Memory exhaustion detection - check heap before sending
     size_t free_heap_before = esp_get_free_heap_size();
     
@@ -326,17 +325,17 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
     
     // Handle ESP_ERR_NO_MEM with improved exponential backoff
     if (esp_err == ESP_ERR_NO_MEM) {
-        log_w("Memory exhausted! Free heap: %d, waiting for recovery...", free_heap_after);
+        // log_w("Memory exhausted! Free heap: %d, waiting for recovery...", free_heap_after);
         
         // Improved exponential backoff with memory checking
-        for (int retry = 0; retry < 5; retry++) {
-            int delay_ms = 10 * (1 << retry); // 10ms, 20ms, 40ms, 80ms, 160ms
+        for (int retry = 0; retry < 15; retry++) {
+            int delay_ms = 1 * (1 << retry); // 10ms, 20ms, 40ms, 80ms, 160ms
             vTaskDelay(delay_ms / portTICK_PERIOD_MS);
             
             // Check if memory has recovered (at least 4KB free)
             size_t current_heap = esp_get_free_heap_size();
             if (current_heap > free_heap_after + 4096) {
-                log_i("Memory recovered after %d ms, retrying...", delay_ms);
+                // log_i("Memory recovered after %d ms, retrying...", delay_ms);
                 esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, true);
                 
                 if (esp_err == ESP_OK) {
@@ -347,8 +346,9 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
         }
     }
     
-    // Small delay to prevent overwhelming the WiFi stack
-    delay(2);  // Reduced from 5ms to 2ms
+    // Small delay to prevent overwhelming the WiFi stack (ESP_ERR_NO_MEM)
+    // delay(5);  // Increased to 5ms to give WiFi stack time to process
+    delayMicroseconds(10);
     
     if (esp_err != ESP_OK) {
         // Log detailed error information
@@ -358,7 +358,7 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
     }
     
     // Call send callback if registered
-    if (user_send_cb != nullptr) {
+    if (user_send_cb != nullptr && esp_err == ESP_OK) {
         user_send_cb(mac_addr, COMM_SEND_SUCCESS);
     }
     

@@ -16,7 +16,7 @@ void ESPNowComm::esp_send_cb_wrapper(const uint8_t* mac_addr, esp_now_send_statu
 }
 
 // Wrapper callback for receive
-void ESPNowComm::esp_recv_cb_wrapper(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
+void ESPNowComm::esp_recv_cb_wrapper(const uint8_t* mac_addr, const uint8_t* data, int32_t data_len) {
     if (user_recv_cb) {
         user_recv_cb(mac_addr, data, data_len);
     }

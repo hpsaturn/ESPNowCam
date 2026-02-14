@@ -21,7 +21,7 @@ class ESPNowComm : public CommInterface {
 private:
     // Static callbacks to bridge between C-style ESPNow callbacks and C++ class
     static void esp_send_cb_wrapper(const uint8_t* mac_addr, esp_now_send_status_t esp_status);
-    static void esp_recv_cb_wrapper(const uint8_t* mac_addr, const uint8_t* data, int data_len);
+    static void esp_recv_cb_wrapper(const uint8_t* mac_addr, const uint8_t* data, int32_t data_len);
     
     // User callbacks
     static comm_send_cb_t user_send_cb;

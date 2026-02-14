@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include <stddef.h>
 
+// Maximum data length (can be overridden by implementations)
+#ifndef COMM_MAX_DATA_LEN
+#define COMM_MAX_DATA_LEN 1024
+#endif
+
 // Simple error type for abstraction
 typedef int comm_err_t;
 #define COMM_OK 0
@@ -23,14 +28,9 @@ typedef enum {
     COMM_SEND_FAIL = 1
 } comm_send_status_t;
 
-// Maximum data length (can be overridden by implementations)
-#ifndef COMM_MAX_DATA_LEN
-#define COMM_MAX_DATA_LEN 250
-#endif
-
 // Callback types using abstracted types
 typedef void (*comm_send_cb_t)(const uint8_t* mac_addr, comm_send_status_t status);
-typedef void (*comm_recv_cb_t)(const uint8_t* mac_addr, const uint8_t* data, int data_len);
+typedef void (*comm_recv_cb_t)(const uint8_t* mac_addr, const uint8_t* data, int32_t data_len);
 
 // Simple peer info structure (platform independent)
 struct CommPeerInfo {
