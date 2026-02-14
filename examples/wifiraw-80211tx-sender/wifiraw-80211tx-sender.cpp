@@ -43,22 +43,14 @@ void setup() {
   // M5Core2 receiver
   const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
   radio.setTarget(macRecv);
-  // radio.init();
-  radio.setChannel(6);
 
-  if (radio.init(480)) {
+  if (radio.init(480)) {  // chunk size in bytes (beta feature)
     Serial.println("ESPNowCam Init Success");
   }
 
   // You are able to change the Camera config E.g:
   Camera.config.fb_count = 2;
   Camera.config.frame_size = FRAMESIZE_QVGA;
-  
-  // Camera.config.pixel_format = PIXFORMAT_JPEG;
-  // Camera.config.jpeg_quality = 85;
-  // Camera.config.frame_size = FRAMESIZE_QVGA;
-  // Camera.config.fb_count = 2;
-  // Camera.config.fb_location = CAMERA_FB_IN_DRAM;
 
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");

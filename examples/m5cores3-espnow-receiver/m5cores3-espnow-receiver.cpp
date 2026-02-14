@@ -8,7 +8,9 @@
 #include <M5CoreS3.h>
 #include "ESPNowCam.h"
 
-ESPNowCam radio;
+WiFiRawComm wifiRaw;
+ESPNowCam radio(&wifiRaw);
+// ESPNowCam radio;
 
 // frame buffer
 uint8_t *fb; 
@@ -53,13 +55,13 @@ void setup() {
   }
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = static_cast<uint8_t *>(ps_malloc(5000 * sizeof(uint8_t)));
+  fb = static_cast<uint8_t *>(ps_malloc(15000 * sizeof(uint8_t)));
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);
 
-  if (radio.init()) {
-    M5.Display.drawString("ESPNow Init Success", dw / 2, dh / 2);
+  if (radio.init(480)) {
+    M5.Display.drawString("ESPNowCam Init Success", dw / 2, dh / 2);
   }
   delay(1000);
 }

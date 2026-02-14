@@ -38,7 +38,6 @@ void setup() {
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);
-  radio.setChannel(6);
 
   if (radio.init()) {
     M5.Display.drawString("ESPNowCam Init Success", dw / 2, dh / 2);
