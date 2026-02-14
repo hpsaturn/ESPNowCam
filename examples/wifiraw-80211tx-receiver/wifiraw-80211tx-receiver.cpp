@@ -18,10 +18,8 @@
 WiFiRawComm wifiRaw;
 ESPNowCam radio(&wifiRaw);
 
-// frame buffer
-uint8_t *fb; 
-// display globals
-int32_t dw, dh;
+uint8_t *fb;    // frame buffer
+int32_t dw, dh; // display width and height
 
 void onDataReady(uint32_t lenght) {
   M5.Display.drawJpg(fb, lenght , 0, 0, dw, dh);
@@ -56,7 +54,7 @@ void setup() {
   // radio.setRecvFilter(fb, camera, onDataReady);
   radio.setRecvCallback(onDataReady);
   radio.setChannel(6);
-  // if (radio.init()) {
+
   if (radio.init(480)) {
     M5.Display.drawString("ESPNowCam Init Success", dw / 2, dh / 2);
     Serial.println("ESPNowCam Init Success");
@@ -64,5 +62,4 @@ void setup() {
   delay(100);
 }
 
-void loop() {
-}
+void loop() {}
