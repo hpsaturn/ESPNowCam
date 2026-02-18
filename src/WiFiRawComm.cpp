@@ -172,10 +172,10 @@ void init_sender() {
 
   // CRITICAL: Increase buffer sizes for better performance
   cfg.tx_buf_type = 1;          // Dynamic buffers
-  cfg.dynamic_tx_buf_num = 64;  // More buffers for continuous transmission
+  cfg.dynamic_tx_buf_num = 128;  // More buffers for continuous transmission
   cfg.static_tx_buf_num = 0;    // No static buffers (use dynamic only)
   cfg.beacon_max_len = sizeof(WiFiRawFrame) + COMM_MAX_DATA_LEN + FCS_SIZE;  // Include FCS
-  cfg.cache_tx_buf_num = 8;  // More cache for better performance
+  cfg.cache_tx_buf_num = 16;  // More cache for better performance
 
   // Enable AMPDU for better throughput (can be disabled if causing issues)
   cfg.ampdu_tx_enable = 1;
@@ -183,7 +183,7 @@ void init_sender() {
   cfg.ampdu_rx_enable = 1;
 
   // Increase RX buffer
-  cfg.rx_ba_win = 16;  // Increased BA window size
+  cfg.rx_ba_win = 32;  // Increased BA window size
 
   log_i("Improved Config: dynamic buffers=%d, beacon_max_len=%d, AMPDU enabled",
         cfg.dynamic_tx_buf_num, cfg.beacon_max_len);
@@ -200,8 +200,8 @@ void init_receiver() {
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 
   // Increase buffers for receiver
-  cfg.dynamic_tx_buf_num = 32;  // Still need some for ACKs
-  cfg.rx_ba_win = 16;           // Increased receive window
+  cfg.dynamic_tx_buf_num = 64;  // Still need some for ACKs
+  cfg.rx_ba_win = 32;           // Increased receive window
   cfg.ampdu_rx_enable = 1;      // Enable AMPDU reception for better performance
 
   // Initialize WiFi
@@ -311,7 +311,7 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
   create_raw_frame(frame_buffer, mac_addr, local_mac, data, len, &frame_len);
 
   // Memory exhaustion detection - check heap before sending
-  size_t free_heap_before = esp_get_free_heap_size();
+  // size_t free_heap_before = esp_get_free_heap_size();
 
   // IMPROVED: Use en_sys_seq = true for better reliability
   // This enables system sequence number management
