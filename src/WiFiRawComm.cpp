@@ -172,7 +172,7 @@ void init_sender() {
 
   // CRITICAL: Increase buffer sizes for better performance
   cfg.tx_buf_type = 1;          // Dynamic buffers
-  cfg.dynamic_tx_buf_num = 128;  // More buffers for continuous transmission
+  cfg.dynamic_tx_buf_num = 64;  // More buffers for continuous transmission
   cfg.static_tx_buf_num = 0;    // No static buffers (use dynamic only)
   cfg.beacon_max_len = sizeof(WiFiRawFrame) + COMM_MAX_DATA_LEN + FCS_SIZE;  // Include FCS
   cfg.cache_tx_buf_num = 16;  // More cache for better performance
@@ -195,6 +195,10 @@ void init_sender() {
   log_i("initialized for 802.11_tx() transmitting");
 }
 
+wifi_promiscuous_filter_t filter = {
+    .filter_mask = WIFI_PROMIS_FILTER_MASK_ALL | WIFI_PROMIS_CTRL_FILTER_MASK_ALL
+};
+
 void init_receiver() {
   // Improved receiver configuration
   wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
@@ -208,6 +212,7 @@ void init_receiver() {
   ESP_ERROR_CHECK(esp_wifi_init(&cfg));
   ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
   ESP_ERROR_CHECK(esp_wifi_set_promiscuous(true));
+  // ESP_ERROR_CHECK(esp_wifi_set_promiscuous_filter(&filter));
 
   log_i("initialized for 802.11_tx() receiving in promiscuous mode");
 }
@@ -248,6 +253,7 @@ comm_err_t WiFiRawComm::init() {
 
   ESP_ERROR_CHECK(esp_wifi_start());
   ESP_ERROR_CHECK(esp_wifi_set_channel(current_channel, WIFI_SECOND_CHAN_NONE));
+  ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
 
   uint8_t mac[6];
   // Get local MAC address
@@ -292,49 +298,34 @@ comm_err_t WiFiRawComm::addPeer(const CommPeerInfo* peer) {
 
 // Send data using raw 802.11 frames with improved configuration
 comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_t len) {
-  if (!initialized) {
-    return COMM_ERR_NOT_INIT;
-  }
+  
+  if (!initialized) return COMM_ERR_NOT_INIT;
+  if (mac_addr == nullptr || data == nullptr || len == 0) return COMM_ERR_ARG;
+  if (len > COMM_MAX_DATA_LEN) return COMM_ERR_ARG;
 
-  if (mac_addr == nullptr || data == nullptr || len == 0) {
-    return COMM_ERR_ARG;
-  }
-
-  if (len > COMM_MAX_DATA_LEN) {
-    return COMM_ERR_ARG;  // Too large
-  }
-
+  // uint8_t broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
   // Create raw frame buffer with exact size needed (not maximum, possible proto issue)
   size_t frame_len = 0;
   uint8_t frame_buffer[sizeof(WiFiRawFrame) + COMM_MAX_DATA_LEN + FCS_SIZE];
 
   create_raw_frame(frame_buffer, mac_addr, local_mac, data, len, &frame_len);
 
-  // Memory exhaustion detection - check heap before sending
-  // size_t free_heap_before = esp_get_free_heap_size();
-
   // IMPROVED: Use en_sys_seq = true for better reliability
   // This enables system sequence number management
   esp_err_t esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, true);
 
-  // Check memory after sending
-  size_t free_heap_after = esp_get_free_heap_size();
-
   // Handle ESP_ERR_NO_MEM with improved exponential backoff
   if (esp_err == ESP_ERR_NO_MEM) {
-    // log_w("Memory exhausted! Free heap: %d, waiting for recovery...", free_heap_after);
-
+    size_t free_heap_after = esp_get_free_heap_size();
     // Improved exponential backoff with memory checking
     for (int retry = 0; retry < 15; retry++) {
       int delay_ms = 10 * (1 << retry);  // 10ms, 20ms, 40ms, 80ms, 160ms
       vTaskDelay(delay_ms / portTICK_PERIOD_MS);
-
       // Check if memory has recovered (at least 4KB free)
       size_t current_heap = esp_get_free_heap_size();
       if (current_heap > free_heap_after + 4096) {
         // log_i("Memory recovered after %d ms, retrying...", delay_ms);
         esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, true);
-
         if (esp_err == ESP_OK) {
           log_w("Send successful after %d retries", retry + 1);
           break;
@@ -342,8 +333,6 @@ comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_
       }
     }
   }
-
-  // delayMicroseconds(1000); // TODO: adjust this delay as needed for better performance
 
   if (esp_err != ESP_OK) {
     log_e("Send failed with error: %s (0x%x)", esp_err_to_name(esp_err), esp_err);

@@ -34,7 +34,7 @@ void setup() {
 
   auto cfg = M5.config();
   M5.begin(cfg);
-  M5.Display.setBrightness(96);
+  M5.Display.setBrightness(100);
   dw=M5.Display.width();
   dh=M5.Display.height();
 
