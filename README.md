@@ -134,7 +134,7 @@ and each camera should have configured the receiver MAC like a target. Fore more
 
 ### WiFi Raw 802.11tx mode (experimental)
 
-Now is possible use 80211tx() primitive or WiFi RAW mode without ESPNow internals. That use this raw method and it has better performance. For that, only do that:
+Now is possible use 80211tx() primitive or WiFi RAW mode without ESPNow internals. Using this raw mode it could be better performance. For that, only do that:
 
 **sender**:
 
