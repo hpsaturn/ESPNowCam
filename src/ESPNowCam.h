@@ -24,8 +24,8 @@ extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
 }
 
-#define ENC_VERSION "0.1.17"
-#define ENC_REVISION 082
+#define ENC_VERSION "0.2.0"
+#define ENC_REVISION 083
 
 // Maximum data length (can be overridden by implementations)
 #ifndef COMM_MAX_DATA_LEN

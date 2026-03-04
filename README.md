@@ -22,6 +22,7 @@ The latest version brings numerous enhancements and is currently highly stable. 
 - One transmitter to multiple receivers using the internal ESPNow broadcasting feature (1:N mode).
 - Peer-to-peer (P2P) connections utilizing MAC address targeting (1:1 mode).
 - Multi-sender mode with one receiver (N:1 mode).
+- **NEW:** [80211tx()](#wifi-raw-80211tx-mode-experimental) WiFi raw ESPNow alternative (Beta).
 
 [![ESPNowCam broadcast camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcast-camera-mode.gif)](https://youtu.be/zXIzP1TGlpA) [![ESPNowCam P2P mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/p2p-camera-mode.gif)](https://youtu.be/XDIiJ25AKr8) [![ESPNowCam multi camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/multi-camera-mode.gif)](https://youtu.be/ip6RohVEg2s)  
 [[1:N mode video]](https://youtu.be/zXIzP1TGlpA) [[1:1 mode video]](https://youtu.be/XDIiJ25AKr8) [[N:1 mode video]](https://youtu.be/ip6RohVEg2s)  
@@ -35,6 +36,7 @@ The current version was tested with the next cameras:
 
 | Sender |  Frame | PSRAM | JPGQ | FPS | Status |
 |:---------|:-----:|:-----:|:------:|:-------:|:------:|
+| Freenove [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | ~13 FPS | TESTING |
 | TTGO TJournal |  QVGA | No | 12 | ~11 FPS | STABLE |
 | XIAO Sense S3 | QVGA | Yes | 12 | ~11 FPS | STABLE |
 | Freenove S3 | QVGA | Yes | 12 | ~10 FPS | STABLE |
@@ -51,13 +53,13 @@ The current version was tested with the next cameras:
 Add the following line to the lib_deps option of your [env:] section:
 
 ```python
-hpsaturn/EspNowCam@^0.1.17
+hpsaturn/EspNowCam@^0.2.0
 ```
 
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.17"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.2.0"
 ```
 
 **Arduino IDE**:
@@ -65,7 +67,7 @@ pio pkg install --library "hpsaturn/ESPNowCam@^0.1.17"
 >[!IMPORTANT]
 >For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need:
 >
->1. Download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file
+>1. Download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.9.1) using the `Include Library` section via zip file
 >2. and then with the **Library Manager** find **ESPNowCam** and install it.
 
 >[!TIP]
@@ -83,6 +85,7 @@ ESPNowCam radio;
 radio.init();
 radio.sendData(data, data_len);
 ```
+
 [full sender implementation example](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/xiao-espnow-sender/xiao-espnow-sender.cpp)
 
 **To receive** the data, you only need to define a buffer and callback:
@@ -98,6 +101,7 @@ void onDataReady(uint32_t lenght) {
   tft.drawJpg(fb, lenght , 0, 0, dw, dh);
 }
 ```
+
 [full receiver implementation example](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/m5core2-basic-receiver/m5core2-basic-receiver.ino)
 
 >[!NOTE]
@@ -127,6 +131,39 @@ radio.setRecvFilter(fb_cam3, mac_cam3, onCam3DataReady);
 ```
 
 and each camera should have configured the receiver MAC like a target. Fore more details, please follow the [multi-camera-one-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/multi-camera-one-receiver/) directory example.
+
+### WiFi Raw 802.11tx mode (experimental)
+
+Now is possible use 80211tx() primitive or WiFi RAW mode without ESPNow internals. That use this raw method and it has better performance. For that, only do that:
+
+**sender**:
+
+```cpp
+WiFiRawComm wifiRaw;
+ESPNowCam radio(&wifiRaw);
+
+radio.setTarget(macRecv); // receiver mac address improv
+radio.setChannel(6);      // improve quality
+radio.init(512);          // you are able to change the chunk size
+
+radio.sendData(out_data, out_data_len);
+```  
+
+[full wifiraw-80211tx-sender example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-sender)
+
+**receiver**:
+
+```cpp
+WiFiRawComm wifiRaw;
+ESPNowCam radio(&wifiRaw);
+
+radio.setRecvBuffer(fb);            // fixed buffer
+radio.setRecvCallback(onDataReady); // similar callback to other modes
+radio.setChannel(6);                // improve quality
+radio.init(512);                    // the same sender chunk size
+```  
+
+[full wifiraw-80211tx-receiver example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-receiver)
 
 ### Predefined drivers
 
@@ -214,7 +251,7 @@ Also I'm working in a complete Camera configurator and test suite for this libra
 - [x] Add sender callback to improve speed
 - [x] Added internal drivers for some popular Cameras
 - [x] Added multi-camera support with one only target
-- [ ] Migration to esp_wifi_80211_tx() to improve Payload and Quality
+- [x] Migration to esp_wifi_80211_tx() to improve Payload and Quality
 
 ## Credits
 
