@@ -142,8 +142,8 @@ Now is possible use 80211tx() primitive or WiFi RAW mode without ESPNow internal
 WiFiRawComm wifiRaw;
 ESPNowCam radio(&wifiRaw);
 
-radio.setTarget(macRecv); // receiver mac address improv
-radio.setChannel(6);      // improve quality
+radio.setTarget(macRecv); // receiver mac address to improve quality
+radio.setChannel(6);      // improve quality (recommended)
 radio.init(512);          // you are able to change the chunk size
 
 radio.sendData(out_data, out_data_len);
@@ -164,6 +164,9 @@ radio.init(512);                    // the same sender chunk size
 ```  
 
 [full wifiraw-80211tx-receiver example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-receiver)
+
+>[!TIP]
+>Note: The N:1 mode is not full implemented on WiFi raw. It is recommended use channel and mac address target on the sender for improve quality. Please sse the examples for details.
 
 ### Predefined drivers
 
