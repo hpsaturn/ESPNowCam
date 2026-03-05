@@ -11,9 +11,9 @@
 #include <esp_wifi.h>
 #include <string.h>
 
-// Initialize static members
-comm_send_cb_t ESPNowComm::user_send_cb = nullptr;
+// Static members initialization
 comm_recv_cb_t ESPNowComm::user_recv_cb = nullptr;
+comm_send_cb_t ESPNowComm::user_send_cb = nullptr;
 
 // Wrapper callback to convert ESP types to abstract types
 void ESPNowComm::esp_send_cb_wrapper(const uint8_t* mac_addr, esp_now_send_status_t esp_status) {
@@ -24,11 +24,21 @@ void ESPNowComm::esp_send_cb_wrapper(const uint8_t* mac_addr, esp_now_send_statu
 }
 
 // Wrapper callback for receive
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+// ESP32-C3 expects int for data_len
+void ESPNowComm::esp_recv_cb_wrapper(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
+  if (user_recv_cb) {
+    user_recv_cb(mac_addr, data, (int32_t)data_len);
+  }
+}
+#else
+// ESP32 (Xtensa) expects int32_t for data_len
 void ESPNowComm::esp_recv_cb_wrapper(const uint8_t* mac_addr, const uint8_t* data, int32_t data_len) {
   if (user_recv_cb) {
     user_recv_cb(mac_addr, data, data_len);
   }
 }
+#endif
 
 comm_err_t ESPNowComm::init() { return (comm_err_t)esp_now_init(); }
 

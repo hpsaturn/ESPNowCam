@@ -169,7 +169,11 @@ bool decodeMessage(uint16_t message_length) {
 }
 
 void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int32_t dataLen) {
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+  uint32_t msgLen = min((int32_t)COMM_MAX_DATA_LEN, dataLen);
+#else
   uint32_t msgLen = min(COMM_MAX_DATA_LEN, dataLen);
+#endif
   memcpy(recv_buffer, data, msgLen);
   if (decodeMessage(msgLen) && msg_recv.lenght > 0) {
     if (recvCb != nullptr) recvCb(msg_recv.lenght);
@@ -238,7 +242,11 @@ void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int32_t data
     return;
   } else {
     curReceiver = (struct_receiver*)(&pos->second);
+    #ifdef CONFIG_IDF_TARGET_ESP32C3
+    uint32_t msgLen = min((int32_t)COMM_MAX_DATA_LEN, dataLen);
+    #else
     uint32_t msgLen = min(COMM_MAX_DATA_LEN, dataLen);
+    #endif
     memcpy(recv_buffer, data, msgLen);
     if (mulDecodeMessage(msgLen) && msg_recv.lenght > 0) {
       if (curReceiver->recvCb != nullptr) curReceiver->recvCb(msg_recv.lenght);
