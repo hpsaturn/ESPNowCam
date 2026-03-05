@@ -1,6 +1,6 @@
 /**************************************************
- * ESP32Cam Freenove ESPNow Transmitter
- * by @hpsaturn Copyright (C) 2024
+ * ESPNowCam transmitter using WiFi Raw frames (802.11 Tx)
+ * by @hpsaturn Copyright (C) 2024-2026
  * This file is part ESPNowCam project:
  * https://github.com/hpsaturn/ESPNowCam
 **************************************************/
@@ -15,13 +15,14 @@
 #include <drivers/CamFreenove.h>
 
 CamFreenove Camera;
-ESPNowCam radio;
+WiFiRawComm wifiRaw;
+ESPNowCam radio(&wifiRaw);
 
 void processFrame() {
   if (Camera.get()) {
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
-    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len);
+    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len); 
     radio.sendData(out_jpg, out_jpg_len);
     free(out_jpg);
     Camera.free();
@@ -32,7 +33,7 @@ void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
-  delay(1000);
+  delay(100);
 
   if(psramFound()){
     size_t psram_size = esp_spiram_get_size() / 1048576;
@@ -40,25 +41,22 @@ void setup() {
   }
 
   // M5Core2 receiver
-  // const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
-  // radio.setTarget(macRecv);
+  const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  radio.setTarget(macRecv);
+  radio.setChannel(6);
 
-  if (radio.init()) {
+  if (radio.init(512)) {  // chunk size in bytes (beta feature)
     Serial.println("ESPNowCam Init Success");
   }
 
-  delay(500);
-
   // You are able to change the Camera config E.g:
-  // Camera.config.fb_count = 2;
-  // Camera.config.frame_size = FRAMESIZE_QQVGA;
-  
-  if (Camera.begin()) {
-    Serial.println("Camera Init Success");
-  } else
+  Camera.config.fb_count = 2;
+  Camera.config.frame_size = FRAMESIZE_QVGA;
+
+  if (!Camera.begin()) {
     Serial.println("Camera Init Fail");
-  
-  delay(500);
+  }
+  delay(100);
 }
 
 void loop() {

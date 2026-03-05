@@ -45,3 +45,7 @@ releases
 releases/binaries/
 releases/installer/
 examples/lib/espcamlib
+.history
+.local
+.cache
+.platformio

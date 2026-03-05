@@ -1,24 +1,30 @@
 /**************************************************
- * ESPNowCam Transmitter/Receiver unified class
- * by @hpsaturn Copyright (C) 2024
+ * ESPNowCam Main Implementation (ESPNow/WiFiRaw unified)
+ * by @hpsaturn Copyright (C) 2024-2026
  * This file is part ESP32S3 camera tests project:
  * https://github.com/hpsaturn/esp32s3-cam
 **************************************************/
 
 #include "ESPNowCam.h"
+#include "CommInterface.h"
+#include "typeinfo"
+#include <algorithm>
+
+// Static instance of default ESPNow implementation
+static ESPNowComm defaultESPNow;
 
 /***********************************
  * S E N D E R  S E C T I O N
 ************************************/
-uint8_t send_buffer[256];
-uint8_t chunksize = 244;
-uint8_t chunk_size_left = chunksize;
-uint32_t chunk_pos = 0;
+uint16_t chunksize = 244;
+uint8_t send_buffer[COMM_MAX_DATA_LEN - 8];
+uint16_t chunk_size_left = chunksize;
+uint16_t chunk_pos = 0;
 uint8_t *outdata = NULL;
 size_t outdata_len = 0;
 bool msgReady = false;
 
-bool sendMessage(uint32_t msglen, const uint8_t *mac);
+bool sendMessage(uint32_t msglen, const uint8_t *mac, CommInterface* comm);
 size_t encodeMsg(Frame msg);
 
 bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
@@ -27,8 +33,21 @@ bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *con
   return pb_encode_string(stream, static_cast<uint8_t*>(outdata + chunk_pos), chunk_size_left);
 }
 
-void msgSentCb(const uint8_t *macAddr, esp_now_send_status_t  status) {
+void msgSentCb(const uint8_t *macAddr, comm_send_status_t  status) {
   msgReady = true;
+}
+
+// Constructor and Destructor
+ESPNowCam::ESPNowCam(CommInterface* interface) {
+  if (interface == nullptr) {
+    comm = &defaultESPNow;
+  } else {
+    comm = interface;
+  }
+}
+
+ESPNowCam::~ESPNowCam() {
+  // Cleanup if needed
 }
 
 bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
@@ -47,7 +66,7 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
     }
     msg.data.funcs.encode = &encode_uint8_array;
     msgReady = false;
-    sendMessage(encodeMsg(msg), this->targetAddress);
+    sendMessage(encodeMsg(msg), this->targetAddress, comm);
     while(!msgReady)delayMicroseconds(1);
     chunk_pos = outdata_len - frame_left;
     if (msg.lenght == outdata_len) {
@@ -61,6 +80,7 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
 
 size_t encodeMsg(Frame msg) {
   pb_ostream_t stream = pb_ostream_from_buffer(send_buffer, sizeof(send_buffer));
+  
   bool status = pb_encode(&stream, Frame_fields, &msg);
   size_t message_length = stream.bytes_written;
   if (!status) {
@@ -70,26 +90,26 @@ size_t encodeMsg(Frame msg) {
   return message_length;
 }
 
-bool sendMessage(uint32_t msglen, const uint8_t *mac) {
-  esp_now_peer_info_t peerInfo = {};
+bool sendMessage(uint32_t msglen, const uint8_t *mac, CommInterface* comm) {
+  CommPeerInfo peerInfo = {};
   memcpy(&peerInfo.peer_addr, mac, 6);
-  if (!esp_now_is_peer_exist(mac)) {
-    esp_now_add_peer(&peerInfo);
+  if (!comm->isPeerExist(mac)) {
+    comm->addPeer(&peerInfo);
   }
-  esp_err_t result = esp_now_send(mac, send_buffer, msglen);
+  esp_err_t result = comm->send(mac, send_buffer, msglen);
 
-  if (result == ESP_OK) {
-    log_v("send msg success");
+  if (result == COMM_OK) {
+    // log_v("send msg success");
     return true;
-  } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
+  } else if (result == COMM_ERR_NOT_INIT) {
     log_e("ESPNOW not Init.");
-  } else if (result == ESP_ERR_ESPNOW_ARG) {
+  } else if (result == COMM_ERR_ARG) {
     log_e("Invalid Argument");
-  } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
+  } else if (result == COMM_ERR_INTERNAL) {
     log_e("Internal Error");
-  } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-    log_e("ESP_ERR_ESPNOW_NO_MEM");
-  } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
+  } else if (result == COMM_ERR_NO_MEM) {
+    log_e("COMM_ERR_NO_MEM");
+  } else if (result == COMM_ERR_NOT_FOUND) {
     log_e("Peer not found.");
   } else {
     log_e("Unknown error");
@@ -120,7 +140,7 @@ void printMacAddress(const uint8_t * macAddress){
  * R E C E I V E R  S E C T I O N
  * (for single camera source)
 ************************************/
-uint8_t recv_buffer[256];
+uint8_t recv_buffer[COMM_MAX_DATA_LEN - 8];
 uint32_t fbpos = 0;
 RecvCb recvCb = nullptr;
 uint8_t *recvBuffer = nullptr;
@@ -128,7 +148,7 @@ Frame msg_recv = Frame_init_zero;
 
 bool decode_data(pb_istream_t *stream, const pb_field_t *field, void **arg) {
   /// store the initial bytes left for after update fpos
-  int bytes_left = stream->bytes_left;
+  size_t bytes_left = stream->bytes_left;
 
   if (!pb_read(stream, recvBuffer + fbpos, stream->bytes_left))
     return false;
@@ -142,14 +162,18 @@ bool decodeMessage(uint16_t message_length) {
   msg_recv.data.funcs.decode = &decode_data;
   bool status = pb_decode(&stream, Frame_fields, &msg_recv);
   if (!status) {
-    log_w("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
+    log_w("%s", PB_GET_ERROR(&stream));
     return false;
   }
   return true;
 }
 
-void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
-  int msgLen = min(ESP_NOW_MAX_DATA_LEN, dataLen);
+void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int32_t dataLen) {
+#ifdef CONFIG_IDF_TARGET_ESP32C3
+  uint32_t msgLen = min((int32_t)COMM_MAX_DATA_LEN, dataLen);
+#else
+  uint32_t msgLen = min(COMM_MAX_DATA_LEN, dataLen);
+#endif
   memcpy(recv_buffer, data, msgLen);
   if (decodeMessage(msgLen) && msg_recv.lenght > 0) {
     if (recvCb != nullptr) recvCb(msg_recv.lenght);
@@ -202,13 +226,13 @@ bool mulDecodeMessage(uint16_t message_length) {
   msg_recv.data.funcs.decode = &mul_decode_data;
   bool status = pb_decode(&stream, Frame_fields, &msg_recv);
   if (!status) {
-    log_w("Decoding msg failed: %s\r\n", PB_GET_ERROR(&stream));
+    log_w("%s", PB_GET_ERROR(&stream));
     return false;
   }
   return true;
 }
 
-void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int dataLen) {
+void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int32_t dataLen) {
   // printMacAddress(macAddr); 
   // std::lock_guard<std::mutex> lck(recv_cb_mtx);
   uint32_t id = getReceiverId(macAddr);
@@ -218,7 +242,11 @@ void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int dataLen)
     return;
   } else {
     curReceiver = (struct_receiver*)(&pos->second);
-    int msgLen = min(ESP_NOW_MAX_DATA_LEN, dataLen);
+    #ifdef CONFIG_IDF_TARGET_ESP32C3
+    uint32_t msgLen = min((int32_t)COMM_MAX_DATA_LEN, dataLen);
+    #else
+    uint32_t msgLen = min(COMM_MAX_DATA_LEN, dataLen);
+    #endif
     memcpy(recv_buffer, data, msgLen);
     if (mulDecodeMessage(msgLen) && msg_recv.lenght > 0) {
       if (curReceiver->recvCb != nullptr) curReceiver->recvCb(msg_recv.lenght);
@@ -262,38 +290,50 @@ void ESPNowCam::setRecvFilter(uint8_t *fb, const uint8_t *macAddr, RecvCb cb) {
 /***********************************
  * C O M M O N  S E C T I O N
 ************************************/
+void ESPNowCam::registerCallbacks() {
+  // Only for receivers devices
+  if (recvCb != nullptr)
+    comm->registerRecvCallback(msgReceiveCb);
+  else if (buffers.size() > 0)
+    comm->registerRecvCallback(msgReceiveCbByMAC);
+  // Default send callback
+  comm->registerSendCallback(msgSentCb);
+}
+
 void ESPNowCam::setChannel(uint8_t channel) {
   _channel = channel;
 }
 
-bool ESPNowCam::init(uint8_t chunk_size) {
+bool ESPNowCam::init(uint16_t chunk_size) {
   chunksize = chunk_size; 
   chunk_size_left = chunk_size;
-  WiFi.mode(WIFI_STA);
-  log_i("ESPNow Init");
-  log_i("%s",WiFi.macAddress().c_str());
-  // shutdown wifi
-  WiFi.disconnect();
-  delay(100);
 
   if (_channel != -1) {
     log_i("Set custom channel: %i", _channel);
-    esp_wifi_set_channel(_channel, WIFI_SECOND_CHAN_NONE);
+    comm->setChannel(_channel);
   }
 
-  if (esp_now_init() == ESP_OK) {
-    log_i("ESPNow Init Success");
-
-    esp_now_register_send_cb(msgSentCb);
-    // Only for receivers devices
-    if (recvCb != nullptr)
-      esp_now_register_recv_cb(msgReceiveCb);
-    else if (buffers.size() > 0)
-      esp_now_register_recv_cb(msgReceiveCbByMAC);
-
-    return true;
-
+  if (comm != &defaultESPNow) {
+    printf("Using WiFiRawComm 80211tx interface :)\r\n");
+    registerCallbacks();
   } else {
+    printf("Using old EspNow implementation :(\r\n");
+    WiFi.mode(WIFI_STA);
+    log_i("ESPNowCam Init");
+    log_i("%s", WiFi.macAddress().c_str());
+    // shutdown wifi
+    WiFi.disconnect();
+    delay(100);
+  }
+
+  if (comm->init() == COMM_OK) {
+    log_i("ESPNow Init Success");
+    if (comm == &defaultESPNow) {
+      registerCallbacks();
+    }
+    return true;
+  } 
+  else {
     log_e("ESPNow Init Failed");
     delay(100);
     ESP.restart();
