@@ -25,7 +25,7 @@ uint32_t outdata_len = 0;
 bool msgReady = false;
 
 bool sendMessage(uint32_t msglen, const uint8_t *mac, CommInterface* comm);
-size_t encodeMsg(Frame msg);
+uint32_t encodeMsg(Frame msg);
 
 bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
   if (!pb_encode_tag_for_field(stream, field))
@@ -80,11 +80,11 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
   return true;
 }
 
-size_t encodeMsg(Frame msg) {
+uint32_t encodeMsg(Frame msg) {
   pb_ostream_t stream = pb_ostream_from_buffer(send_buffer, sizeof(send_buffer));
   
   bool status = pb_encode(&stream, Frame_fields, &msg);
-  size_t message_length = stream.bytes_written;
+  uint32_t message_length = stream.bytes_written;
   if (!status) {
     printf("Encoding failed: %s\r\n", PB_GET_ERROR(&stream));
     return 0;
