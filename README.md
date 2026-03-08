@@ -151,7 +151,7 @@ radio.sendData(out_data, out_data_len);
 ```  
 
 [full wifiraw-80211tx-freenove-sender example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-freenove-sender)  
-[full wifiraw-80211tx-m5cores3-sender example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-sender)
+[full wifiraw-80211tx-m5cores3-sender example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-m5cores3-sender)
 
 **receiver**:
 
