@@ -11,7 +11,7 @@
 
 /* Struct definitions */
 typedef struct _Frame {
-    uint16_t lenght;
+    uint32_t lenght;
     pb_callback_t data;
 } Frame;
 
