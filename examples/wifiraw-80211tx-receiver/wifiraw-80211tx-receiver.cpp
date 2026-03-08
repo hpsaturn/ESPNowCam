@@ -17,6 +17,7 @@
 
 WiFiRawComm wifiRaw;
 ESPNowCam radio(&wifiRaw);
+// ESPNowCam radio;
 
 uint8_t *fb;    // frame buffer
 int32_t dw, dh; // display width and height
@@ -34,7 +35,7 @@ void setup() {
 
   auto cfg = M5.config();
   M5.begin(cfg);
-  M5.Display.setBrightness(100);
+  M5.Display.setBrightness(250);
   dw=M5.Display.width();
   dh=M5.Display.height();
 
@@ -49,7 +50,7 @@ void setup() {
   radio.setRecvCallback(onDataReady);
   radio.setChannel(6);
 
-  if (radio.init(512)) {  // chunk size in bytes (beta feature)
+  if (radio.init(960)) {  // chunk size in bytes (beta feature)
     M5.Display.drawString("ESPNowCam Init Success", dw / 2, dh / 2);
     Serial.println("ESPNowCam Init Success");
   } 

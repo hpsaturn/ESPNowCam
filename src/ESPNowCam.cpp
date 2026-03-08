@@ -18,14 +18,14 @@ static ESPNowComm defaultESPNow;
 ************************************/
 uint16_t chunksize = 244;
 uint8_t send_buffer[COMM_MAX_DATA_LEN - 8];
-uint16_t chunk_size_left = chunksize;
-uint16_t chunk_pos = 0;
+uint32_t chunk_size_left = chunksize;
+uint32_t chunk_pos = 0;
 uint8_t *outdata = NULL;
-size_t outdata_len = 0;
+uint32_t outdata_len = 0;
 bool msgReady = false;
 
 bool sendMessage(uint32_t msglen, const uint8_t *mac, CommInterface* comm);
-size_t encodeMsg(Frame msg);
+uint32_t encodeMsg(Frame msg);
 
 bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
   if (!pb_encode_tag_for_field(stream, field))
@@ -51,12 +51,14 @@ ESPNowCam::~ESPNowCam() {
 }
 
 bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
+  log_v("sending data (size: %i)", lenght);
   outdata = data;
   outdata_len = lenght;
 
   uint32_t frame_left = outdata_len;
   Frame msg = Frame_init_zero;
   while (frame_left > 0) {
+    log_v("frame_left: %i)", frame_left);
     if (frame_left <= chunk_size_left) {
       chunk_size_left = frame_left;
       msg.lenght = outdata_len;
@@ -78,11 +80,11 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
   return true;
 }
 
-size_t encodeMsg(Frame msg) {
+uint32_t encodeMsg(Frame msg) {
   pb_ostream_t stream = pb_ostream_from_buffer(send_buffer, sizeof(send_buffer));
   
   bool status = pb_encode(&stream, Frame_fields, &msg);
-  size_t message_length = stream.bytes_written;
+  uint32_t message_length = stream.bytes_written;
   if (!status) {
     printf("Encoding failed: %s\r\n", PB_GET_ERROR(&stream));
     return 0;

@@ -45,7 +45,7 @@ void setup() {
   radio.setTarget(macRecv);
   radio.setChannel(6);
 
-  if (radio.init(512)) {  // chunk size in bytes (beta feature)
+  if (radio.init(960)) {  // chunk size in bytes (beta feature)
     Serial.println("ESPNowCam Init Success");
   }
 

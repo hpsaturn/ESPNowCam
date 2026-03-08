@@ -2,7 +2,7 @@
 
 [![PlatformIO](https://github.com/hpsaturn/esp32s3-cam/workflows/PlatformIO/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) [![All Platforms](https://github.com/hpsaturn/esp32s3-cam/workflows/Scheduled/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) ![ViewCount](https://views.whatilearened.today/views/github/hpsaturn/esp32s3-cam.svg)  
 
-The ESPNowCam library is a simple and direct video or data streamer designed for popular ESP32 devices, utilizing the ESPNow protocol. No need for IPs, routers, or credentials—keeping it straightforward and hassle-free! :D
+The ESPNowCam library is a simple and direct video or data streamer designed for popular ESP32 devices, utilizing ESPNow and WiFi-raw (80211tx) protocols. No need for IPs, routers, or credentials-keeping it straightforward and hassle-free! :D
 
 >[!TIP]
 >**This library is for general purpose**, as it accepts pointers to various types of data, including buffers, strings, images, or any byte-formatted content. This flexibility enables transmission of larger packages across different scenarios, not limited to cameras alone. For instance, a buffer of 4000 bytes takes approximately 1/9 of a second to transmit, resulting in a frame rate of around 9FPS.
@@ -36,6 +36,7 @@ The current version was tested with the next cameras:
 
 | Sender |  Frame | PSRAM | JPGQ | FPS | Status |
 |:---------|:-----:|:-----:|:------:|:-------:|:------:|
+| M5CoreS3 [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | ~14 FPS | TESTING |
 | Freenove [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | ~13 FPS | TESTING |
 | TTGO TJournal |  QVGA | No | 12 | ~11 FPS | STABLE |
 | XIAO Sense S3 | QVGA | Yes | 12 | ~11 FPS | STABLE |
@@ -149,7 +150,8 @@ radio.init(512);          // you are able to change the chunk size
 radio.sendData(out_data, out_data_len);
 ```  
 
-[full wifiraw-80211tx-sender example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-sender)
+[full wifiraw-80211tx-freenove-sender example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-freenove-sender)  
+[full wifiraw-80211tx-m5cores3-sender example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-sender)
 
 **receiver**:
 
