@@ -1,5 +1,5 @@
 /**************************************************
- * ESPNowCam receiver using WiFi Raw frames (802.11 Tx)
+ * ESPNowCam transmitter using WiFi Raw frames (802.11 Tx)
  * by @hpsaturn Copyright (C) 2024-2026
  * This file is part ESPNowCam project:
  * https://github.com/hpsaturn/ESPNowCam
@@ -11,20 +11,22 @@
 // and also review the README.md file.
 
 #include <Arduino.h>
-#include <M5Unified.h>
-#include "ESPNowCam.h"
-#include "Utils.h"
+#include <ESPNowCam.h>
+#include <drivers/CamFreenove.h>
 
+CamFreenove Camera;
 WiFiRawComm wifiRaw;
 ESPNowCam radio(&wifiRaw);
-// ESPNowCam radio;
 
-uint8_t *fb;    // frame buffer
-int32_t dw, dh; // display width and height
-
-void onDataReady(uint32_t lenght) {
-  M5.Display.drawJpg(fb, lenght , 0, 0, dw, dh);
-  printFPS("M5Core2:");
+void processFrame() {
+  if (Camera.get()) {
+    uint8_t *out_jpg = NULL;
+    size_t out_jpg_len = 0;
+    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len); 
+    radio.sendData(out_jpg, out_jpg_len);
+    free(out_jpg);
+    Camera.free();
+  }
 }
 
 void setup() {
@@ -33,28 +35,30 @@ void setup() {
   Serial.println();
   delay(100);
 
-  auto cfg = M5.config();
-  M5.begin(cfg);
-  M5.Display.setBrightness(250);
-  dw=M5.Display.width();
-  dh=M5.Display.height();
-
   if(psramFound()){
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
-  // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = static_cast<uint8_t*>(ps_malloc(15000 * sizeof(uint8_t)));
 
-  radio.setRecvBuffer(fb);
-  radio.setRecvCallback(onDataReady);
+  // M5Core2 receiver
+  const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  radio.setTarget(macRecv);
   radio.setChannel(6);
 
   if (radio.init(960)) {  // chunk size in bytes (beta feature)
-    M5.Display.drawString("ESPNowCam Init Success", dw / 2, dh / 2);
     Serial.println("ESPNowCam Init Success");
-  } 
+  }
+
+  // You are able to change the Camera config E.g:
+  Camera.config.fb_count = 2;
+  Camera.config.frame_size = FRAMESIZE_QVGA;
+
+  if (!Camera.begin()) {
+    Serial.println("Camera Init Fail");
+  }
   delay(100);
 }
 
-void loop() {}
+void loop() {
+  processFrame();
+}

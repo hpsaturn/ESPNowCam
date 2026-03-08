@@ -12,6 +12,7 @@
 
 WiFiRawComm wifiRaw;
 ESPNowCam radio(&wifiRaw);
+// ESPNowCam radio;
 
 int32_t dw, dh;
 
@@ -31,15 +32,11 @@ static void drawFPS() {
 
 void processFrame() {
   if (CoreS3.Camera.get()) {
-    CoreS3.Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
+    // CoreS3.Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
-    frame2jpg(CoreS3.Camera.fb, 18, &out_jpg, &out_jpg_len);
-    // CoreS3.Display.drawJpg(out_jpg, out_jpg_len, 0, 0, dw, dh);
+    frame2jpg(CoreS3.Camera.fb, 12, &out_jpg, &out_jpg_len);
     radio.sendData(out_jpg, out_jpg_len);
-    // Serial.printf("format: %i bufferlen: %i\r\n",CoreS3.Camera.fb->format, CoreS3.Camera.fb->len);
-    // radio.sendData(CoreS3.Camera.fb->buf, CoreS3.Camera.fb->len);
-    // vTaskDelay(5);
     printFPS("CAM:");
     free(out_jpg);
     CoreS3.Camera.free();
@@ -65,7 +62,7 @@ void setup() {
   radio.setTarget(macRecv);
   radio.setChannel(6);
   
-  if (radio.init(512)) {  // chunk size in bytes (beta feature)
+  if (radio.init(960)) {  // chunk size in bytes (beta feature)
     Serial.println("ESPNowCam Init Success");
   }
 
@@ -82,7 +79,7 @@ void setup() {
   // CoreS3.Camera.config->pixel_format = PIXFORMAT_GRAYSCALE;
   CoreS3.Camera.sensor->set_framesize(CoreS3.Camera.sensor, FRAMESIZE_QVGA);
 
-  delay(500);
+  delay(100);
 }
 
 void loop() {
