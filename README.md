@@ -22,7 +22,7 @@ The latest version brings numerous enhancements and is currently highly stable. 
 - One transmitter to multiple receivers using the internal ESPNow broadcasting feature (1:N mode).
 - Peer-to-peer (P2P) connections utilizing MAC address targeting (1:1 mode).
 - Multi-sender mode with one receiver (N:1 mode).
-- **NEW:** [80211tx()](#wifi-raw-80211tx-mode-experimental) WiFi raw ESPNow alternative (Beta).
+- **!! N E W !!**: [80211tx()](#wifi-raw-80211tx-mode-experimental) WiFi-raw ESPNow alternative. This achieves a **performance improvement of around 40%** in P2P mode (Beta).
 
 [![ESPNowCam broadcast camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcast-camera-mode.gif)](https://youtu.be/zXIzP1TGlpA) [![ESPNowCam P2P mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/p2p-camera-mode.gif)](https://youtu.be/XDIiJ25AKr8) [![ESPNowCam multi camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/multi-camera-mode.gif)](https://youtu.be/ip6RohVEg2s)  
 [[1:N mode video]](https://youtu.be/zXIzP1TGlpA) [[1:1 mode video]](https://youtu.be/XDIiJ25AKr8) [[N:1 mode video]](https://youtu.be/ip6RohVEg2s)  
@@ -226,7 +226,7 @@ Some examples are for Arduino users (*.ino samples), but is possible too compile
  pio run --target upload
  ```
 
-### Camera CLI
+### Camera CLI (experimental)
 
 Also I'm working in a complete Camera configurator and test suite for this library and also other features around the ESP Cameras. It is a project in progress, but you are able to configure and test all ESPNowCam features more easy using a [CLI and manager](https://github.com/hpsaturn/esp32-camera-cli) that runs into the Camera:
 
@@ -257,11 +257,15 @@ Also I'm working in a complete Camera configurator and test suite for this libra
 - [x] Added internal drivers for some popular Cameras
 - [x] Added multi-camera support with one only target
 - [x] Migration to esp_wifi_80211_tx() to improve Payload and Quality
+- [ ] PC support using WiFi adapters with monitor mode
+- [ ] Audio transmission examples
+- [ ] Improve 802.11tx() using modified version
 
 ## Credits
 
 I want to extend my gratitude to:
 
+[CNX-Software](https://www.cnx-software.com/2025/02/24/espnowcam-library-enables-esp32-video-camera-or-data-transmission-with-the-esp-now-protocol/) (Embedded Systems News) for this review.  
 [@ElectroZeusTIC](https://github.com/electrozeustic) and [@AcoranTf](https://github.com/AcoranTf) for testing on Arduino IDE.  
 [@UtaAoya](https://x.com/UtaAoya) for findings related to the M5UnitCam device.  
 [@MeloCuentan](https://github.com/MeloCuentan) for fixing issues with the AI-Thinker Camera and the new ESP32S3 RGB receiver.  

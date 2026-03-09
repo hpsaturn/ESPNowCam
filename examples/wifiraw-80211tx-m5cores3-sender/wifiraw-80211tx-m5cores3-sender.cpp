@@ -1,6 +1,6 @@
 /**************************************************
- * ESPNowCam video Transmitter
- * by @hpsaturn Copyright (C) 2024
+ * ESPNowCam transmitter using WiFi Raw frames (802.11 Tx)
+ * by @hpsaturn Copyright (C) 2024-2026
  * This file is part ESPNowCam project:
  * https://github.com/hpsaturn/ESPNowCam
 **************************************************/
@@ -12,7 +12,6 @@
 
 WiFiRawComm wifiRaw;
 ESPNowCam radio(&wifiRaw);
-// ESPNowCam radio;
 
 int32_t dw, dh;
 
@@ -25,7 +24,6 @@ static void drawFPS() {
     sprintf(bf,"FPS: %i",frame);
     CoreS3.Display.clear();
     CoreS3.Display.drawString(String(bf), dw / 2, dh / 2);
-    // Serial.printf("%s %2d FPS\r\n",msg, frame);
     frame = 0;
   } 
 }
@@ -74,9 +72,6 @@ void setup() {
   }
   CoreS3.Display.drawString("Camera Init Success", dw / 2, dh / 2);
 
-  // CoreS3.Camera.config->fb_count = 2;
-  // CoreS3.Camera.config->fb_location = CAMERA_FB_IN_DRAM;
-  // CoreS3.Camera.config->pixel_format = PIXFORMAT_GRAYSCALE;
   CoreS3.Camera.sensor->set_framesize(CoreS3.Camera.sensor, FRAMESIZE_QVGA);
 
   delay(100);
