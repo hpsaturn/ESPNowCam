@@ -34,16 +34,16 @@ The latest version brings numerous enhancements and is currently highly stable. 
 
 The current version was tested with the next cameras:
 
-| Sender |  Frame | PSRAM | JPGQ | FPS | Status |
-|:---------|:-----:|:-----:|:------:|:-------:|:------:|
-| M5CoreS3 [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | ~14 FPS | TESTING |
-| Freenove [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | ~13 FPS | TESTING |
-| TTGO TJournal |  QVGA | No | 12 | ~11 FPS | STABLE |
-| XIAO Sense S3 | QVGA | Yes | 12 | ~11 FPS | STABLE |
-| Freenove S3 | QVGA | Yes | 12 | ~10 FPS | STABLE |
-| Freenove S3 | HVGA | Yes | 12 | ~6 FPS | STABLE |
-| M5CoreS3 | QVGA | Yes | 12  | ~11 FPS | STABLE |
-| M5UnitCamS3 | QVGA | Yes | 12 | ~9 FPS | STABLE |
+| Sender | Impl | Frame | PSRAM | JPGQ | FPS | Status |
+|:---------|:-----:|:-----:|:-----:|:------:|:-------:|:------:|
+| M5CoreS3 | [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | **~14 FPS** | TESTING |
+| Freenove | [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | **~13 FPS** | TESTING |
+| TTGO TJournal | ESPNOW |  QVGA | No | 12 | ~11 FPS | STABLE |
+| XIAO Sense S3 | ESPNOW | QVGA | Yes | 12 | ~11 FPS | STABLE |
+| Freenove S3 | ESPNOW | QVGA | Yes | 12 | ~10 FPS | STABLE |
+| Freenove S3 | ESPNOW | HVGA | Yes | 12 | ~6 FPS | STABLE |
+| M5CoreS3 | ESPNOW | QVGA | Yes | 12  | ~11 FPS | STABLE |
+| M5UnitCamS3 | ESPNOW | QVGA | Yes | 12 | ~9 FPS | STABLE |
 
 [Full list of senders and receivers that was tested](https://github.com/hpsaturn/ESPNowCam/wiki/Supported-Devices)
 
