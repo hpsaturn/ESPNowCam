@@ -76,7 +76,7 @@ class ESPNowCam {
   void setChannel(uint8_t channel);
 
   /// @brief initialize the communication.
-  /// @param chunksize size of the chunks to be sent. Default is 244 bytes.
+  /// @param chunksize default for ESPNow <= 244, for WiFiRaw > 244 max ~1000 bytes.
   bool init(uint16_t chunksize = 244);
 };
 
