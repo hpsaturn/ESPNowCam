@@ -35,14 +35,14 @@ The latest version brings numerous enhancements and is currently highly stable. 
 The current version was tested with the next cameras:
 
 | Sender | Impl | Frame | PSRAM | JPGQ | FPS | Status |
-|:---------|:-----:|:-----:|:-----:|:------:|:-------:|:------:|
+| :-------- | :-----: | :-----: | :-----: | :------: | :-------: | :------: |
 | M5CoreS3 | [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | **~14 FPS** | TESTING |
 | Freenove | [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | **~13 FPS** | TESTING |
 | TTGO TJournal | ESPNOW |  QVGA | No | 12 | ~11 FPS | STABLE |
 | XIAO Sense S3 | ESPNOW | QVGA | Yes | 12 | ~11 FPS | STABLE |
 | Freenove S3 | ESPNOW | QVGA | Yes | 12 | ~10 FPS | STABLE |
 | Freenove S3 | ESPNOW | HVGA | Yes | 12 | ~6 FPS | STABLE |
-| M5CoreS3 | ESPNOW | QVGA | Yes | 12  | ~11 FPS | STABLE |
+| M5CoreS3 | ESPNOW | QVGA | Yes | 12 | ~11 FPS | STABLE |
 | M5UnitCamS3 | ESPNOW | QVGA | Yes | 12 | ~9 FPS | STABLE |
 
 [Full list of senders and receivers that was tested](https://github.com/hpsaturn/ESPNowCam/wiki/Supported-Devices)
@@ -70,7 +70,6 @@ pio pkg install --library "hpsaturn/ESPNowCam@^0.2.0"
 >
 >1. Download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.9.1) using the `Include Library` section via zip file
 >2. and then with the **Library Manager** find **ESPNowCam** and install it.
-
 >[!TIP]
 >Nanobp is not included as a dependency because, despite being 25 years after the invention of symbolic links, Arduino IDE does not support these types of files. Consider exploring PlatformIO for your future developments, as it offers a more versatile and modern development environment.
 
@@ -98,8 +97,8 @@ radio.init();
 ```
 
 ```cpp
-void onDataReady(uint32_t lenght) {
-  tft.drawJpg(fb, lenght , 0, 0, dw, dh);
+void onDataReady(uint32_t length) {
+  tft.drawJpg(fb, length , 0, 0, dw, dh);
 }
 ```
 
@@ -244,7 +243,6 @@ Also I'm working in a complete Camera configurator and test suite for this libra
 >The **Freenove camera** sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
 >
 >**pb_decode.h error**: For **Arduino IDE users**, if you have a compiler error, maybe you forget install **NanoPb library**. Please see above in [library installation](#library-installation) section.
-
 > [!TIP]
 > This project was developed and thoroughly tested on PlatformIO. While I did compile and execute it successfully on Arduino IDE using Espressif 2.0.11 and Arduino IDE 2.2.1, with PSRAM enabled, I generally avoid using Arduino IDE due to its tendency to mix everything and its buggy nature. Therefore, **I highly recommend using PlatformIO** for a smoother and more reliable development experience.
 
@@ -252,7 +250,7 @@ Also I'm working in a complete Camera configurator and test suite for this libra
 
 - [x] NanoPb possible issue #1 (payload size)
 - [x] Unified ESPNow in an one class for all transmitters and receivers
-- [x] Isolate the ESPNow Receiver and Transmitter in a seperated library
+- [x] Isolate the ESPNow Receiver and Transmitter in a separated library
 - [x] Add sender callback to improve speed
 - [x] Added internal drivers for some popular Cameras
 - [x] Added multi-camera support with one only target
