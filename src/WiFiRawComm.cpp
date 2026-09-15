@@ -1,0 +1,378 @@
+/**************************************************
+ * ESPNowCam WiFi Raw 802.11tx Communication Implementation
+ * by @hpsaturn Copyright (C) 2024-2026
+ * This file is part ESP32S3 camera tests project:
+ * https://github.com/hpsaturn/esp32s3-cam
+**************************************************/
+
+#include "WiFiRawComm.h"
+#include "Arduino.h"
+#include "esp_heap_caps.h"
+
+// Configuration
+#define FCS_SIZE 4  // Frame Check Sequence size in bytes
+
+// Initialize static members
+comm_send_cb_t WiFiRawComm::user_send_cb = nullptr;
+comm_recv_cb_t WiFiRawComm::user_recv_cb = nullptr;
+bool WiFiRawComm::initialized = false;
+uint8_t WiFiRawComm::current_channel = 1;
+wifi_interface_t WiFiRawComm::wifi_if = WIFI_IF_STA;
+uint8_t WiFiRawComm::local_mac[6] = {0};
+std::vector<CommPeerInfo> WiFiRawComm::peers;
+
+// Print MAC address
+void print_mac_address(const uint8_t* mac) {
+  printf("MAC: %02X:%02X:%02X:%02X:%02X:%02X\r\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+// Helper: Check if MAC address is broadcast
+bool WiFiRawComm::is_broadcast_addr(const uint8_t* mac_addr) {
+  for (int i = 0; i < 6; i++) {
+    if (mac_addr[i] != 0xFF) return false;
+  }
+  return true;
+}
+
+// Check if MAC address is multicast
+bool WiFiRawComm::is_multicast_addr(const uint8_t* mac_addr) {
+  return (mac_addr[0] & 0x01) != 0;  // LSB of first byte is 1 for multicast
+}
+
+// Create raw 802.11 frame
+void WiFiRawComm::create_raw_frame(uint8_t* buffer, const uint8_t* dest_mac, const uint8_t* src_mac,
+                                   const uint8_t* data, size_t data_len, size_t* frame_len) {
+  WiFiRawFrame* frame = reinterpret_cast<WiFiRawFrame*>(buffer);
+
+  // Frame Control: Data frame, To DS=0, From DS=0, More Frag=0, Retry=0, Pwr Mgt=0, More Data=0, Protected=0
+  frame->frame_control[0] = 0x08;  // Type: Data, Subtype: Data
+  frame->frame_control[1] = 0x00;  // To DS=0, From DS=0, More Frag=0, Retry=0, Pwr Mgt=0, More Data=0, Protected=0
+
+  // Duration: 0 (not used in this context)
+  frame->duration[0] = 0x00;
+  frame->duration[1] = 0x00;
+
+  // Address fields
+  memcpy(frame->addr1, dest_mac, 6);  // Receiver address (DA)
+  memcpy(frame->addr2, src_mac, 6);   // Transmitter address (SA)
+  memcpy(frame->addr3, dest_mac, 6);  // BSSID (same as receiver for ad-hoc)
+
+  // Sequence control: Use fixed value for simplicity
+  frame->sequence[0] = 0x00;
+  frame->sequence[1] = 0x00;
+
+  // LLC/SNAP header (optional - can be disabled)
+  frame->llc_dsap = 0xAA;     // DSAP
+  frame->llc_ssap = 0xAA;     // SSAP
+  frame->llc_control = 0x03;  // Unnumbered Information
+  frame->snap_oui[0] = 0x00;  // OUI
+  frame->snap_oui[1] = 0x00;
+  frame->snap_oui[2] = 0x00;
+  frame->snap_type[0] = 0x08;  // EtherType: IP
+  frame->snap_type[1] = 0x00;
+
+  // Copy payload
+  if (data_len > 0 && data != nullptr) {
+    memcpy(frame->payload, data, data_len);
+  }
+
+  *frame_len = sizeof(WiFiRawFrame) + data_len;
+}
+
+// Helper: Parse raw 802.11 frame with FCS handling
+void WiFiRawComm::parse_raw_frame(const uint8_t* frame, size_t frame_len, uint8_t* src_mac,
+                                  uint8_t* dest_mac, const uint8_t** payload, size_t* payload_len) {
+  
+  // Frame_len includes FCS (4 bytes) at the end
+  // subtract FCS_SIZE to get the actual frame length
+  if (frame_len < sizeof(WiFiRawFrame) + FCS_SIZE) {
+    *payload_len = 0;
+    return;
+  }
+
+  // Adjust frame length to exclude FCS
+  size_t actual_frame_len = frame_len - FCS_SIZE;
+
+  const WiFiRawFrame* wifi_frame = reinterpret_cast<const WiFiRawFrame*>(frame);
+
+  // Extract MAC addresses
+  memcpy(dest_mac, wifi_frame->addr1, 6);  // Receiver address
+  memcpy(src_mac, wifi_frame->addr2, 6);   // Transmitter address
+
+  // REDUCED STRICT FILTERING: Accept frames with or without LLC/SNAP header
+  // Check if this has LLC/SNAP header (optional check)
+  bool has_llc_snap = false;
+  if (actual_frame_len >= sizeof(WiFiRawFrame)) {
+    // Check for LLC/SNAP header pattern
+    if (wifi_frame->llc_dsap == 0xAA && wifi_frame->llc_ssap == 0xAA &&
+        wifi_frame->llc_control == 0x03) {
+      has_llc_snap = true;
+    }
+  }
+
+  if (has_llc_snap) {
+    // Frame has LLC/SNAP header, extract payload after it
+    *payload = wifi_frame->payload;
+    *payload_len = actual_frame_len - sizeof(WiFiRawFrame);
+  } else {
+    // Frame doesn't have LLC/SNAP header, payload starts right after 802.11 header
+    // 802.11 header is 24 bytes (frame_control to sequence)
+    const uint8_t* payload_start = frame + 24;  // Skip 24-byte 802.11 header
+    *payload = payload_start;
+    *payload_len = actual_frame_len - 24;  // Subtract 802.11 header size
+  }
+}
+
+// Promiscuous mode callback wrapper with FCS handling
+void WiFiRawComm::wifi_promiscuous_cb_wrapper(void* buf, wifi_promiscuous_pkt_type_t type) {
+  if (type != WIFI_PKT_DATA || user_recv_cb == nullptr) {
+    return;
+  }
+
+  wifi_promiscuous_pkt_t* pkt = reinterpret_cast<wifi_promiscuous_pkt_t*>(buf);
+
+  // pkt->rx_ctrl.sig_len includes FCS (4 bytes)
+  // handle this in parse_raw_frame
+  size_t frame_len_with_fcs = pkt->rx_ctrl.sig_len;
+
+  // Parse the frame
+  uint8_t src_mac[6];
+  uint8_t dest_mac[6];
+  const uint8_t* payload = nullptr;
+  size_t payload_len = 0;
+
+  parse_raw_frame(pkt->payload, frame_len_with_fcs, src_mac, dest_mac, &payload, &payload_len);
+
+  if (payload_len > 0) {
+    // Check if this frame is for us (our MAC or broadcast)
+    bool for_us = false;
+
+    // Check broadcast
+    if (is_broadcast_addr(dest_mac)) {
+      for_us = true;
+    }
+    // Check our MAC address
+    else if (memcmp(dest_mac, local_mac, 6) == 0) {
+      for_us = true;
+    }
+    // Check multicast (if we want to receive multicast)
+    // else if (is_multicast_addr(dest_mac)) {
+      // for_us = true;
+    // }
+
+    if (for_us) { 
+      user_recv_cb(src_mac, payload, payload_len); // Call user callback
+    }
+  }
+}
+
+void init_sender() {
+  // IMPROVED WiFi configuration for raw frame transmission
+  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+
+  // CRITICAL: Increase buffer sizes for better performance
+  cfg.tx_buf_type = 1;          // Dynamic buffers
+  cfg.dynamic_tx_buf_num = 64;  // More buffers for continuous transmission
+  cfg.static_tx_buf_num = 0;    // No static buffers (use dynamic only)
+  cfg.beacon_max_len = sizeof(WiFiRawFrame) + COMM_MAX_DATA_LEN + FCS_SIZE;  // Include FCS
+  cfg.cache_tx_buf_num = 16;  // More cache for better performance
+
+  // Enable AMPDU for better throughput (can be disabled if causing issues)
+  cfg.ampdu_tx_enable = 1;
+  cfg.amsdu_tx_enable = 1;
+  cfg.ampdu_rx_enable = 1;
+
+  // Increase RX buffer
+  cfg.rx_ba_win = 32;  // Increased BA window size
+
+  log_i("Improved Config: dynamic buffers=%d, beacon_max_len=%d, AMPDU enabled",
+        cfg.dynamic_tx_buf_num, cfg.beacon_max_len);
+
+  // Initialize WiFi
+  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+
+  log_i("initialized for 802.11_tx() transmitting");
+}
+
+wifi_promiscuous_filter_t filter = {
+    .filter_mask = WIFI_PROMIS_FILTER_MASK_ALL | WIFI_PROMIS_CTRL_FILTER_MASK_ALL
+};
+
+void init_receiver() {
+  // Improved receiver configuration
+  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+
+  // Increase buffers for receiver
+  cfg.dynamic_tx_buf_num = 64;  // Still need some for ACKs
+  cfg.rx_ba_win = 32;           // Increased receive window
+  cfg.ampdu_rx_enable = 1;      // Enable AMPDU reception for better performance
+
+  // Initialize WiFi
+  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+  ESP_ERROR_CHECK(esp_wifi_set_promiscuous(true));
+  // ESP_ERROR_CHECK(esp_wifi_set_promiscuous_filter(&filter));
+
+  log_i("initialized for 802.11_tx() receiving in promiscuous mode");
+}
+
+// Initialize WiFi Raw communication
+comm_err_t WiFiRawComm::init() {
+  if (initialized) {
+    return COMM_OK;
+  }
+
+  // Initialize NVS
+  esp_err_t ret = nvs_flash_init();
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    ESP_ERROR_CHECK(nvs_flash_erase());
+    ret = nvs_flash_init();
+  }
+  ESP_ERROR_CHECK(ret);
+  log_i("NVS flash initialized");
+
+  // ESP_ERROR_CHECK(esp_netif_init());
+  esp_err_t event_loop_ret = esp_event_loop_create_default();
+  if (event_loop_ret == ESP_OK) {
+    log_i("Event loop created");
+  } else if (event_loop_ret == ESP_ERR_INVALID_STATE) {
+    log_i("Event loop already exists");
+  } else {
+    log_e("Event loop error: %d", event_loop_ret);
+    return COMM_ERR_INTERNAL;
+  }
+
+  esp_netif_create_default_wifi_sta();
+
+  if (user_recv_cb != nullptr) {
+    init_receiver();
+    ESP_ERROR_CHECK(esp_wifi_set_promiscuous_rx_cb(&wifi_promiscuous_cb_wrapper));
+  } else
+    init_sender();
+
+  ESP_ERROR_CHECK(esp_wifi_start());
+  ESP_ERROR_CHECK(esp_wifi_set_channel(current_channel, WIFI_SECOND_CHAN_NONE));
+  ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
+
+  uint8_t mac[6];
+  // Get local MAC address
+  if (esp_wifi_get_mac(wifi_if, local_mac) != ESP_OK) {
+    return COMM_ERR_INTERNAL;
+  }
+  print_mac_address(mac);
+
+  log_i("WiFi initialized. Free heap: %d bytes", esp_get_free_heap_size());
+  initialized = true;
+  return COMM_OK;
+}
+
+// Check if peer exists
+bool WiFiRawComm::isPeerExist(const uint8_t* mac_addr) {
+  if (mac_addr == nullptr) return false;
+
+  for (const auto& peer : peers) {
+    if (memcmp(peer.peer_addr, mac_addr, 6) == 0) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Add a peer (for WiFi Raw, we just store the MAC address for now)
+comm_err_t WiFiRawComm::addPeer(const CommPeerInfo* peer) {
+  if (peer == nullptr) {
+    return COMM_ERR_ARG;
+  }
+
+  // Check if peer already exists
+  if (isPeerExist(peer->peer_addr)) {
+    return COMM_OK;  // Already exists
+  }
+
+  // Add to peers list
+  peers.push_back(*peer);
+  return COMM_OK;
+}
+
+// Send data using raw 802.11 frames with improved configuration
+comm_err_t WiFiRawComm::send(const uint8_t* mac_addr, const uint8_t* data, size_t len) {
+  
+  if (!initialized) return COMM_ERR_NOT_INIT;
+  if (mac_addr == nullptr || data == nullptr || len == 0) return COMM_ERR_ARG;
+  if (len > COMM_MAX_DATA_LEN) return COMM_ERR_ARG;
+
+  // uint8_t broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+  // Create raw frame buffer with exact size needed (not maximum, possible proto issue)
+  size_t frame_len = 0;
+  uint8_t frame_buffer[sizeof(WiFiRawFrame) + COMM_MAX_DATA_LEN + FCS_SIZE];
+
+  create_raw_frame(frame_buffer, mac_addr, local_mac, data, len, &frame_len);
+
+  // IMPROVED: Use en_sys_seq = true for better reliability
+  // This enables system sequence number management
+  esp_err_t esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, true);
+
+  // Handle ESP_ERR_NO_MEM with improved exponential backoff
+  if (esp_err == ESP_ERR_NO_MEM) {
+    size_t free_heap_after = esp_get_free_heap_size();
+    // Improved exponential backoff with memory checking
+    for (int retry = 0; retry < 15; retry++) {
+      int delay_ms = 10 * (1 << retry);  // 10ms, 20ms, 40ms, 80ms, 160ms
+      vTaskDelay(delay_ms / portTICK_PERIOD_MS);
+      // Check if memory has recovered (at least 4KB free)
+      size_t current_heap = esp_get_free_heap_size();
+      if (current_heap > free_heap_after + 4096) {
+        // log_i("Memory recovered after %d ms, retrying...", delay_ms);
+        esp_err = esp_wifi_80211_tx(wifi_if, frame_buffer, frame_len, true);
+        if (esp_err == ESP_OK) {
+          log_w("Send successful after %d retries", retry + 1);
+          break;
+        }
+      }
+    }
+  }
+
+  if (esp_err != ESP_OK) {
+    log_e("Send failed with error: %s (0x%x)", esp_err_to_name(esp_err), esp_err);
+    log_e("Frame length: %d, Free heap: %d", frame_len, esp_get_free_heap_size());
+    return WIFI_RAW_ERR_TX_FAILED;
+  }
+
+  // Call send callback if registered
+  if (user_send_cb != nullptr && esp_err == ESP_OK) {
+    user_send_cb(mac_addr, COMM_SEND_SUCCESS);
+  }
+
+  return COMM_OK;
+}
+
+// Register send callback
+comm_err_t WiFiRawComm::registerSendCallback(comm_send_cb_t cb) {
+  user_send_cb = cb;
+  return COMM_OK;
+}
+
+// Register receive callback
+comm_err_t WiFiRawComm::registerRecvCallback(comm_recv_cb_t cb) {
+  log_i("Registering receive callback");
+  user_recv_cb = cb;
+  return COMM_OK;
+}
+
+// Set channel
+void WiFiRawComm::setChannel(uint8_t channel) {
+  if (channel >= 1 && channel <= 14) {
+    current_channel = channel;
+  }
+}
+
+// Destructor
+WiFiRawComm::~WiFiRawComm() {
+  if (initialized) {
+    // TODO: check this! Disable promiscuous mode
+    esp_wifi_set_promiscuous(false);
+    initialized = false;
+  }
+}

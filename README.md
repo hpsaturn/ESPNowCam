@@ -2,7 +2,7 @@
 
 [![PlatformIO](https://github.com/hpsaturn/esp32s3-cam/workflows/PlatformIO/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) [![All Platforms](https://github.com/hpsaturn/esp32s3-cam/workflows/Scheduled/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) ![ViewCount](https://views.whatilearened.today/views/github/hpsaturn/esp32s3-cam.svg)  
 
-The ESPNowCam library is a simple and direct video or data streamer designed for popular ESP32 devices, utilizing the ESPNow protocol. No need for IPs, routers, or credentials—keeping it straightforward and hassle-free! :D
+The ESPNowCam library is a simple and direct video or data streamer designed for popular ESP32 devices, utilizing ESPNow and WiFi-raw (80211tx) protocols. No need for IPs, routers, or credentials-keeping it straightforward and hassle-free! :D
 
 >[!TIP]
 >**This library is for general purpose**, as it accepts pointers to various types of data, including buffers, strings, images, or any byte-formatted content. This flexibility enables transmission of larger packages across different scenarios, not limited to cameras alone. For instance, a buffer of 4000 bytes takes approximately 1/9 of a second to transmit, resulting in a frame rate of around 9FPS.
@@ -22,6 +22,7 @@ The latest version brings numerous enhancements and is currently highly stable. 
 - One transmitter to multiple receivers using the internal ESPNow broadcasting feature (1:N mode).
 - Peer-to-peer (P2P) connections utilizing MAC address targeting (1:1 mode).
 - Multi-sender mode with one receiver (N:1 mode).
+- **!! N E W !!**: [80211tx()](#wifi-raw-80211tx-mode-experimental) WiFi-raw ESPNow alternative. This achieves a **performance improvement of around 40%** in P2P mode (Beta).
 
 [![ESPNowCam broadcast camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/broadcast-camera-mode.gif)](https://youtu.be/zXIzP1TGlpA) [![ESPNowCam P2P mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/p2p-camera-mode.gif)](https://youtu.be/XDIiJ25AKr8) [![ESPNowCam multi camera mode](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/master/pictures/multi-camera-mode.gif)](https://youtu.be/ip6RohVEg2s)  
 [[1:N mode video]](https://youtu.be/zXIzP1TGlpA) [[1:1 mode video]](https://youtu.be/XDIiJ25AKr8) [[N:1 mode video]](https://youtu.be/ip6RohVEg2s)  
@@ -33,14 +34,16 @@ The latest version brings numerous enhancements and is currently highly stable. 
 
 The current version was tested with the next cameras:
 
-| Sender |  Frame | PSRAM | JPGQ | FPS | Status |
-|:---------|:-----:|:-----:|:------:|:-------:|:------:|
-| TTGO TJournal |  QVGA | No | 12 | ~11 FPS | STABLE |
-| XIAO Sense S3 | QVGA | Yes | 12 | ~11 FPS | STABLE |
-| Freenove S3 | QVGA | Yes | 12 | ~10 FPS | STABLE |
-| Freenove S3 | HVGA | Yes | 12 | ~6 FPS | STABLE |
-| M5CoreS3 | QVGA | Yes | 12  | ~11 FPS | STABLE |
-| M5UnitCamS3 | QVGA | Yes | 12 | ~9 FPS | STABLE |
+| Sender | Impl | Frame | PSRAM | JPGQ | FPS | Status |
+| :-------- | :-----: | :-----: | :-----: | :------: | :-------: | :------: |
+| M5CoreS3 | [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | **~14 FPS** | TESTING |
+| Freenove | [80211tx()](#wifi-raw-80211tx-mode-experimental) | QVGA | Yes | 12 | **~13 FPS** | TESTING |
+| TTGO TJournal | ESPNOW |  QVGA | No | 12 | ~11 FPS | STABLE |
+| XIAO Sense S3 | ESPNOW | QVGA | Yes | 12 | ~11 FPS | STABLE |
+| Freenove S3 | ESPNOW | QVGA | Yes | 12 | ~10 FPS | STABLE |
+| Freenove S3 | ESPNOW | HVGA | Yes | 12 | ~6 FPS | STABLE |
+| M5CoreS3 | ESPNOW | QVGA | Yes | 12 | ~11 FPS | STABLE |
+| M5UnitCamS3 | ESPNOW | QVGA | Yes | 12 | ~9 FPS | STABLE |
 
 [Full list of senders and receivers that was tested](https://github.com/hpsaturn/ESPNowCam/wiki/Supported-Devices)
 
@@ -51,13 +54,13 @@ The current version was tested with the next cameras:
 Add the following line to the lib_deps option of your [env:] section:
 
 ```python
-hpsaturn/EspNowCam@^0.1.13
+hpsaturn/EspNowCam@^0.2.2
 ```
 
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.1.13"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.2.2"
 ```
 
 **Arduino IDE**:
@@ -65,9 +68,8 @@ pio pkg install --library "hpsaturn/ESPNowCam@^0.1.13"
 >[!IMPORTANT]
 >For `Arduino IDE` is a little bit more complicated because the Arduino IDE dependencies resolver is very bad, but you only need:
 >
->1. Download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.8) using the `Include Library` section via zip file
+>1. Download and install the [Nanopb library](https://github.com/nanopb/nanopb/releases/tag/nanopb-0.4.9.1) using the `Include Library` section via zip file
 >2. and then with the **Library Manager** find **ESPNowCam** and install it.
-
 >[!TIP]
 >Nanobp is not included as a dependency because, despite being 25 years after the invention of symbolic links, Arduino IDE does not support these types of files. Consider exploring PlatformIO for your future developments, as it offers a more versatile and modern development environment.
 
@@ -76,11 +78,15 @@ pio pkg install --library "hpsaturn/ESPNowCam@^0.1.13"
 **To send** any kind of data, you only need a buffer and the size to send:
 
 ```cpp
+#include <ESPNowCam.h>
+
 ESPNowCam radio;
 
 radio.init();
-radio.sendData(out_jpg, out_jpg_len);
+radio.sendData(data, data_len);
 ```
+
+[full sender implementation example](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/xiao-espnow-sender/xiao-espnow-sender.cpp)
 
 **To receive** the data, you only need to define a buffer and callback:
 
@@ -91,10 +97,12 @@ radio.init();
 ```
 
 ```cpp
-void onDataReady(uint32_t lenght) {
-  tft.drawJpg(fb, lenght , 0, 0, dw, dh);
+void onDataReady(uint32_t length) {
+  tft.drawJpg(fb, length , 0, 0, dw, dh);
 }
 ```
+
+[full receiver implementation example](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/m5core2-basic-receiver/m5core2-basic-receiver.ino)
 
 >[!NOTE]
 >If you don't define any specific target, the radio will work in broadcasting mode, that means **1:N mode**, for instance one camera sending video to multiple screen receivers.
@@ -124,6 +132,43 @@ radio.setRecvFilter(fb_cam3, mac_cam3, onCam3DataReady);
 
 and each camera should have configured the receiver MAC like a target. Fore more details, please follow the [multi-camera-one-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/multi-camera-one-receiver/) directory example.
 
+### WiFi Raw 802.11tx mode (experimental)
+
+Now is possible use 80211tx() primitive or WiFi RAW mode without ESPNow internals. Using this raw mode it could be better performance. For that, only do that:
+
+**sender**:
+
+```cpp
+WiFiRawComm wifiRaw;
+ESPNowCam radio(&wifiRaw);
+
+radio.setTarget(macRecv); // receiver mac address to improve quality
+radio.setChannel(6);      // improve quality (recommended)
+radio.init(512);          // you are able to change the chunk size
+
+radio.sendData(out_data, out_data_len);
+```  
+
+[full wifiraw-80211tx-freenove-sender example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-freenove-sender)  
+[full wifiraw-80211tx-m5cores3-sender example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-m5cores3-sender)
+
+**receiver**:
+
+```cpp
+WiFiRawComm wifiRaw;
+ESPNowCam radio(&wifiRaw);
+
+radio.setRecvBuffer(fb);            // fixed buffer
+radio.setRecvCallback(onDataReady); // similar callback to other modes
+radio.setChannel(6);                // improve quality
+radio.init(512);                    // the same sender chunk size
+```  
+
+[full wifiraw-80211tx-receiver example](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-receiver)
+
+>[!TIP]
+>Note: The N:1 mode is not full implemented on WiFi raw. It is recommended use channel and mac address target on the sender for improve quality. Please sse the examples for details.
+
 ### Predefined drivers
 
 The library includes some pre-defined camera configs to have an easy implementation, for example:
@@ -137,6 +182,15 @@ CamFreenove Camera;
 
 >[!TIP]
 >For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me via a [GitHub issue](https://github.com/hpsaturn/ESPNowCam/issues/new) or please contribute with the project sending a pull request :D
+
+### Channel
+
+Is possible to configure the radio channel or the WiFi channel. You should put the same channel on all devices. This setting is optional, and it is not mandatory, but could improve the connection.
+
+```cpp
+radio.setChannel(2);
+radio.init();
+```
 
 ### PSRAM or DRAM?
 
@@ -171,6 +225,16 @@ Some examples are for Arduino users (*.ino samples), but is possible too compile
  pio run --target upload
  ```
 
+### Camera CLI (experimental)
+
+Also I'm working in a complete Camera configurator and test suite for this library and also other features around the ESP Cameras. It is a project in progress, but you are able to configure and test all ESPNowCam features more easy using a [CLI and manager](https://github.com/hpsaturn/esp32-camera-cli) that runs into the Camera:
+
+[![ESP32 Camera CLI](https://raw.githubusercontent.com/hpsaturn/ESPNowCam/refs/heads/master/pictures/esp32_camera_cli_preview.jpg)](https://github.com/hpsaturn/esp32-camera-cli)
+
+[![ESP32 Camera CLI Demo](https://img.youtube.com/vi/ibuKil7jjsg/maxresdefault.jpg)](https://youtu.be/ibuKil7jjsg)
+
+[video demo](https://youtu.be/ibuKil7jjsg)
+
 ## Troubleshooting
 
 > [!NOTE]
@@ -179,7 +243,6 @@ Some examples are for Arduino users (*.ino samples), but is possible too compile
 >The **Freenove camera** sometimes needs good power cable and also takes some seconds to stabilization, that means, that not worries for initial video glitches.
 >
 >**pb_decode.h error**: For **Arduino IDE users**, if you have a compiler error, maybe you forget install **NanoPb library**. Please see above in [library installation](#library-installation) section.
-
 > [!TIP]
 > This project was developed and thoroughly tested on PlatformIO. While I did compile and execute it successfully on Arduino IDE using Espressif 2.0.11 and Arduino IDE 2.2.1, with PSRAM enabled, I generally avoid using Arduino IDE due to its tendency to mix everything and its buggy nature. Therefore, **I highly recommend using PlatformIO** for a smoother and more reliable development experience.
 
@@ -187,16 +250,20 @@ Some examples are for Arduino users (*.ino samples), but is possible too compile
 
 - [x] NanoPb possible issue #1 (payload size)
 - [x] Unified ESPNow in an one class for all transmitters and receivers
-- [x] Isolate the ESPNow Receiver and Transmitter in a seperated library
+- [x] Isolate the ESPNow Receiver and Transmitter in a separated library
 - [x] Add sender callback to improve speed
 - [x] Added internal drivers for some popular Cameras
 - [x] Added multi-camera support with one only target
-- [ ] Migration to esp_wifi_80211_tx() to improve Payload and Quality
+- [x] Migration to esp_wifi_80211_tx() to improve Payload and Quality
+- [ ] PC support using WiFi adapters with monitor mode
+- [ ] Audio transmission examples
+- [ ] Improve 802.11tx() using modified version
 
 ## Credits
 
 I want to extend my gratitude to:
 
+[CNX-Software](https://www.cnx-software.com/2025/02/24/espnowcam-library-enables-esp32-video-camera-or-data-transmission-with-the-esp-now-protocol/) (Embedded Systems News) for this review.  
 [@ElectroZeusTIC](https://github.com/electrozeustic) and [@AcoranTf](https://github.com/AcoranTf) for testing on Arduino IDE.  
 [@UtaAoya](https://x.com/UtaAoya) for findings related to the M5UnitCam device.  
 [@MeloCuentan](https://github.com/MeloCuentan) for fixing issues with the AI-Thinker Camera and the new ESP32S3 RGB receiver.  

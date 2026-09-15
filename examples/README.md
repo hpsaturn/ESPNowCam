@@ -28,7 +28,8 @@ Some video receivers
 | makerfabs-nojpg-receiver | Makerfabs RGB Parallel [1] [2] | <2FPS |
 | tft-3.5-basic-receiver | Any TFT display with LGFX [1] | STABLE |
 | tft-il9485-basic-receiver | M5Core TFT reciver il9481 [1] [2]| STABLE |
-| ft-rgb-hmi-basic-receiver | ESP32S3_RGB_ESP32-8048S043 [1] [2] | STABLE |
+| tft-rgb-hmi-basic-receiver | ESP32S3_RGB_ESP32-8048S043 [1] [2] | STABLE |
+| tft-s3-RGB-800x480-receiver | ESP32S3_RGB_ESP32-8048S043 [1] | STABLE |
 | crowpanel-receiver | Elecrow round panel 320x240 [1] | TESTING |
 
 [1] Use with any sender sample  
