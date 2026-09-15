@@ -20,11 +20,7 @@ ESPNowCam radio(&wifiRaw);
 
 void processFrame() {
   if (Camera.get()) {
-    uint8_t *out_jpg = NULL;
-    size_t out_jpg_len = 0;
-    frame2jpg(Camera.fb, 24, &out_jpg, &out_jpg_len); 
-    radio.sendData(out_jpg, out_jpg_len);
-    free(out_jpg);
+    radio.sendData(Camera.fb->buf, Camera.fb->len);
     Camera.free();
   }
 }
@@ -38,6 +34,7 @@ void setup() {
   if(psramFound()){
     size_t psram_size = esp_spiram_get_size() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
+    vTaskDelay(10);
   }
 
   // M5Core2 receiver
@@ -50,8 +47,12 @@ void setup() {
   }
 
   // You are able to change the Camera config E.g:
-  Camera.config.fb_count = 2;
   Camera.config.frame_size = FRAMESIZE_QVGA;
+  Camera.config.fb_count = 2;
+  Camera.config.fb_location = CAMERA_FB_IN_PSRAM;
+  Camera.config.pixel_format = PIXFORMAT_JPEG;
+  Camera.config.jpeg_quality = 12;
+  Camera.config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
 
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");

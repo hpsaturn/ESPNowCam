@@ -30,10 +30,10 @@ static void drawFPS() {
 
 void processFrame() {
   if (CoreS3.Camera.get()) {
-    // CoreS3.Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
+    CoreS3.Display.pushImage(0, 0, dw, dh, (uint16_t *)CoreS3.Camera.fb->buf);
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
-    frame2jpg(CoreS3.Camera.fb, 12, &out_jpg, &out_jpg_len);
+    frame2jpg(CoreS3.Camera.fb, 24, &out_jpg, &out_jpg_len);
     radio.sendData(out_jpg, out_jpg_len);
     printFPS("CAM:");
     free(out_jpg);

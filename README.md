@@ -54,13 +54,13 @@ The current version was tested with the next cameras:
 Add the following line to the lib_deps option of your [env:] section:
 
 ```python
-hpsaturn/EspNowCam@^0.2.0
+hpsaturn/EspNowCam@^0.2.2
 ```
 
 Or via command line:  
 
 ```python
-pio pkg install --library "hpsaturn/ESPNowCam@^0.2.0"
+pio pkg install --library "hpsaturn/ESPNowCam@^0.2.2"
 ```
 
 **Arduino IDE**:

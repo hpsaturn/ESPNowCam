@@ -61,7 +61,7 @@ class CommInterface {
   virtual comm_err_t registerSendCallback(comm_send_cb_t cb) = 0;
   virtual comm_err_t registerRecvCallback(comm_recv_cb_t cb) = 0;
 
-  // Channel control (optional - some comm technologies may not support this)
+  // Channel control (optional)
   virtual void setChannel(uint8_t channel) = 0;
 
   virtual ~CommInterface() = default;
