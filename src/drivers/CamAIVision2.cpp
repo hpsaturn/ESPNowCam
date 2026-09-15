@@ -16,9 +16,9 @@
  *
  * The event payload is decoded with some tolerance on purpose: the module is
  * able to wrap the base64 data, to add a header or a tail to the JPEG, or to
- * cut the image when its internal buffer is smaller than the frame. Every
- * rejected frame is counted and the first ones are logged with all the
- * details, useful to know what the module is really sending.
+ * cut the image when its buffer or its link is smaller than the frame. Every
+ * bad frame is counted and the first ones are logged with all the details,
+ * useful to know what the module is really sending.
  *
  * It only is compiled when the AIVISION2 build flag is defined, see the
  * xiao-ai-vision-sender environment on platformio.ini
@@ -186,6 +186,29 @@ static JpegStatus trimJpeg(uint8_t *buf, size_t *len) {
   return complete ? JPEG_COMPLETE : JPEG_INCOMPLETE;
 }
 
+/// when the module can not complete an image it leaves the rest of its frame
+/// buffer untouched: those bytes are not decodable data and they only bother
+/// the JPEG decoder of the receiver, so they are removed here
+static size_t trimPadding(uint8_t *buf, size_t len) {
+  size_t n = len;
+  while (n > 3 && buf[n - 1] == 0x00) {
+    n--;
+  }
+  return n;
+}
+
+/// the receivers need the end of image marker to paint a frame, so the missing
+/// one is added: the decoders paint what they have and stop at the end of the
+/// data instead of discarding the whole frame
+static bool closeJpeg(uint8_t *buf, size_t *len, size_t capacity) {
+  if (*len + 2 > capacity) {
+    return false;
+  }
+  buf[(*len)++] = 0xFF;
+  buf[(*len)++] = 0xD9;
+  return true;
+}
+
 /// the size of the frame is only known by the JPEG itself (the module does not
 /// report the width and the height on the event)
 static bool jpegDimensions(const uint8_t *buf, size_t len, size_t *width, size_t *height) {
@@ -267,6 +290,21 @@ static const char *findImageData(const char *resp, size_t len, size_t *b64_len) 
   return nullptr;
 }
 
+/// the SSCMA library hands over everything that it finds between "\r{" and
+/// "}\n", but when the module (or the link) loses the tail of a message, the
+/// payload holds the cut message followed by the next complete one. The image
+/// of the newest message is the useful one, so the payload is parsed from its
+/// last message start. The base64 data can not hold '\r' nor '{', so looking
+/// for those two bytes is enough and it can not confuse the image data.
+static const char *lastMessageStart(const char *resp, size_t len) {
+  for (size_t i = len; i > 1; i--) {
+    if (resp[i - 1] == '{' && resp[i - 2] == '\r') {
+      return resp + i - 2;
+    }
+  }
+  return resp;
+}
+
 /**************************************************
  * F R A M E   D E C O D I N G
  **************************************************/
@@ -282,26 +320,21 @@ static void dumpHex(char *out, size_t out_size, const uint8_t *buf, size_t len) 
 /// the dropped frames are noisily logged (the console is not able to follow
 /// hundreds of messages per second), the first ones with all the payload
 /// details, after that only the summary of each 100 frames
-void CamAIVision2::reportRejected(const char *reason, const char *b64, size_t b64_len,
-                                  const uint8_t *jpeg, size_t jpeg_len) {
-  _rejected++;
-  bool details = (_rejected <= AIVISION2_DEBUG_FRAMES) || (_rejected % 100 == 0);
-  if (!details) {
-    if (_rejected == AIVISION2_DEBUG_FRAMES + 1) {
-      log_w("%u frames rejected (%s), muting the per frame details, see rejected()",
-            (unsigned int)_rejected, reason);
-      if (strstr(reason, "truncated") != nullptr) {
-        log_w("The module is not able to keep the whole image, try a lower resolution, "
-              "e.g. Camera.setResolution(0) [240x240]");
-      }
-    }
+void CamAIVision2::logFrameIssue(const char *reason, const char *b64, size_t b64_len,
+                                 const uint8_t *jpeg, size_t jpeg_len) {
+  size_t issues = _rejected + _partial;
+  if (issues == AIVISION2_DEBUG_FRAMES + 1) {
+    log_w("%u bad frames so far, muting the per frame details, see rejected() and partial()",
+          (unsigned int)issues);
+  }
+  if (issues > AIVISION2_DEBUG_FRAMES && (issues % 100) != 0) {
     return;
   }
 
   char head[3 * 16 + 1] = {0};
   char tail[3 * 8 + 1] = {0};
-  log_w("Frame rejected (%s) #%u: base64 %u chars, decoded %u bytes", reason,
-        (unsigned int)_rejected, (unsigned int)b64_len, (unsigned int)jpeg_len);
+  log_w("Frame issue (%s) #%u: base64 %u chars, decoded %u bytes", reason, (unsigned int)issues,
+        (unsigned int)b64_len, (unsigned int)jpeg_len);
   if (jpeg != nullptr && jpeg_len > 0) {
     dumpHex(head, sizeof(head), jpeg, jpeg_len < 16 ? jpeg_len : 16);
     dumpHex(tail, sizeof(tail), jpeg + (jpeg_len > 8 ? jpeg_len - 8 : 0), jpeg_len > 8 ? 8 : jpeg_len);
@@ -314,16 +347,37 @@ void CamAIVision2::reportRejected(const char *reason, const char *b64, size_t b6
         b64 + (b64_len < 16 ? 0 : b64_len - 16), (unsigned int)(b64_len % 4));
 }
 
+/// the module answers with "type": 0 messages (SENSOR?, VER?, ID?, ...), they
+/// are logged when the command was sent by the user or by the driver itself,
+/// it is the only way to know if a command was applied by the module
+void CamAIVision2::onReply(const char *resp, size_t len) {
+  if (!_logNextReply) {
+    return;
+  }
+  _logNextReply = false;
+  const char *from = (len > 0 && resp[0] == '\r') ? resp + 1 : resp;
+  size_t size = len - (size_t)(from - resp);
+  log_i("module reply: %.*s", (int)(size < AIVISION2_REPLY_LOG ? size : AIVISION2_REPLY_LOG), from);
+}
+
 void CamAIVision2::onResponse(const char *resp, size_t len) {
   if (resp == nullptr || len == 0) {
     return;
   }
-  if (!isEvent(resp, len)) {
+
+  /// a payload can hold the cut tail of a message followed by the next one,
+  /// the newest message is the complete one and the one parsed here
+  const char *msg = lastMessageStart(resp, len);
+  size_t msg_len = len - (size_t)(msg - resp);
+
+  if (!isEvent(msg, msg_len)) {
+    /// the command answers are the way to know if a command was applied
+    onReply(msg, msg_len);
     return; // command replies and logs have no frame data
   }
 
   size_t b64_len = 0;
-  const char *data = findImageData(resp, len, &b64_len);
+  const char *data = findImageData(msg, msg_len, &b64_len);
   if (data == nullptr || b64_len < 8) {
     return; // events like the inference results without image data
   }
@@ -341,11 +395,15 @@ void CamAIVision2::onResponse(const char *resp, size_t len) {
     return;
   }
 
+  /// an event with image data arrived, even if it ends rejected, the caller
+  /// should not wait for the answer timeout of its request
+  _gotEvent = true;
+
   /// the head of the first events is logged to know what the module is really
   /// sending (a base64 JPEG starts with /9j/4)
   if (_events < AIVISION2_DEBUG_FRAMES) {
     _events++;
-    const char *from = (resp[0] == '\r') ? resp + 1 : resp;
+    const char *from = (msg[0] == '\r') ? msg + 1 : msg;
     size_t head = (size_t)(data - from) + 16;
     log_i("event payload: %.*s", (int)(head > 96 ? 96 : head), from);
   }
@@ -353,7 +411,8 @@ void CamAIVision2::onResponse(const char *resp, size_t len) {
   /// the base64 length is always the upper bound of the decoded data
   size_t capacity = ((b64_len / 4) * 3) + 4;
   if (capacity > AIVISION2_MAX_JPEG) {
-    reportRejected("frame too big", data, b64_len, nullptr, 0);
+    _rejected++;
+    logFrameIssue("frame too big for the configured limits", data, b64_len, nullptr, 0);
     return;
   }
 
@@ -396,16 +455,30 @@ void CamAIVision2::onResponse(const char *resp, size_t len) {
   }
 
   if (status == JPEG_INVALID) {
-    reportRejected(ret != 0 ? "base64 decode error" : "no JPEG data", data, b64_len, jpeg, jpeg_len);
+    _rejected++;
+    logFrameIssue(ret != 0 ? "base64 decode error" : "no JPEG data", data, b64_len, jpeg, jpeg_len);
     ::free(jpeg);
     return;
   }
   if (status == JPEG_INCOMPLETE) {
-    reportRejected("truncated JPEG, the module sent an incomplete frame", data, b64_len, jpeg,
-                   jpeg_len);
 #if AIVISION2_STRICT_JPEG
+    _rejected++;
+    logFrameIssue("truncated JPEG, the module sent an incomplete frame", data, b64_len, jpeg, jpeg_len);
     ::free(jpeg);
     return;
+#else
+    /// a receiver can not paint a frame without the end of image marker, so
+    /// the padded tail is removed and the marker is added here (the module
+    /// cuts the frame when its link or its buffers can not follow it)
+    jpeg_len = trimPadding(jpeg, jpeg_len);
+    if (jpeg_len < AIVISION2_MIN_JPEG || !closeJpeg(jpeg, &jpeg_len, capacity)) {
+      _rejected++;
+      logFrameIssue("truncated JPEG, too short to be useful", data, b64_len, jpeg, jpeg_len);
+      ::free(jpeg);
+      return;
+    }
+    _partial++;
+    logFrameIssue("partial frame completed with the end of image marker", data, b64_len, jpeg, jpeg_len);
 #endif
   }
 
@@ -446,6 +519,10 @@ CamAIVision2::CamAIVision2() {
   sensor = nullptr;
 }
 
+/**************************************************
+ * M O D U L E   I N I T I A L I Z A T I O N
+ **************************************************/
+
 /// the SSCMA library resizes its internal buffer with realloc(), and on
 /// failure it leaves the driver without buffer, so here we only resize it if
 /// the internal RAM has room enough, otherwise its default is used
@@ -469,35 +546,123 @@ void CamAIVision2::reserveResponseBuffer() {
   }
 }
 
+/// the AI module is a separate MCU that only resets with the power, so it can
+/// be still running the tasks (the stream included) of a previous session: its
+/// frames would be mixed with the answers of the new commands and they would
+/// fill the UART buffers, so they are stopped here before anything else
+void CamAIVision2::stopModuleTasks() {
+  char command[16] = {0};
+  snprintf(command, sizeof(command), "%s%s%s", CMD_PREFIX, CMD_AT_BREAK, CMD_SUFFIX);
+  aivisionSerial.write((const uint8_t *)command, strlen(command));
+  delay(AIVISION2_BREAK_DELAY);
+  while (aivisionSerial.available()) {
+    aivisionSerial.read();
+  }
+  _streaming = false;
+}
+
+/// read the serial port for the given time, it is used to collect the answers
+/// of the commands sent during the initialization
+void CamAIVision2::pump(uint32_t ms) {
+  uint32_t start = millis();
+  do {
+    _module.fetch([this](const char *resp, size_t len) { onResponse(resp, len); });
+    if ((millis() - start) < ms) {
+      delay(AIVISION2_POLL_DELAY);
+    }
+  } while ((millis() - start) < ms);
+}
+
 bool CamAIVision2::begin(uint32_t baud) {
-  if (_streaming) {
-    log_w("The stream is already running..");
+  if (_started) {
+    log_w("The AI Vision 2 interface is already started..");
     return true;
   }
   log_i("Starting AI Vision 2 interface..");
+
   aivisionSerial.setRxBufferSize(AIVISION2_UART_BUFFER);
   if (AIVISION2_PIN_RX >= 0 && AIVISION2_PIN_TX >= 0) {
     aivisionSerial.begin(baud, SERIAL_8N1, AIVISION2_PIN_RX, AIVISION2_PIN_TX);
+  } else {
+    aivisionSerial.begin(baud);
   }
+
+  stopModuleTasks();
+
+  /// the SSCMA initialization asks the module ID and name (the official way to
+  /// know if the module is there), but it is not fatal when it fails: the
+  /// module does not answer while it is busy
   if (!_module.begin(&aivisionSerial, AIVISION2_PIN_RST, baud)) {
-    log_e("AI Vision 2 module not found..");
-    return false;
+    log_w("The AI Vision 2 module did not answer the identification query..");
   }
-  log_i("AI Vision 2 module: %s", _module.name());
+  const char *name = _module.name();
+  log_i("AI Vision 2 module: %s", (name && name[0]) ? name : "(unknown)");
+  _started = true;
+
   reserveResponseBuffer();
+
+  /// the module keeps its resolution between sessions, so the active one is
+  /// asked and logged (the answer includes its name, e.g "480x480 Auto")
+  _logNextReply = true;
+  writeCmd(CMD_AT_SENSOR "?", strlen(CMD_AT_SENSOR "?"));
+  pump(AIVISION2_REPLY_DELAY);
+
   if (!applyResolution()) {
     log_w("Failed to set the sensor resolution..");
   }
-  return startStream();
+  pump(AIVISION2_REPLY_DELAY);
+
+  if (_streamMode == STREAM_CONTINUOUS) {
+    return startStream();
+  }
+  log_i("Ready, frames are requested on demand (see get() and requestFrame())");
+  return true;
 }
+
+/**************************************************
+ * D R I V E R   A P I
+ **************************************************/
 
 bool CamAIVision2::get() {
   if (fb != nullptr) {
     log_w("The current frame was not released, did you forget Camera.free()?");
     free();
   }
-  /// fetch() pumps the serial port, the frames are decoded inside the callback
-  _module.fetch([this](const char *resp, size_t len) { onResponse(resp, len); });
+  if (!_started) {
+    log_e("The AI Vision 2 interface is not initialized, call Camera.begin() first..");
+    return false;
+  }
+
+  if (_streamMode == STREAM_ON_DEMAND) {
+    /// the module is idle until a frame is requested, so the UART can not
+    /// overflow while the current frame is sent by the radio (that is what
+    /// was cutting the frames)
+    _gotEvent = false;
+    if (_frames.empty() && !requestFrame()) {
+      log_e("Failed to request a frame from the module..");
+      _timeouts++;
+      return false;
+    }
+    uint32_t start = millis();
+    while (_frames.empty() && !_gotEvent && (millis() - start < AIVISION2_GET_TIMEOUT)) {
+      _module.fetch([this](const char *resp, size_t len) { onResponse(resp, len); });
+      if (_frames.empty()) {
+        delay(AIVISION2_POLL_DELAY);
+      }
+    }
+    if (_frames.empty() && !_gotEvent) {
+      _timeouts++;
+      if (_timeouts <= AIVISION2_DEBUG_FRAMES || (_timeouts % 100) == 0) {
+        log_w("#%u requests without an answer (%u ms), is the module there? (try Camera.sendCmd(\"SENSOR?\"))",
+              (unsigned int)_timeouts, (unsigned int)AIVISION2_GET_TIMEOUT);
+      }
+      return false;
+    }
+  } else {
+    /// the module pushes the frames as fast as it can, here they are pumped
+    _module.fetch([this](const char *resp, size_t len) { onResponse(resp, len); });
+  }
+
   if (_frames.empty()) {
     return false;
   }
@@ -515,7 +680,7 @@ bool CamAIVision2::free() {
   return true;
 }
 
-bool CamAIVision2::sendCmd(const char *command, int len) {
+bool CamAIVision2::writeCmd(const char *command, int len) {
   if (command == nullptr || len <= 0) {
     return false;
   }
@@ -535,13 +700,52 @@ bool CamAIVision2::sendCmd(const char *command, int len) {
   return true;
 }
 
-bool CamAIVision2::startStream(int times, bool differed, bool resultOnly) {
+bool CamAIVision2::sendCmd(const char *command, int len) {
+  if (!_started) {
+    log_e("The AI Vision 2 interface is not initialized, call Camera.begin() first..");
+    return false;
+  }
+  _logNextReply = true; // the user wants to see the answer of the module
+  return writeCmd(command, len);
+}
+
+bool CamAIVision2::buildStreamCmd(char *buffer, size_t size, int times, bool differed,
+                                  bool resultOnly) {
+  if (_frameMode == FRAME_SAMPLE) {
+    /// AT+SAMPLE only asks the sensor for an image, there is no inference and
+    /// no model to load, so it is the fastest way to get the frames
+    return snprintf(buffer, size, "%s=%d", CMD_AT_SAMPLE, times) > 0;
+  }
+  return snprintf(buffer, size, "%s=%d,%d,%d", CMD_AT_INVOKE, times, differed ? 1 : 0,
+                  resultOnly ? 1 : 0) > 0;
+}
+
+bool CamAIVision2::requestFrame() {
+  if (!_started) {
+    return false;
+  }
   char command[32] = {0};
-  snprintf(command, sizeof(command), "%s=%d,%d,%d", CMD_AT_INVOKE, times, differed ? 1 : 0,
-           resultOnly ? 1 : 0);
-  _streaming = sendCmd(command, strlen(command));
+  if (_frameMode == FRAME_SAMPLE) {
+    buildStreamCmd(command, sizeof(command), 1, false, false);
+  } else {
+    /// a single inference, the image is always in the event (a differed
+    /// result would not send any event at all, so it is disabled here)
+    snprintf(command, sizeof(command), "%s=1,0,0", CMD_AT_INVOKE);
+  }
+  return writeCmd(command, strlen(command));
+}
+
+bool CamAIVision2::startStream(int times, bool differed, bool resultOnly) {
+  if (!_started) {
+    log_e("The AI Vision 2 interface is not initialized, call Camera.begin() first..");
+    return false;
+  }
+  char command[32] = {0};
+  buildStreamCmd(command, sizeof(command), times, differed, resultOnly);
+  _streamMode = STREAM_CONTINUOUS;
+  _streaming = writeCmd(command, strlen(command));
   if (_streaming) {
-    log_i("Streaming started: %s", command);
+    log_i("Streaming started: %s (%s)", command, (_frameMode == FRAME_SAMPLE) ? "image only" : "AI results");
   } else {
     log_e("Failed to start the stream..");
   }
@@ -549,18 +753,60 @@ bool CamAIVision2::startStream(int times, bool differed, bool resultOnly) {
 }
 
 bool CamAIVision2::stopStream() {
+  bool ok = false;
+  if (_started) {
+    ok = writeCmd(CMD_AT_BREAK, strlen(CMD_AT_BREAK));
+  }
   _streaming = false;
+  _streamMode = STREAM_ON_DEMAND;
+  _logNextReply = true;
   dropFrames();
-  return sendCmd(CMD_AT_BREAK, strlen(CMD_AT_BREAK));
+  return ok;
+}
+
+void CamAIVision2::setFrameMode(FrameMode mode) {
+  if (mode == _frameMode) {
+    return;
+  }
+  _frameMode = mode;
+  if (_started && _streaming) {
+    startStream(); // the stream command changes with the frame mode
+  }
+  log_i("Frame mode: %s", (mode == FRAME_SAMPLE) ? "image only (AT+SAMPLE)" : "AI results (AT+INVOKE)");
+}
+
+void CamAIVision2::setStreamMode(StreamMode mode) {
+  if (!_started) {
+    _streamMode = mode;
+    return;
+  }
+  if (mode == STREAM_CONTINUOUS) {
+    startStream();
+  } else {
+    stopStream();
+  }
 }
 
 bool CamAIVision2::setResolution(uint16_t optId, int sensorId) {
   _sensorOptId = optId;
   _sensorId = sensorId;
-  if (!_streaming) {
+  if (!_started) {
     return true; // it is applied on begin()
   }
-  return applyResolution();
+  /// the module deInitializes and initializes its sensor to change the
+  /// resolution, so the running stream (if any) is stopped first, otherwise
+  /// the change is mixed with the frames in flight and it is lost
+  bool restart = _streaming;
+  if (restart) {
+    stopStream();
+  }
+  dropFrames(); // the buffered frames belong to the old resolution
+  bool ok = applyResolution();
+  pump(AIVISION2_REPLY_DELAY);
+  if (restart) {
+    ok = startStream() && ok;
+  }
+  return ok;
 }
 
 bool CamAIVision2::applyResolution() {
@@ -569,14 +815,15 @@ bool CamAIVision2::applyResolution() {
   }
   char command[24] = {0};
   snprintf(command, sizeof(command), "%s=%d,1,%d", CMD_AT_SENSOR, _sensorId, _sensorOptId);
-  log_i("Sensor resolution: %s", command);
-  return sendCmd(command, strlen(command));
+  log_i("Setting the sensor resolution: %s (see the module reply below)", command);
+  _logNextReply = true; // the answer says which resolution is active now
+  return writeCmd(command, strlen(command));
 }
 
 size_t CamAIVision2::available() { return _frames.size(); }
-
 size_t CamAIVision2::discarded() { return _discarded; }
-
 size_t CamAIVision2::rejected() { return _rejected; }
+size_t CamAIVision2::partial() { return _partial; }
+size_t CamAIVision2::timeouts() { return _timeouts; }
 
 #endif

@@ -36,7 +36,10 @@ void setup() {
   }
 
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = static_cast<uint8_t*>(ps_malloc(15000 * sizeof(uint8_t)));
+  // the frame of the Seeed AI Vision 2 is a 240x240 JPEG (~13KB to 17KB), and
+  // ESPNowCam does not check the frame length against this buffer, so it is
+  // sized with some room (a 480x480 frame needs more than 40KB)
+  fb = static_cast<uint8_t*>(ps_malloc(40000 * sizeof(uint8_t)));
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);
