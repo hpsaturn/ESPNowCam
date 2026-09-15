@@ -181,7 +181,29 @@ CamFreenove Camera;
 ```
 
 >[!TIP]
->For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me via a [GitHub issue](https://github.com/hpsaturn/ESPNowCam/issues/new) or please contribute with the project sending a pull request :D
+>For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker, the TTGO T-Journal cameras and the Seeed Studio AI Vision 2 module (SSCMA), see the [xiao-ai-vision-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-sender) example, but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me via a [GitHub issue](https://github.com/hpsaturn/ESPNowCam/issues/new) or please contribute with the project sending a pull request :D
+
+### Seeed Studio AI Vision 2 (SSCMA)
+
+This module owns the camera and the model, it makes the inference and it sends every frame as a base64 JPEG inside the SSCMA AT protocol events, so the driver only decodes those events and exposes `Camera.fb` like any other camera of this library:
+
+```cpp
+CamAIVision2 Camera;
+...
+if (Camera.get()) {
+  radio.sendData(Camera.fb->buf, Camera.fb->len);
+  Camera.free();
+}
+```
+
+The payload is big (a 240x240 frame can be 12KB of JPEG, ~16KB in base64) and it is not always clean, so the driver decodes it with some tolerance:
+
+- the frame is cut to the real JPEG data, in case the module adds a header or a tail to the image
+- it accepts the standard base64, the URL safe and wrapped variants, and also the hex encoded payloads
+- if the module cuts the image (its buffer is smaller than the frame), the partial frame is sent anyway, it is possible to drop those frames defining `AIVISION2_STRICT_JPEG=1`
+- the first rejected frames are logged with all the payload details and they are counted, see `Camera.rejected()`
+
+Other useful defines for the environment: `AIVISION2_BAUD` (921600), `AIVISION2_UART_BUFFER`, `AIVISION2_RESP_BUFFER`, `AIVISION2_DEBUG_FRAMES` and `AIVISION2_PIN_RST` if your wiring has the module reset line. More details in [CamAIVision2.h](https://github.com/hpsaturn/ESPNowCam/blob/master/src/drivers/CamAIVision2.h) and in the [xiao-ai-vision-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-sender) example.
 
 ### Channel
 

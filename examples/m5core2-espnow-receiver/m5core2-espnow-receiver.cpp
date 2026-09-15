@@ -22,6 +22,8 @@ void onDataReady(uint32_t lenght) {
 
 void setup() {
   Serial.begin(115200);
+  delay(4000);
+  Serial.printf("M5 start..\r\n");
   auto cfg = M5.config();
   M5.begin(cfg);
   M5.Display.setBrightness(96);
