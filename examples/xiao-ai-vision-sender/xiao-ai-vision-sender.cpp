@@ -70,8 +70,11 @@ void setup() {
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
 
-  // Optional: for better performance you can use the WiFi raw (80211tx)
-  // implementation instead of ESP-NOW, see wifiraw-80211tx-* examples.
+  // The AI Vision 2 driver always uses the WiFi raw (80211tx) implementation:
+  // the AI results of every frame travel inside the frame (see FrameMeta.h)
+  // and the ESP-NOW messages are too small for them (250 bytes) and their
+  // protocol must stay compatible with the previous releases of the library.
+  // The receiver must use WiFiRawComm too (see wifiraw-80211tx-receiver).
 
   // Optional M5Core2 receiver B8:F0:09:C6:0E:CC
   const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
@@ -92,6 +95,10 @@ void setup() {
   // driver parses them and sends them to the receiver with the frame (see
   // FrameMeta.h). In SAMPLE mode only the image is sent.
   Camera.setFrameMode(CamAIVision2::FRAME_INVOKE);
+
+  if (!radio.supportsFrameMetadata()) {
+    Serial.println("WARNING: this radio can not carry the AI results, use WiFiRawComm");
+  }
 
   if (!Camera.begin()) {
     Serial.println("Camera Init Fail");

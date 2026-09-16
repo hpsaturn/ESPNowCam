@@ -14,7 +14,7 @@
 | m5cores3-espnow-sender | PSRAM, 2FB, JPG built-in camera | QVGA | STABLE |
 | esp32cam-p2p-sender | PSRAM, 2FB, JPG | QVGA | UNTESTED |
 | freenoveWR-basic-sender | PSRAM, 2FB, JPG | QVGA | UNTESTED |
-| xiao-ai-vision-sender | Seeed AI Vision 2 (SSCMA), JPG, on demand frames, AI detections | 240x240 | 16 FPS (80211tx) |
+| xiao-ai-vision-sender | Seeed AI Vision 2 (SSCMA), JPG, on demand frames, AI detections [3] | 240x240 | 16 FPS (80211tx) |
 
 ### Receivers samples
 
@@ -23,7 +23,7 @@ Some video receivers
 | ENV Name   |    Details      |   Status |
 |:-----------------|:--------------:|:----------:|
 | m5core2-basic-receiver   | M5Stack M5Core2 [1] |  STABLE |
-| m5core2-espnow-receiver  | M5Stack M5Core2 [1] [3] |  STABLE |
+| m5core2-espnow-receiver  | M5Stack M5Core2 [1] |  STABLE |
 | m5cores3-espnow-receiver | M5Stack M5CoreS3 [1] |  STABLE |
 | makerfabs-basic-receiver | Makerfabs RGB Parallel [1] [2] |  STABLE |  
 | makerfabs-nojpg-receiver | Makerfabs RGB Parallel [1] [2] | <2FPS |
@@ -35,7 +35,7 @@ Some video receivers
 
 [1] Use with any sender sample  
 [2] Use with freenove HVGA sender sample for example.  
-[3] It paints the AI detections of the frames (the senders that attach them, see the FrameMeta section on the main README)
+[3] WiFi raw (80211tx) only: it sends the AI results of each frame inside it (see the FrameMeta section on the main README), use it with the wifiraw-80211tx-receiver sample
 
 ### Advanced samples
 

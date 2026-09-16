@@ -25,6 +25,13 @@
  *   240x240 JPEG (~13KB -> ~17KB in base64) needs ~200ms, and 480x480/VGA are
  *   much bigger (they cap the FPS around 1). See the README notes.
  *
+ * - The AI results of every frame (Camera.detections(), Camera.perf()) are
+ *   only sent to the receiver on the communication interfaces that can carry
+ *   the frame metadata, i.e. the WiFi raw (80211tx) one: the ESP-NOW messages
+ *   are too small for it and its protocol must stay compatible with the
+ *   previous releases of the library. Use WiFiRawComm at both ends, see the
+ *   xiao-ai-vision-sender and wifiraw-80211tx-receiver examples.
+ *
  * It only is compiled when the AIVISION2 build flag is defined, see the
  * xiao-ai-vision-sender environment on platformio.ini
 **************************************************/

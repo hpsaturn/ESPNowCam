@@ -7,7 +7,6 @@
 
 #include <Arduino.h>
 #include <M5Unified.h>
-#include <common/DetectionsOverlay.h>
 #include "ESPNowCam.h"
 #include "Utils.h"
 
@@ -19,12 +18,6 @@ int32_t dw, dh; // display width and height
 void onDataReady(uint32_t lenght) {
   M5.Display.drawJpg(fb, lenght , 0, 0, dw, dh);
   printFPS("M5Core2:");
-}
-
-/// the AI results of the frame that was just painted (the sender attaches them
-/// to the frame, see FrameMeta.h), the detection boxes go over the image
-void onMetaReady(const uint8_t *meta, uint32_t lenght) {
-  drawDetectionsOverlay(M5.Display, meta, lenght, 0, 0, dw, dh);
 }
 
 void setup() {
@@ -50,7 +43,6 @@ void setup() {
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);
-  radio.setMetaCallback(onMetaReady);
 
   if (radio.init()) {
     M5.Display.drawString("ESPNowCam Init Success", dw / 2, dh / 2);

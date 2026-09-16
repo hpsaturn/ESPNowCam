@@ -1,0 +1,24 @@
+syntax = "proto2";
+
+import "nanopb.proto";
+
+// One frame chunk of the ESPNowCam streaming protocol for the interfaces with
+// room for it (the WiFi raw 802.11tx one, ~960/1000 bytes per message).
+//
+// This schema is NOT used by the old ESP-NOW interface: esp_now_send() only
+// accepts 250 bytes per message, so its frames are kept in the minimal
+// src/frame.proto (lenght + data) and stay byte compatible with the previous
+// releases of the library.
+//
+// lenght  : the total size of the frame, it is only set on the LAST chunk,
+//           the receiver uses it to know when the frame is complete
+// data    : the payload chunk (a fragment of the JPEG or of any other data)
+// meta    : optional metadata of the frame (the AI results, the size of the
+//           source image, etc), it rides with the last chunk so it arrives
+//           atomically with its frame. See src/FrameMeta.h for the layout,
+//           FRAME_META_MAX_SIZE must match the max_size below.
+message FrameWifiRaw {
+  required uint32 lenght = 1 [(nanopb).int_size = IS_32];
+  repeated bytes data = 2 [(nanopb).int_size = IS_8];
+  optional bytes meta = 3 [(nanopb).max_size = 176];
+}

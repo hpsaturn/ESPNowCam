@@ -11,6 +11,12 @@
  * atomically: no extra radio message, no ordering problem and no change of
  * the frame rate (the blob is a few tens of bytes against the KBs of a frame).
  *
+ * The metadata is only available on the communication interfaces with room
+ * for it (CommInterface::supportsFrameMetadata), i.e. the WiFi raw (80211tx)
+ * one, which is the only one that uses the extended src/frame_wifiraw.proto
+ * schema. The old ESP-NOW interface keeps the minimal src/frame.proto schema
+ * (lenght + data) used by the previous releases of the library.
+ *
  * The layout is little endian and versioned: a receiver must ignore the
  * metadata that it does not know instead of failing, so new types can be
  * added without breaking the existing ones (nanopb skips the unknown fields,
@@ -32,7 +38,7 @@
  *                 x, y, w, h (uint16 little endian), score (0-100), target
  *
  * FRAME_META_MAX_SIZE must match the max_size of the meta field of
- * src/frame.proto (regenerate the protobuf files if it changes).
+ * src/frame_wifiraw.proto (regenerate the protobuf files if it changes).
  **************************************************/
 
 #ifndef FRAME_META_H
@@ -61,7 +67,7 @@
 /// fixed part of the metadata
 #define FRAME_META_HEADER_SIZE 16
 
-/// maximum size of a metadata blob (it must fit in src/frame.proto)
+/// maximum size of a metadata blob (it must fit in src/frame_wifiraw.proto)
 #define FRAME_META_MAX_SIZE \
   (FRAME_META_HEADER_SIZE + (FRAME_META_MAX_BOXES * FRAME_META_BOX_SIZE))
 

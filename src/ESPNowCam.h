@@ -16,6 +16,10 @@
 #include <vector>
 
 #include "frame.pb.h"
+// extended schema (lenght + data + meta), only used by the communication
+// interfaces with room for the metadata of the frame (see FrameMeta.h):
+// the old ESP-NOW one keeps the minimal src/frame.proto schema
+#include "frame_wifiraw.pb.h"
 #include "CommInterface.h"
 #include "ESPNowComm.h"
 #include "FrameMeta.h"
@@ -26,6 +30,8 @@ typedef void (*RecvCb)(uint32_t lenght);
 }
 
 /// receiver callback for the metadata of the received frames (see FrameMeta.h).
+/// It is only available on the communication interfaces that can carry it
+/// (WiFiRawComm, see CommInterface::supportsFrameMetadata).
 /// It is called right after the frame callback, so the frame can be painted
 /// first and the AI results on top of it.
 typedef void (*MetaCb)(const uint8_t *meta, uint32_t lenght);
@@ -70,7 +76,9 @@ class ESPNowCam {
   /// @param lenght length of the data to be sent
   /// @param meta optional metadata of this frame (see FrameMeta.h), it travels
   ///        with the last chunk of the frame, so the receiver gets it together
-  ///        with the frame it belongs to
+  ///        with the frame it belongs to. Only the communication interfaces
+  ///        with room for it can send it (supportsFrameMetadata), on the others
+  ///        the frame is sent without the metadata
   /// @param metaLenght length of the metadata
   bool sendData(uint8_t *data, uint32_t lenght, const uint8_t *meta = nullptr,
                 uint32_t metaLenght = 0);
@@ -89,8 +97,16 @@ class ESPNowCam {
 
   /// @brief set the receiver metadata callback (optional, single source mode).
   ///        see FrameMeta.h to read the metadata of the frame (AI results).
+  ///        It is ignored by the interfaces that can not carry the metadata
+  ///        (see supportsFrameMetadata).
   /// @param cb callback function to be called with the metadata of a frame
   void setMetaCallback(MetaCb cb);
+
+  /// @brief true when the communication interface in use can carry the frame
+  ///        metadata, i.e. when the frames are sent with the extended schema
+  ///        of src/frame_wifiraw.proto instead of the minimal src/frame.proto
+  ///        one (the AI results can only be sent on those interfaces)
+  bool supportsFrameMetadata();
 
   /// @brief filter for multiple sources (N:1)
   /// @param fb pointer to the buffer to receive the data

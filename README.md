@@ -169,6 +169,8 @@ radio.init(512);                    // the same sender chunk size
 >[!TIP]
 >Note: The N:1 mode is not full implemented on WiFi raw. It is recommended use channel and mac address target on the sender for improve quality. Please sse the examples for details.
 
+This is the only interface that uses the extended [frame_wifiraw.proto](https://github.com/hpsaturn/ESPNowCam/blob/master/src/frame_wifiraw.proto) schema, the one that allows to attach the metadata (the AI results) to the frames, see the [Frame metadata](#frame-metadata-the-ai-results-on-the-receiver) section. The ESP-NOW mode keeps the original `frame.proto` protocol.
+
 ### Predefined drivers
 
 The library includes some pre-defined camera configs to have an easy implementation, for example:
@@ -218,6 +220,9 @@ Other useful defines for the environment: `AIVISION2_BAUD` (921600), `AIVISION2_
 
 A frame can carry a small metadata blob with it (see [FrameMeta.h](https://github.com/hpsaturn/ESPNowCam/blob/master/src/FrameMeta.h)): what the AI found inside the image, the resolution that the detection boxes refer to, the state of the frame, the inference timings. `sendData()` sends it with the last chunk of the frame, so the metadata and its frame arrive atomically: no extra radio message, no ordering problem and no change of the frame rate (the blob is a few tens of bytes against the KBs of a frame).
 
+>[!IMPORTANT]
+>This is only available on the **WiFi raw (80211tx)** interface, which uses the extended [frame_wifiraw.proto](https://github.com/hpsaturn/ESPNowCam/blob/master/src/frame_wifiraw.proto) schema (`lenght` + `data` + `meta`). The old **ESP-NOW** interface keeps the minimal [frame.proto](https://github.com/hpsaturn/ESPNowCam/blob/master/src/frame.proto) schema (`lenght` + `data`): its messages are limited to 250 bytes and its protocol must stay byte compatible with the previous releases of the library. The interface in use is asked at runtime (`CommInterface::supportsFrameMetadata()`, `radio.supportsFrameMetadata()`), so `sendData()` with metadata on an ESP-NOW link simply sends the frame without it.
+
 ```cpp
 // sender: Camera.frameMeta() is nullptr when the frame has no results
 radio.sendData(Camera.fb->buf, Camera.fb->len, Camera.frameMeta(), Camera.frameMetaLen());
@@ -242,10 +247,10 @@ void onMetaReady(const uint8_t *meta, uint32_t lenght) {
 }
 ```
 
-The [wifiraw-80211tx-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-receiver) and [m5core2-espnow-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/m5core2-espnow-receiver) samples paint the boxes, the class and the score over the video with [DetectionsOverlay.h](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/common/DetectionsOverlay.h).
+The [wifiraw-80211tx-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-receiver) sample paints the boxes, the class and the score over the video with [DetectionsOverlay.h](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/common/DetectionsOverlay.h). The sender and the receiver must use the same interface: the [xiao-ai-vision-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-sender) sample (the only camera that generates metadata at this moment) with a WiFi raw receiver.
 
 >[!NOTE]
->The metadata is an optional field of the frame protocol: nanopb skips the unknown fields, so a receiver of a previous version ignores it and it keeps painting the frames, and a sender that does not use it (any other camera of this library) does not change its behavior.
+>The metadata is an optional field of the extended protocol: nanopb skips the unknown fields, so a WiFi raw receiver of a previous version ignores it and it keeps painting the frames, and a sender that does not use it (any other camera of this library) does not change its behavior.
 
 ### Channel
 
