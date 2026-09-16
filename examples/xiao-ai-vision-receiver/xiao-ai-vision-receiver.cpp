@@ -25,7 +25,7 @@ int32_t dw, dh; // display width and height
 uint32_t detections = 0;
 
 void onDataReady(uint32_t lenght) {
-  M5.Display.drawJpg(fb, lenght , 0, 0, dw, dh, 0, 0, 1.32, 1.0);
+  M5.Display.drawJpg(fb, lenght , 0, 0, dw, dh, 0, 0, 1.34, 1.0);
   printFPS("M5Core2:");
 }
 

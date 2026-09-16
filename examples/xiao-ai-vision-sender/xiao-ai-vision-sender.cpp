@@ -63,7 +63,7 @@ void shutdown() {
 void setup() {
   Serial.begin(115200);
 
-  delay(4000); // only for debugging 
+  // delay(4000); // only for debugging 
 
   if(psramFound()){
     size_t psram_size = esp_spiram_get_size() / 1048576;
