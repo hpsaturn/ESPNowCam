@@ -210,9 +210,42 @@ The payload is big (a 240x240 frame can be 12KB of JPEG, ~16KB in base64) and it
 > [!IMPORTANT]
 >The 921600 baud UART is the real limit of this camera (~90KB/s): a 240x240 frame needs ~200ms (~5 FPS maximum before the radio), 480x480 and VGA are ~4x and ~6x bigger, so they cap the FPS below 1 and they need a receiver buffer of more than 40KB. Keep the 240x240 resolution (0) for ESP-NOW.
 
-The driver also allows to choose what is asked to the module for every frame: `Camera.setFrameMode(CamAIVision2::FRAME_SAMPLE)` (default) asks only for the image, while `CamAIVision2::FRAME_INVOKE` asks for the AI results too (the driver still only sends the image, so it is slower and it is only useful to read the module results).
+The driver also allows to choose what is asked to the module for every frame: `Camera.setFrameMode(CamAIVision2::FRAME_SAMPLE)` asks only for the image, while `CamAIVision2::FRAME_INVOKE` (default in the sample) asks for the AI results too. With `FRAME_INVOKE` the driver parses the detections of every event and they are available as `Camera.detections()`, `Camera.detectionCount()` and `Camera.perf()` (the inference timings), and they are also sent to the receiver with the frame, see the next section.
 
 Other useful defines for the environment: `AIVISION2_BAUD` (921600), `AIVISION2_UART_BUFFER`, `AIVISION2_RESP_BUFFER`, `AIVISION2_GET_TIMEOUT`, `AIVISION2_DEBUG_FRAMES` and `AIVISION2_PIN_RST` if your wiring has the module reset line. More details in [CamAIVision2.h](https://github.com/hpsaturn/ESPNowCam/blob/master/src/drivers/CamAIVision2.h) and in the [xiao-ai-vision-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-sender) example.
+
+### Frame metadata (the AI results on the receiver)
+
+A frame can carry a small metadata blob with it (see [FrameMeta.h](https://github.com/hpsaturn/ESPNowCam/blob/master/src/FrameMeta.h)): what the AI found inside the image, the resolution that the detection boxes refer to, the state of the frame, the inference timings. `sendData()` sends it with the last chunk of the frame, so the metadata and its frame arrive atomically: no extra radio message, no ordering problem and no change of the frame rate (the blob is a few tens of bytes against the KBs of a frame).
+
+```cpp
+// sender: Camera.frameMeta() is nullptr when the frame has no results
+radio.sendData(Camera.fb->buf, Camera.fb->len, Camera.frameMeta(), Camera.frameMetaLen());
+
+// receiver
+radio.setRecvBuffer(fb);
+radio.setRecvCallback(onDataReady);   // it paints the frame
+radio.setMetaCallback(onMetaReady);   // and then its AI results over it
+```
+
+The receiver reads the blob with `FrameMetaReader`, and the boxes are in the resolution of the sender frame, so they are easy to scale to the rectangle used to paint the image:
+
+```cpp
+void onMetaReady(const uint8_t *meta, uint32_t lenght) {
+  FrameMetaReader reader(meta, lenght);
+  if (!reader.valid() || reader.type() != FRAME_META_TYPE_DETECTIONS) return;
+  for (size_t i = 0; i < reader.count(); i++) {
+    FrameMetaBox box;
+    if (!reader.box(i, box)) break;
+    // box.x/y/w/h in a reader.width() x reader.height() frame
+  }
+}
+```
+
+The [wifiraw-80211tx-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-receiver) and [m5core2-espnow-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/m5core2-espnow-receiver) samples paint the boxes, the class and the score over the video with [DetectionsOverlay.h](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/common/DetectionsOverlay.h).
+
+>[!NOTE]
+>The metadata is an optional field of the frame protocol: nanopb skips the unknown fields, so a receiver of a previous version ignores it and it keeps painting the frames, and a sender that does not use it (any other camera of this library) does not change its behavior.
 
 ### Channel
 

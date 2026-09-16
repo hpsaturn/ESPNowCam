@@ -23,12 +23,31 @@ ESPNowCam radio(&wifiRaw);
 
 OneButton btnB(GPIO_NUM_0, true);
 
+/// show the detections of the frame on the serial console (they are also sent
+/// to the receiver inside the metadata of the frame, see FrameMeta.h)
+void printDetections() {
+  static uint32_t frames = 0;
+  if ((++frames % 50) != 0) return; // the console can not follow the stream
+  Serial.printf("CAM: %ux%u %u detection(s), infer %ums\r\n", (unsigned int)Camera.fb->width,
+                (unsigned int)Camera.fb->height, (unsigned int)Camera.detectionCount(),
+                (unsigned int)Camera.perf()[1]);
+  for (size_t i = 0; i < Camera.detectionCount(); i++) {
+    const boxes_t &box = Camera.detections()[i];
+    Serial.printf("  [%u] target %u score %u%% (%u,%u %ux%u)\r\n", (unsigned int)i,
+                  (unsigned int)box.target, (unsigned int)box.score, (unsigned int)box.x,
+                  (unsigned int)box.y, (unsigned int)box.w, (unsigned int)box.h);
+  }
+}
+
 void processFrame() {
   if (Camera.get()) {
     // the AI Vision 2 driver already provides a JPEG frame (PIXFORMAT_JPEG),
     // so there is no need to convert it with frame2jpg()
-    radio.sendData(Camera.fb->buf, Camera.fb->len);
+    // Camera.frameMeta() is the AI results of this frame (nullptr in SAMPLE
+    // mode), it rides with the frame and the receiver can paint it over it
+    radio.sendData(Camera.fb->buf, Camera.fb->len, Camera.frameMeta(), Camera.frameMetaLen());
     printFPS("CAM:");
+    printDetections();
     Camera.free();
   }
 }
@@ -68,8 +87,10 @@ void setup() {
   // 0 -> 240x240 (default), 1 -> 480x480, 2 -> VGA 640x480
   Camera.setResolution(0);
 
-  // Optional: ask for the AI results too instead of the plain image (the
-  // driver only sends the image, so it is slower and does not change here)
+  // The AI results of every frame (the detection boxes, the scores, the
+  // inference timings) are only reported by the module in INVOKE mode: the
+  // driver parses them and sends them to the receiver with the frame (see
+  // FrameMeta.h). In SAMPLE mode only the image is sent.
   Camera.setFrameMode(CamAIVision2::FRAME_INVOKE);
 
   if (!Camera.begin()) {

@@ -10,9 +10,21 @@
 #endif
 
 /* Struct definitions */
+typedef PB_BYTES_ARRAY_T(176) Frame_meta_t;
+/* One frame chunk of the ESPNowCam streaming protocol.
+
+ lenght  : the total size of the frame, it is only set on the LAST chunk,
+           the receiver uses it to know when the frame is complete
+ data    : the payload chunk (a fragment of the JPEG or of any other data)
+ meta    : optional metadata of the frame (the AI results, the size of the
+           source image, etc), it rides with the last chunk so it arrives
+           atomically with its frame. See src/FrameMeta.h for the layout,
+           FRAME_META_MAX_SIZE must match the max_size below. */
 typedef struct _Frame {
     uint32_t lenght;
     pb_callback_t data;
+    bool has_meta;
+    Frame_meta_t meta;
 } Frame;
 
 
@@ -21,17 +33,19 @@ extern "C" {
 #endif
 
 /* Initializer values for message structs */
-#define Frame_init_default                       {0, {{NULL}, NULL}}
-#define Frame_init_zero                          {0, {{NULL}, NULL}}
+#define Frame_init_default                       {0, {{NULL}, NULL}, false, {0, {0}}}
+#define Frame_init_zero                          {0, {{NULL}, NULL}, false, {0, {0}}}
 
 /* Field tags (for use in manual encoding/decoding) */
 #define Frame_lenght_tag                         1
 #define Frame_data_tag                           2
+#define Frame_meta_tag                           3
 
 /* Struct field encoding specification for nanopb */
 #define Frame_FIELDLIST(X, a) \
 X(a, STATIC,   REQUIRED, UINT32,   lenght,            1) \
-X(a, CALLBACK, REPEATED, BYTES,    data,              2)
+X(a, CALLBACK, REPEATED, BYTES,    data,              2) \
+X(a, STATIC,   OPTIONAL, BYTES,    meta,              3)
 #define Frame_CALLBACK pb_default_field_callback
 #define Frame_DEFAULT NULL
 

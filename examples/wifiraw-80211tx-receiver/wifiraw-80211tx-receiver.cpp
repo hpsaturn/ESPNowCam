@@ -12,6 +12,7 @@
 
 #include <Arduino.h>
 #include <M5Unified.h>
+#include <common/DetectionsOverlay.h>
 #include "ESPNowCam.h"
 #include "Utils.h"
 
@@ -22,9 +23,26 @@ ESPNowCam radio(&wifiRaw);
 uint8_t *fb;    // frame buffer
 int32_t dw, dh; // display width and height
 
+uint32_t detections = 0;
+
 void onDataReady(uint32_t lenght) {
-  M5.Display.drawJpg(fb, lenght , 0, 0, dw, dh);
+  M5.Display.drawJpg(fb, lenght , 0, 0, dw, dh, 0, 0, 1.32, 1.0);
   printFPS("M5Core2:");
+}
+
+/// the AI results of the frame that was just painted (the sender attaches them
+/// to the frame, see FrameMeta.h): the detection boxes are painted over the
+/// image with the same rectangle used for it
+void onMetaReady(const uint8_t *meta, uint32_t lenght) {
+  detections = drawDetectionsOverlay(M5.Display, meta, lenght, 0, 0, dw, dh);
+  FrameMetaReader reader(meta, lenght);
+  static uint32_t last = 0;
+  if (reader.valid() && (millis() - last) > 1000) {
+    last = millis();
+    Serial.printf("M5Core2: %u detection(s), inference %ums, %ux%u frame\r\n",
+                  (unsigned int)reader.count(), (unsigned int)reader.perfInference(),
+                  (unsigned int)reader.width(), (unsigned int)reader.height());
+  }
 }
 
 void setup() {
@@ -48,6 +66,7 @@ void setup() {
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);
+  radio.setMetaCallback(onMetaReady);
   radio.setChannel(6);
 
   if (radio.init(960)) {  // chunk size in bytes (beta feature)

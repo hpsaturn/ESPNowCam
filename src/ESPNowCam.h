@@ -18,11 +18,17 @@
 #include "frame.pb.h"
 #include "CommInterface.h"
 #include "ESPNowComm.h"
+#include "FrameMeta.h"
 #include "WiFiRawComm.h"
 
 extern "C" {
 typedef void (*RecvCb)(uint32_t lenght);
 }
+
+/// receiver callback for the metadata of the received frames (see FrameMeta.h).
+/// It is called right after the frame callback, so the frame can be painted
+/// first and the AI results on top of it.
+typedef void (*MetaCb)(const uint8_t *meta, uint32_t lenght);
 
 #define ENC_VERSION "0.2.2"
 #define ENC_REVISION 085
@@ -30,6 +36,17 @@ typedef void (*RecvCb)(uint32_t lenght);
 // Maximum data length (can be overridden by implementations)
 #ifndef COMM_MAX_DATA_LEN
 #define COMM_MAX_DATA_LEN 350
+#endif
+
+// Maximum metadata size of a frame (see FrameMeta.h and src/frame.proto)
+#ifndef COMM_MAX_META_LEN
+#define COMM_MAX_META_LEN FRAME_META_MAX_SIZE
+#endif
+
+// Milliseconds that sendData() waits for the send confirmation of a chunk, the
+// radio callback is synchronous on both interfaces, it is only a safety net
+#ifndef COMM_SEND_TIMEOUT
+#define COMM_SEND_TIMEOUT 500
 #endif
 
 class ESPNowCam {
@@ -51,7 +68,12 @@ class ESPNowCam {
   /// @brief send data to the target device or broadcast if targetAddress is not set.
   /// @param data pointer to the data to be sent
   /// @param lenght length of the data to be sent
-  bool sendData(uint8_t *data, uint32_t lenght);
+  /// @param meta optional metadata of this frame (see FrameMeta.h), it travels
+  ///        with the last chunk of the frame, so the receiver gets it together
+  ///        with the frame it belongs to
+  /// @param metaLenght length of the metadata
+  bool sendData(uint8_t *data, uint32_t lenght, const uint8_t *meta = nullptr,
+                uint32_t metaLenght = 0);
 
   /// @brief set the target device MAC address. (For 1:1 mode)
   /// @param macAddress pointer to the MAC address of the target device
@@ -64,6 +86,11 @@ class ESPNowCam {
   /// @brief set the receiver buffer.
   /// @param fb pointer to the buffer to receive the data
   void setRecvBuffer(uint8_t *fb);
+
+  /// @brief set the receiver metadata callback (optional, single source mode).
+  ///        see FrameMeta.h to read the metadata of the frame (AI results).
+  /// @param cb callback function to be called with the metadata of a frame
+  void setMetaCallback(MetaCb cb);
 
   /// @brief filter for multiple sources (N:1)
   /// @param fb pointer to the buffer to receive the data

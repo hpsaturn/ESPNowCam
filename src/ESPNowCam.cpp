@@ -50,33 +50,80 @@ ESPNowCam::~ESPNowCam() {
   // Cleanup if needed
 }
 
-bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
-  log_v("sending data (size: %i)", lenght);
+bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght, const uint8_t *meta,
+                         uint32_t metaLenght) {
+  log_v("sending data (size: %i, meta: %i)", lenght, metaLenght);
+  if (data == nullptr || lenght == 0) {
+    return false;
+  }
+
+  if (metaLenght > COMM_MAX_META_LEN) {
+    log_w("Frame metadata too big (%u bytes, max %u), sending the frame without it..",
+          (unsigned int)metaLenght, (unsigned int)COMM_MAX_META_LEN);
+    metaLenght = 0;
+  }
+  /// the metadata rides with the last chunk of the frame, that chunk is
+  /// reduced to leave room for it inside the send buffer (the protobuf headers
+  /// and the length field need some bytes too)
+  uint32_t meta_reserve = 0;
+  if (metaLenght > 0) {
+    meta_reserve = metaLenght + 16;
+    if (meta_reserve >= sizeof(send_buffer)) {
+      log_e("Frame metadata does not fit in the send buffer, sending the frame without it..");
+      metaLenght = 0;
+      meta_reserve = 0;
+    }
+  }
+
   outdata = data;
   outdata_len = lenght;
 
-  uint32_t frame_left = outdata_len;
   Frame msg = Frame_init_zero;
-  while (frame_left > 0) {
-    log_v("frame_left: %i)", frame_left);
-    if (frame_left <= chunk_size_left) {
-      chunk_size_left = frame_left;
+  uint32_t offset = 0;
+  while (offset < outdata_len) {
+    uint32_t left = outdata_len - offset;
+    log_v("frame left: %i)", left);
+    chunk_pos = offset;
+    chunk_size_left = min(left, (uint32_t)chunksize);
+    bool last = (left <= (uint32_t)chunksize);
+
+    if (last && meta_reserve > 0) {
+      uint32_t room = (uint32_t)sizeof(send_buffer) - meta_reserve;
+      if (chunk_size_left > room) {
+        chunk_size_left = room; // the last chunk gives room to the metadata
+        last = (left <= chunk_size_left);
+      }
+    }
+
+    if (last) {
       msg.lenght = outdata_len;
+      if (metaLenght > 0) {
+        memcpy(msg.meta.bytes, meta, metaLenght);
+        msg.meta.size = (pb_size_t)metaLenght;
+        msg.has_meta = true;
+      }
     } else {
-      frame_left = frame_left - chunk_size_left;
       msg.lenght = 0;
     }
+
     msg.data.funcs.encode = &encode_uint8_array;
-    msgReady = false;
-    sendMessage(encodeMsg(msg), this->targetAddress, comm);
-    while(!msgReady)delayMicroseconds(1);
-    chunk_pos = outdata_len - frame_left;
-    if (msg.lenght == outdata_len) {
-      frame_left = 0;
-      chunk_size_left = chunksize;
+    uint32_t msgLen = encodeMsg(msg);
+    if (msgLen == 0) {
+      log_e("Encoding failed, the rest of the frame is dropped..");
+      break;
     }
+    msgReady = false;
+    sendMessage(msgLen, this->targetAddress, comm);
+    uint32_t start = millis();
+    while (!msgReady && (millis() - start) < COMM_SEND_TIMEOUT) delayMicroseconds(1);
+    if (!msgReady) {
+      log_e("Timeout waiting the send confirmation of the chunk, the frame is corrupted..");
+      break;
+    }
+    offset += chunk_size_left;
   }
   chunk_pos = 0;
+  chunk_size_left = chunksize;
   return true;
 }
 
@@ -142,9 +189,10 @@ void printMacAddress(const uint8_t * macAddress){
  * R E C E I V E R  S E C T I O N
  * (for single camera source)
 ************************************/
-uint8_t recv_buffer[COMM_MAX_DATA_LEN - 8];
+uint8_t recv_buffer[COMM_MAX_DATA_LEN];
 uint32_t fbpos = 0;
 RecvCb recvCb = nullptr;
+MetaCb metaCb = nullptr;
 uint8_t *recvBuffer = nullptr;
 Frame msg_recv = Frame_init_zero;
 
@@ -171,14 +219,15 @@ bool decodeMessage(uint16_t message_length) {
 }
 
 void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int32_t dataLen) {
-#ifdef CONFIG_IDF_TARGET_ESP32C3
-  uint32_t msgLen = min((int32_t)COMM_MAX_DATA_LEN, dataLen);
-#else
-  uint32_t msgLen = min(COMM_MAX_DATA_LEN, dataLen);
-#endif
+  /// never copy more than the receive buffer (a truncated message is detected
+  /// by the protobuf decoder, but an overflow is corrupted memory)
+  uint32_t msgLen = ((uint32_t)dataLen < sizeof(recv_buffer)) ? (uint32_t)dataLen
+                                                             : (uint32_t)sizeof(recv_buffer);
   memcpy(recv_buffer, data, msgLen);
   if (decodeMessage(msgLen) && msg_recv.lenght > 0) {
     if (recvCb != nullptr) recvCb(msg_recv.lenght);
+    /// the metadata of this frame is available once the frame is complete
+    if (metaCb != nullptr && msg_recv.has_meta) metaCb(msg_recv.meta.bytes, msg_recv.meta.size);
     fbpos = 0;
   }
 }
@@ -189,6 +238,10 @@ void ESPNowCam::setRecvCallback(RecvCb cb) {
 
 void ESPNowCam::setRecvBuffer(uint8_t *fb) {
   recvBuffer = fb;
+}
+
+void ESPNowCam::setMetaCallback(MetaCb cb) {
+  metaCb = cb;
 }
 
 /***********************************
@@ -244,14 +297,12 @@ void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int32_t data
     return;
   } else {
     curReceiver = (struct_receiver*)(&pos->second);
-    #ifdef CONFIG_IDF_TARGET_ESP32C3
-    uint32_t msgLen = min((int32_t)COMM_MAX_DATA_LEN, dataLen);
-    #else
-    uint32_t msgLen = min(COMM_MAX_DATA_LEN, dataLen);
-    #endif
+    uint32_t msgLen = ((uint32_t)dataLen < sizeof(recv_buffer)) ? (uint32_t)dataLen
+                                                               : (uint32_t)sizeof(recv_buffer);
     memcpy(recv_buffer, data, msgLen);
     if (mulDecodeMessage(msgLen) && msg_recv.lenght > 0) {
       if (curReceiver->recvCb != nullptr) curReceiver->recvCb(msg_recv.lenght);
+      if (metaCb != nullptr && msg_recv.has_meta) metaCb(msg_recv.meta.bytes, msg_recv.meta.size);
       curReceiver->fbpos = 0;
     }
   }
@@ -307,6 +358,13 @@ void ESPNowCam::setChannel(uint8_t channel) {
 }
 
 bool ESPNowCam::init(uint16_t chunk_size) {
+  /// the encoded chunk (payload + protobuf headers) must fit in the send buffer
+  uint32_t max_chunk = (uint32_t)sizeof(send_buffer) - 16;
+  if (chunk_size > max_chunk) {
+    log_w("Chunk size %u does not fit in the send buffer, using %u..", chunk_size,
+          (unsigned int)max_chunk);
+    chunk_size = (uint16_t)max_chunk;
+  }
   chunksize = chunk_size; 
   chunk_size_left = chunk_size;
 

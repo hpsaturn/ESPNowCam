@@ -2,7 +2,17 @@ syntax = "proto2";
 
 import "nanopb.proto";
 
+// One frame chunk of the ESPNowCam streaming protocol.
+//
+// lenght  : the total size of the frame, it is only set on the LAST chunk,
+//           the receiver uses it to know when the frame is complete
+// data    : the payload chunk (a fragment of the JPEG or of any other data)
+// meta    : optional metadata of the frame (the AI results, the size of the
+//           source image, etc), it rides with the last chunk so it arrives
+//           atomically with its frame. See src/FrameMeta.h for the layout,
+//           FRAME_META_MAX_SIZE must match the max_size below.
 message Frame {
   required uint32 lenght = 1 [(nanopb).int_size = IS_32];
   repeated bytes data = 2 [(nanopb).int_size = IS_8];
+  optional bytes meta = 3 [(nanopb).max_size = 176];
 }

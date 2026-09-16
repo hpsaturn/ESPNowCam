@@ -306,6 +306,174 @@ static const char *lastMessageStart(const char *resp, size_t len) {
 }
 
 /**************************************************
+ * A I   R E S U L T S
+ **************************************************/
+
+/// find the value of a JSON key, e.g findKeyValue(json, len, MSG_BOXES_KEY, klen)
+/// for "boxes": [...]. The JSON spacing of the module is tolerated and nullptr
+/// is returned when the key is not there (or when it has no value)
+static const char *findKeyValue(const char *json, size_t len, const char *key, size_t key_len) {
+  const char *end = json + len;
+  const char *pos = json;
+  while (pos < end) {
+    pos = strnstr(pos, key, (size_t)(end - pos));
+    if (pos == nullptr) {
+      return nullptr;
+    }
+    const char *value = pos + key_len;
+    while (value < end && (*value == ' ' || *value == '\t' || *value == '\r' || *value == '\n')) value++;
+    if (value < end && *value == ':') {
+      value++;
+      while (value < end && (*value == ' ' || *value == '\t' || *value == '\r' || *value == '\n')) value++;
+      return (value < end) ? value : nullptr;
+    }
+    pos = value; // it is not the key of a value, keep looking
+  }
+  return nullptr;
+}
+
+static void skipSpaces(const char *json, size_t len, size_t *pos) {
+  while (*pos < len && (json[*pos] == ' ' || json[*pos] == '\t' || json[*pos] == '\r' ||
+                        json[*pos] == '\n')) {
+    (*pos)++;
+  }
+}
+
+/// read a non negative integer. All the numbers of the module are integers, so
+/// anything else stops the parsing of the caller (a cut or unknown payload)
+static bool parseUint(const char *json, size_t len, size_t *pos, uint32_t *value, uint32_t max) {
+  skipSpaces(json, len, pos);
+  if (*pos >= len || json[*pos] < '0' || json[*pos] > '9') {
+    return false;
+  }
+  uint32_t v = 0;
+  while (*pos < len && json[*pos] >= '0' && json[*pos] <= '9') {
+    if (v <= max) {
+      v = (v * 10) + (uint32_t)(json[*pos] - '0');
+    }
+    (*pos)++;
+  }
+  *value = (v > max) ? max : v;
+  return true;
+}
+
+/// the detections of an INVOKE event are arrays of numbers, the official
+/// format is "boxes":[[x,y,w,h,score,target],...] (see the SSCMA-Micro AT
+/// protocol documentation). A cut or unknown box stops the parsing without
+/// failing: the boxes read so far are much better than no detection at all.
+static size_t parseBoxes(const char *json, size_t len, boxes_t *boxes, size_t max) {
+  const char *value = findKeyValue(json, len, MSG_BOXES_KEY, MSG_BOXES_KEY_LEN);
+  if (value == nullptr || *value != '[') {
+    return 0;
+  }
+  size_t pos = (size_t)(value - json) + 1;
+  size_t count = 0;
+  while (count < max) {
+    skipSpaces(json, len, &pos);
+    if (pos >= len || json[pos] != '[') {
+      break; // end of the list or something unknown
+    }
+    pos++;
+    uint32_t v[6] = {0, 0, 0, 0, 0, 0};
+    bool ok = true;
+    for (size_t i = 0; i < 6 && ok; i++) {
+      if (i > 0) {
+        skipSpaces(json, len, &pos);
+        if (pos >= len || json[pos] != ',') {
+          ok = false;
+          break;
+        }
+        pos++;
+      }
+      ok = parseUint(json, len, &pos, &v[i], 0xFFFF);
+    }
+    if (!ok) {
+      break;
+    }
+    skipSpaces(json, len, &pos);
+    if (pos >= len || json[pos] != ']') {
+      break; // an incomplete box, it is discarded
+    }
+    pos++;
+    boxes[count].x = (uint16_t)v[0];
+    boxes[count].y = (uint16_t)v[1];
+    boxes[count].w = (uint16_t)v[2];
+    boxes[count].h = (uint16_t)v[3];
+    boxes[count].score = (uint8_t)v[4];
+    boxes[count].target = (uint8_t)v[5];
+    count++;
+    skipSpaces(json, len, &pos);
+    if (pos < len && json[pos] == ',') {
+      pos++;
+    }
+  }
+  return count;
+}
+
+/// the timings of the inference, e.g "perf":[2,33,0] in milliseconds
+static bool parsePerf(const char *json, size_t len, uint16_t *perf) {
+  const char *value = findKeyValue(json, len, MSG_PERF_KEY, MSG_PERF_KEY_LEN);
+  if (value == nullptr || *value != '[') {
+    return false;
+  }
+  size_t pos = (size_t)(value - json) + 1;
+  for (size_t i = 0; i < 3; i++) {
+    if (i > 0) {
+      skipSpaces(json, len, &pos);
+      if (pos >= len || json[pos] != ',') {
+        return false;
+      }
+      pos++;
+    }
+    uint32_t v = 0;
+    if (!parseUint(json, len, &pos, &v, 0xFFFF)) {
+      return false;
+    }
+    perf[i] = (uint16_t)v;
+  }
+  return true;
+}
+
+/// read the AI results of an event: the detections and the inference timings.
+/// Only the INVOKE events have them (AT+SAMPLE asks for the image only).
+bool CamAIVision2::parseResults(const char *msg, size_t len) {
+  _hasResults = false;
+  _boxCount = 0;
+  if (findKeyValue(msg, len, MSG_BOXES_KEY, MSG_BOXES_KEY_LEN) == nullptr) {
+    return false; /// a SAMPLE event, or an INVOKE event without AI results
+  }
+  _hasResults = true;
+  _boxCount = parseBoxes(msg, len, _boxes, AIVISION2_MAX_BOXES);
+  parsePerf(msg, len, _perfMs);
+  return true;
+}
+
+/// the receiver needs to know the resolution of the frame that the boxes refer
+/// to (to scale them) and the state of the frame, so it is sent with it
+size_t CamAIVision2::buildMeta(uint8_t *buffer, size_t size, uint16_t width, uint16_t height,
+                               bool partial) {
+  if (!_hasResults) {
+    return 0;
+  }
+  FrameMetaWriter meta(buffer, size);
+  if (!meta.begin(FRAME_META_TYPE_DETECTIONS, width, height)) {
+    return 0;
+  }
+  meta.setFlags(partial ? FRAME_META_FLAG_PARTIAL : 0);
+  meta.setPerf((uint8_t)(_perfMs[0] > 255 ? 255 : _perfMs[0]),
+               (uint8_t)(_perfMs[1] > 255 ? 255 : _perfMs[1]),
+               (uint8_t)(_perfMs[2] > 255 ? 255 : _perfMs[2]));
+  for (size_t i = 0; i < _boxCount; i++) {
+    if (!meta.addBox(_boxes[i].x, _boxes[i].y, _boxes[i].w, _boxes[i].h, _boxes[i].score,
+                     _boxes[i].target)) {
+      log_w("Too many detections for the metadata of a frame, %u of them are sent", i);
+      break;
+    }
+  }
+  return meta.length();
+}
+
+/**************************************************
  * F R A M E   D E C O D I N G
  **************************************************/
 
@@ -489,23 +657,33 @@ void CamAIVision2::onResponse(const char *resp, size_t len) {
     return;
   }
   jpegDimensions(jpeg, jpeg_len, &frame->width, &frame->height);
-  log_v("new frame: %u bytes %ux%u", (unsigned int)frame->len, (unsigned int)frame->width,
-        (unsigned int)frame->height);
-  pushFrame(frame);
+
+  /// the AI results of the same event (the boxes are in the resolution of the
+  /// frame) are attached to the frame as its metadata, so a receiver can paint
+  /// them over the image (see FrameMeta.h and ESPNowCam::setMetaCallback())
+  parseResults(msg, msg_len);
+  QueuedFrame entry;
+  entry.frame = frame;
+  entry.metaLen = buildMeta(entry.meta, sizeof(entry.meta), (uint16_t)frame->width,
+                            (uint16_t)frame->height, status == JPEG_INCOMPLETE);
+  log_v("new frame: %u bytes %ux%u, %u detections, meta %u bytes", (unsigned int)frame->len,
+        (unsigned int)frame->width, (unsigned int)frame->height, (unsigned int)_boxCount,
+        (unsigned int)entry.metaLen);
+  pushFrame(entry);
 }
 
-void CamAIVision2::pushFrame(camera_fb_t *frame) {
+void CamAIVision2::pushFrame(QueuedFrame &entry) {
   while (_frames.size() >= AIVISION2_QUEUE_LIMIT) {
-    frameDelete(_frames.front());
+    frameDelete(_frames.front().frame);
     _frames.pop_front();
     _discarded++;
   }
-  _frames.push_back(frame);
+  _frames.push_back(entry);
 }
 
 void CamAIVision2::dropFrames() {
   while (!_frames.empty()) {
-    frameDelete(_frames.front());
+    frameDelete(_frames.front().frame);
     _frames.pop_front();
   }
 }
@@ -666,8 +844,13 @@ bool CamAIVision2::get() {
   if (_frames.empty()) {
     return false;
   }
-  fb = _frames.front();
+  QueuedFrame entry = _frames.front();
   _frames.pop_front();
+  fb = entry.frame;
+  _fbMetaLen = entry.metaLen;
+  if (_fbMetaLen > 0) {
+    memcpy(_fbMeta, entry.meta, _fbMetaLen);
+  }
   return true;
 }
 
@@ -677,6 +860,7 @@ bool CamAIVision2::free() {
   }
   frameDelete(fb);
   fb = nullptr;
+  _fbMetaLen = 0;
   return true;
 }
 

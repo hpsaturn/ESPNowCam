@@ -42,6 +42,7 @@
 #include <deque>
 
 #include "CameraBase.hpp"
+#include "FrameMeta.h"
 #include "esp_camera.h"
 
 /**************************************************
@@ -105,6 +106,15 @@
 // decoded frames waiting to be consumed by get()
 #ifndef AIVISION2_QUEUE_LIMIT
 #define AIVISION2_QUEUE_LIMIT 2
+#endif
+
+// detections forwarded with every frame (FRAME_INVOKE), the metadata blob of
+// a frame has room for FRAME_META_MAX_BOXES of them, see FrameMeta.h
+#ifndef AIVISION2_MAX_BOXES
+#define AIVISION2_MAX_BOXES FRAME_META_MAX_BOXES
+#endif
+#if AIVISION2_MAX_BOXES > FRAME_META_MAX_BOXES
+#error "AIVISION2_MAX_BOXES can not be bigger than the metadata room (FRAME_META_MAX_BOXES)"
 #endif
 
 /**************************************************
@@ -178,6 +188,11 @@
 #define MSG_TYPE_KEY "\"type\""
 #define MSG_TYPE_KEY_LEN (sizeof(MSG_TYPE_KEY) - 1)
 #define MSG_EVENT_TYPE "1"
+// the AI results of the INVOKE events, e.g: "perf":[2,33,0],"boxes":[[97,82,154,160,70,1]]
+#define MSG_BOXES_KEY "\"boxes\""
+#define MSG_BOXES_KEY_LEN (sizeof(MSG_BOXES_KEY) - 1)
+#define MSG_PERF_KEY "\"perf\""
+#define MSG_PERF_KEY_LEN (sizeof(MSG_PERF_KEY) - 1)
 
 // the SSCMA library does not have a define for the sensor command
 #define CMD_AT_SENSOR "SENSOR"
@@ -259,6 +274,25 @@ class CamAIVision2 : public CameraBase {
   /// @param sensorId sensor id, 1 by default
   bool setResolution(uint16_t optId, int sensorId = 1);
 
+  /// @brief detections of the current frame (FRAME_INVOKE only), the boxes are
+  ///        in the resolution of the frame (see fb->width and fb->height)
+  const boxes_t *detections() { return _boxes; }
+
+  /// @brief number of detections of the current frame, 0 when there is no
+  ///        detection or when the frames are requested with FRAME_SAMPLE
+  size_t detectionCount() { return _boxCount; }
+
+  /// @brief inference timings of the current frame in milliseconds
+  ///        (preprocess, inference, postprocess), FRAME_INVOKE only
+  const uint16_t *perf() { return _perfMs; }
+
+  /// @brief metadata of the current frame (the detections, the source size and
+  ///        the state of the frame) ready to be sent with ESPNowCam::sendData(),
+  ///        see FrameMeta.h. It is nullptr in FRAME_SAMPLE, because AT+SAMPLE
+  ///        does not report the AI results of the frame.
+  const uint8_t *frameMeta() { return (_fbMetaLen > 0) ? _fbMeta : nullptr; }
+  size_t frameMetaLen() { return _fbMetaLen; }
+
   /// @brief frames decoded and waiting to be read with get()
   size_t available();
 
@@ -282,8 +316,22 @@ class CamAIVision2 : public CameraBase {
   SSCMA &module() { return _module; }
 
  private:
+  /// @brief a frame waiting to be read with get(), with the metadata that the
+  ///        receiver needs to paint its AI results (see FrameMeta.h)
+  struct QueuedFrame {
+    camera_fb_t *frame;
+    uint8_t meta[FRAME_META_MAX_SIZE];
+    size_t metaLen;
+  };
+
   SSCMA _module;
-  std::deque<camera_fb_t *> _frames;
+  std::deque<QueuedFrame> _frames;
+  boxes_t _boxes[AIVISION2_MAX_BOXES];
+  uint16_t _perfMs[3] = {0, 0, 0};
+  size_t _boxCount = 0;
+  bool _hasResults = false;
+  uint8_t _fbMeta[FRAME_META_MAX_SIZE];
+  size_t _fbMetaLen = 0;
   size_t _discarded = 0;
   size_t _rejected = 0;
   size_t _partial = 0;
@@ -308,8 +356,11 @@ class CamAIVision2 : public CameraBase {
   void onReply(const char *resp, size_t len);
   void logFrameIssue(const char *reason, const char *b64, size_t b64_len,
                      const uint8_t *jpeg, size_t jpeg_len);
-  void pushFrame(camera_fb_t *frame);
+  void pushFrame(QueuedFrame &entry);
   void dropFrames();
+  bool parseResults(const char *msg, size_t len);
+  size_t buildMeta(uint8_t *buffer, size_t size, uint16_t width, uint16_t height,
+                   bool partial);
 };
 
 #endif
