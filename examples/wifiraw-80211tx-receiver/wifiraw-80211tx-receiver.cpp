@@ -44,7 +44,7 @@ void setup() {
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = static_cast<uint8_t*>(ps_malloc(15000 * sizeof(uint8_t)));
+  fb = static_cast<uint8_t*>(ps_malloc(40000 * sizeof(uint8_t)));
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);

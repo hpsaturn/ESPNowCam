@@ -14,6 +14,7 @@
 | m5cores3-espnow-sender | PSRAM, 2FB, JPG built-in camera | QVGA | STABLE |
 | esp32cam-p2p-sender | PSRAM, 2FB, JPG | QVGA | UNTESTED |
 | freenoveWR-basic-sender | PSRAM, 2FB, JPG | QVGA | UNTESTED |
+| xiao-ai-vision-sender | Seeed AI Vision 2 (SSCMA), JPG, on demand frames | 240x240 | 16 FPS (80211tx) |
 
 ### Receivers samples
 
