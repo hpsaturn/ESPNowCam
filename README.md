@@ -1,6 +1,6 @@
 # ESPNowCam - Data streamer
 
-[![PlatformIO](https://github.com/hpsaturn/esp32s3-cam/workflows/PlatformIO/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) [![All Platforms](https://github.com/hpsaturn/esp32s3-cam/workflows/Scheduled/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) ![ViewCount](https://views.whatilearened.today/views/github/hpsaturn/esp32s3-cam.svg)  
+[![Master](https://github.com/hpsaturn/esp32s3-cam/workflows/Scheduled/badge.svg)](https://github.com/hpsaturn/ESPNowCam/actions/workflows/schedule.yml) [![Devel](https://github.com/hpsaturn/ESPNowCam/actions/workflows/devel.yml/badge.svg)](https://github.com/hpsaturn/ESPNowCam/actions/workflows/devel.yml) ![ViewCount](https://views.whatilearened.today/views/github/hpsaturn/esp32s3-cam.svg)  
 
 The ESPNowCam library is a simple and direct video or data streamer designed for popular ESP32 devices, utilizing ESPNow and WiFi-raw (80211tx) protocols. No need for IPs, routers, or credentials-keeping it straightforward and hassle-free! :D
 
