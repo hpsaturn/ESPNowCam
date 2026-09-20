@@ -361,13 +361,11 @@ class CamAIVision2 : public CameraBase {
   bool buildStreamCmd(char *buffer, size_t size, int times, bool differed, bool resultOnly);
   void onResponse(const char *resp, size_t len);
   void onReply(const char *resp, size_t len);
-  void logFrameIssue(const char *reason, const char *b64, size_t b64_len,
-                     const uint8_t *jpeg, size_t jpeg_len);
+  void logFrameIssue(const char *reason, const char *b64, size_t b64_len, const uint8_t *jpeg, size_t jpeg_len);
   void pushFrame(QueuedFrame &entry);
   void dropFrames();
   bool parseResults(const char *msg, size_t len);
-  size_t buildMeta(uint8_t *buffer, size_t size, uint16_t width, uint16_t height,
-                   bool partial);
+  size_t buildMeta(uint8_t *buffer, size_t size, uint16_t width, uint16_t height, bool partial);
 };
 
 #endif
