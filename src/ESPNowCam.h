@@ -81,7 +81,7 @@ class ESPNowCam {
   /// @param length length of the data to be sent
   /// @param meta optional metadata of this frame (see FrameMeta.h)
   /// @param metaLenght length of the metadata
-  bool sendData(uint8_t *data, uint32_t length, const uint8_t *meta = nullptr,
+  bool sendDataAndMeta(uint8_t *data, uint32_t length, const uint8_t *meta = nullptr,
                 uint32_t metaLenght = 0);
 
   /// @brief set the target device MAC address. (For 1:1 mode)

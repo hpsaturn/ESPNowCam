@@ -12,7 +12,7 @@
 
 #include <Arduino.h>
 #include <M5Unified.h>
-#include <common/DetectionsOverlay.h>
+#include "DetectionsOverlay.h"
 #include "ESPNowCam.h"
 #include "Utils.h"
 

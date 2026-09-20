@@ -45,7 +45,7 @@ void processFrame() {
     // so there is no need to convert it with frame2jpg()
     // Camera.frameMeta() is the AI results of this frame (nullptr in SAMPLE
     // mode), it rides with the frame and the receiver can paint it over it
-    radio.sendData(Camera.fb->buf, Camera.fb->len, Camera.frameMeta(), Camera.frameMetaLen());
+    radio.sendDataAndMeta(Camera.fb->buf, Camera.fb->len, Camera.frameMeta(), Camera.frameMetaLen());
     printFPS("CAM:");
     printDetections();
     Camera.free();

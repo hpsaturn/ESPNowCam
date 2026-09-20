@@ -51,35 +51,42 @@ ESPNowCam::~ESPNowCam() {
   // Cleanup if needed
 }
 
-bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght, const uint8_t *meta,
-                         uint32_t metaLenght) {
+bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
+  log_v("sending data (size: %i)", lenght);
+  outdata = data;
+  outdata_len = lenght;
+
+  uint32_t frame_left = outdata_len;
+  Frame msg = Frame_init_zero;
+  while (frame_left > 0) {
+    log_v("frame_left: %i)", frame_left);
+    if (frame_left <= chunk_size_left) {
+      chunk_size_left = frame_left;
+      msg.lenght = outdata_len;
+    } else {
+      frame_left = frame_left - chunk_size_left;
+      msg.lenght = 0;
+    }
+    msg.data.funcs.encode = &encode_uint8_array;
+    msgReady = false;
+    sendMessage(encodeMsg(msg), this->targetAddress, comm);
+    while(!msgReady)delayMicroseconds(1);
+    chunk_pos = outdata_len - frame_left;
+    if (msg.lenght == outdata_len) {
+      frame_left = 0;
+      chunk_size_left = chunksize;
+    }
+  }
+  chunk_pos = 0;
+  return true;
+}
+
+bool ESPNowCam::sendDataAndMeta(uint8_t *data, uint32_t lenght, const uint8_t *meta, uint32_t metaLenght) {
   log_v("sending data (size: %i, meta: %i)", lenght, metaLenght);
   if (data == nullptr || lenght == 0) {
     return false;
   }
-
-  /// the metadata of a frame only travels on the interfaces with room for it
-  /// (the extended src/frame_wifiraw.proto schema). The old ESP-NOW protocol
-  /// is kept byte compatible with the previous releases of the library: its
-  /// frames have no metadata field at all
-  static bool metaWarned = false;
-  bool extended = comm->supportsFrameMetadata();
-  if (metaLenght > 0 && !extended) {
-    if (!metaWarned) {
-      metaWarned = true;
-      log_w("This interface can not carry frame metadata, the frames are sent without it..");
-    }
-    metaLenght = 0;
-  }
-
-  if (metaLenght > COMM_MAX_META_LEN) {
-    log_w("Frame metadata too big (%u bytes, max %u), sending the frame without it..",
-          (unsigned int)metaLenght, (unsigned int)COMM_MAX_META_LEN);
-    metaLenght = 0;
-  }
-  /// the metadata rides with the last chunk of the frame, that chunk is
-  /// reduced to leave room for it inside the send buffer (the protobuf headers
-  /// and the length field need some bytes too)
+  
   uint32_t meta_reserve = 0;
   if (metaLenght > 0) {
     meta_reserve = metaLenght + 16;
@@ -114,33 +121,18 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght, const uint8_t *meta,
     /// the schema of the message depends on the interface: the extended one
     /// carries the metadata of the frame in its last chunk
     uint32_t msgLen = 0;
-    if (extended) {
-      msg_ext.lenght = last ? outdata_len : 0;
-      msg_ext.has_meta = false;
-      if (last && metaLenght > 0) {
-        memcpy(msg_ext.meta.bytes, meta, metaLenght);
-        msg_ext.meta.size = (pb_size_t)metaLenght;
-        msg_ext.has_meta = true;
-      }
-      msg_ext.data.funcs.encode = &encode_uint8_array;
-      msgLen = encodeMsg(msg_ext);
-    } else {
-      msg.lenght = last ? outdata_len : 0;
-      msg.data.funcs.encode = &encode_uint8_array;
-      msgLen = encodeMsg(msg);
+
+    msg_ext.lenght = last ? outdata_len : 0;
+    msg_ext.has_meta = false;
+    if (last && metaLenght > 0) {
+      memcpy(msg_ext.meta.bytes, meta, metaLenght);
+      msg_ext.meta.size = (pb_size_t)metaLenght;
+      msg_ext.has_meta = true;
     }
-    if (msgLen == 0) {
-      log_e("Encoding failed, the rest of the frame is dropped..");
-      break;
-    }
+    msg_ext.data.funcs.encode = &encode_uint8_array;
     msgReady = false;
-    sendMessage(msgLen, this->targetAddress, comm);
-    uint32_t start = millis();
-    while (!msgReady && (millis() - start) < COMM_SEND_TIMEOUT) delayMicroseconds(1);
-    if (!msgReady) {
-      log_e("Timeout waiting the send confirmation of the chunk, the frame is corrupted..");
-      break;
-    }
+    sendMessage(encodeMsg(msg_ext), this->targetAddress, comm);
+    while (!msgReady) delayMicroseconds(1);
     offset += chunk_size_left;
   }
   chunk_pos = 0;
@@ -224,7 +216,7 @@ void printMacAddress(const uint8_t * macAddress){
  * R E C E I V E R  S E C T I O N
  * (for single camera source)
 ************************************/
-uint8_t recv_buffer[COMM_MAX_DATA_LEN];
+uint8_t recv_buffer[COMM_MAX_DATA_LEN - 8];
 uint32_t fbpos = 0;
 RecvCb recvCb = nullptr;
 MetaCb metaCb = nullptr;
