@@ -183,49 +183,31 @@ CamFreenove Camera;
 ```
 
 >[!TIP]
->For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker, the TTGO T-Journal cameras and the Seeed Studio AI Vision 2 module (SSCMA), see the [xiao-ai-vision-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-sender) example, but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me via a [GitHub issue](https://github.com/hpsaturn/ESPNowCam/issues/new) or please contribute with the project sending a pull request :D
+>For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker, the TTGO T-Journal cameras and the Seeed Studio AI Vision 2 module (SSCMA), but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me via a [GitHub issue](https://github.com/hpsaturn/ESPNowCam/issues/new) or please contribute with the project sending a pull request :D
 
-### Seeed Studio AI Vision 2 (SSCMA)
+### Seeed Studio AI Vision 2
 
-This module owns the camera and the model, it makes the inference and it sends every frame as a base64 JPEG inside the SSCMA AT protocol events, so the driver only decodes those events and exposes `Camera.fb` like any other camera of this library:
+This module owns the camera and the model: it does the inference itself and sends every frame as a base64 JPEG inside the SSCMA AT protocol events, so the driver only decodes them and exposes `Camera.fb` like any other camera of this library. It only works with the WiFi raw (80211tx) interface, because it is the only one that can carry the AI results with the frames (see the [Frame metadata](#frame-metadata-the-ai-results-on-the-receiver) section):
 
 ```cpp
 CamAIVision2 Camera;
+WiFiRawComm wifiRaw;
+ESPNowCam radio(&wifiRaw);
 ...
 if (Camera.get()) {
-  radio.sendData(Camera.fb->buf, Camera.fb->len);
+  radio.sendDataAndMeta(Camera.fb->buf, Camera.fb->len,
+                        Camera.frameMeta(), Camera.frameMetaLen());
   Camera.free();
 }
 ```
 
-The payload is big (a 240x240 frame can be 12KB of JPEG, ~16KB in base64) and it is not always clean, so the driver decodes it with some tolerance:
+A frame can carry a small metadata blob with it (see [FrameMeta.h](https://github.com/hpsaturn/ESPNowCam/blob/master/src/FrameMeta.h)): what the AI found inside the image, the resolution that the detection boxes refer to, the state of the frame, the inference timings. `sendDataAndMeta()` sends it with the last chunk of the frame, so the metadata and its frame arrive atomically: no extra radio message, no ordering problem and no change of the frame rate (the blob is a few tens of bytes against the KBs of a frame).
 
-- the frame is cut to the real JPEG data, in case the module adds a header or a tail to the image
-- it accepts the standard base64, the URL safe and wrapped variants, and also the hex encoded payloads
-- if the module cuts the image (its buffers or its link can not follow the stream), the frame is completed with the end of image marker, because a receiver can not paint a frame without it (define `AIVISION2_STRICT_JPEG=1` to drop those frames)
-- the payload can hold a cut message fused with the next one (the SSCMA library joins them), the driver always decodes the newest message of the payload
-- the first bad frames are logged with all the payload details and they are counted, see `Camera.rejected()`, `Camera.partial()` and `Camera.timeouts()`
-
-> [!IMPORTANT]
->The module is a separate MCU: it only resets with the power, so its tasks (the stream included) survive a reboot of the host. The driver stops them on `begin()` and then asks for one frame at a time (`STREAM_ON_DEMAND`), the module is idle while the frame is sent by the radio. That is the recommended mode: in continuous mode the module pushes frames faster than the link and they arrive cut, because neither the module nor the host can buffer the whole stream.
-
-> [!IMPORTANT]
->The 921600 baud UART is the real limit of this camera (~90KB/s): a 240x240 frame needs ~200ms (~5 FPS maximum before the radio), 480x480 and VGA are ~4x and ~6x bigger, so they cap the FPS below 1 and they need a receiver buffer of more than 40KB. Keep the 240x240 resolution (0) for ESP-NOW.
-
-The driver also allows to choose what is asked to the module for every frame: `Camera.setFrameMode(CamAIVision2::FRAME_SAMPLE)` asks only for the image, while `CamAIVision2::FRAME_INVOKE` (default in the sample) asks for the AI results too. With `FRAME_INVOKE` the driver parses the detections of every event and they are available as `Camera.detections()`, `Camera.detectionCount()` and `Camera.perf()` (the inference timings), and they are also sent to the receiver with the frame, see the next section.
-
-Other useful defines for the environment: `AIVISION2_BAUD` (921600), `AIVISION2_UART_BUFFER`, `AIVISION2_RESP_BUFFER`, `AIVISION2_GET_TIMEOUT`, `AIVISION2_DEBUG_FRAMES` and `AIVISION2_PIN_RST` if your wiring has the module reset line. More details in [CamAIVision2.h](https://github.com/hpsaturn/ESPNowCam/blob/master/src/drivers/CamAIVision2.h) and in the [xiao-ai-vision-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-sender) example.
-
-### Frame metadata (the AI results on the receiver)
-
-A frame can carry a small metadata blob with it (see [FrameMeta.h](https://github.com/hpsaturn/ESPNowCam/blob/master/src/FrameMeta.h)): what the AI found inside the image, the resolution that the detection boxes refer to, the state of the frame, the inference timings. `sendData()` sends it with the last chunk of the frame, so the metadata and its frame arrive atomically: no extra radio message, no ordering problem and no change of the frame rate (the blob is a few tens of bytes against the KBs of a frame).
-
->[!IMPORTANT]
->This is only available on the **WiFi raw (80211tx)** interface, which uses the extended [frame_wifiraw.proto](https://github.com/hpsaturn/ESPNowCam/blob/master/src/frame_wifiraw.proto) schema (`lenght` + `data` + `meta`). The old **ESP-NOW** interface keeps the minimal [frame.proto](https://github.com/hpsaturn/ESPNowCam/blob/master/src/frame.proto) schema (`lenght` + `data`): its messages are limited to 250 bytes and its protocol must stay byte compatible with the previous releases of the library. The interface in use is asked at runtime (`CommInterface::supportsFrameMetadata()`, `radio.supportsFrameMetadata()`), so `sendData()` with metadata on an ESP-NOW link simply sends the frame without it.
+More details in [CamAIVision2.h](https://github.com/hpsaturn/ESPNowCam/blob/master/src/drivers/CamAIVision2.h) and in the [xiao-ai-vision-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-sender) example.
 
 ```cpp
 // sender: Camera.frameMeta() is nullptr when the frame has no results
-radio.sendData(Camera.fb->buf, Camera.fb->len, Camera.frameMeta(), Camera.frameMetaLen());
+radio.sendDataAndMeta(Camera.fb->buf, Camera.fb->len, Camera.frameMeta(), Camera.frameMetaLen());
 
 // receiver
 radio.setRecvBuffer(fb);
@@ -247,10 +229,7 @@ void onMetaReady(const uint8_t *meta, uint32_t lenght) {
 }
 ```
 
-The [wifiraw-80211tx-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/wifiraw-80211tx-receiver) sample paints the boxes, the class and the score over the video with [DetectionsOverlay.h](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/common/DetectionsOverlay.h). The sender and the receiver must use the same interface: the [xiao-ai-vision-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-sender) sample (the only camera that generates metadata at this moment) with a WiFi raw receiver.
-
->[!NOTE]
->The metadata is an optional field of the extended protocol: nanopb skips the unknown fields, so a WiFi raw receiver of a previous version ignores it and it keeps painting the frames, and a sender that does not use it (any other camera of this library) does not change its behavior.
+The [xiao-ai-vision-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-receiver) sample paints the boxes, the class and the score over the video with [DetectionsOverlay.h](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/common/DetectionsOverlay.h).
 
 ### Channel
 
