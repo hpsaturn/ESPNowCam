@@ -12,7 +12,9 @@
 #include <LGFX_TFT_eSPI.hpp>
 #include "Utils.h"
 
-ESPNowCam radio;
+WiFiRawComm wifiRaw;
+ESPNowCam radio(&wifiRaw);
+
 LGFX tft;
 
 #define I2C_SDA 4
@@ -108,9 +110,6 @@ void setup() {
   set_pin_io(4, true);
   set_pin_io(2, true);
 
-  pinMode(3, OUTPUT);
-  digitalWrite(3, LOW);
-
   // ticker.attach(1, tcr1s);
   tft.init();
   tft.initDMA();
@@ -122,20 +121,16 @@ void setup() {
   dw = tft.width();
   dh = tft.height();
 
-  // if(psramFound()){
-  //   size_t psram_size = esp_spiram_get_size() / 1048576;
-  //   Serial.printf("PSRAM size: %dMb\r\n", psram_size);
-  // }
-
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = static_cast<uint8_t*>(malloc(10000 * sizeof(uint8_t)));
+  fb = static_cast<uint8_t*>(malloc(40000 * sizeof(uint8_t)));
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);
+  radio.setChannel(6);  // should be the same as the sender's channel
 
-  if (radio.init()) {
-    tft.setTextSize(2);
-    tft.drawString("ESPNow Init Success", 5, 2);
+  if (radio.init(960)) {
+    tft.setTextSize(1);
+    tft.drawString("ESPNow Init Success", dw/2 - 50, dh/2);
   }
   delay(1000);
 }

@@ -23,8 +23,6 @@ ESPNowCam radio(&wifiRaw);
 
 OneButton btnB(GPIO_NUM_0, true);
 
-/// show the detections of the frame on the serial console (they are also sent
-/// to the receiver inside the metadata of the frame, see FrameMeta.h)
 void printDetections() {
   static uint32_t frames = 0;
   if ((++frames % 50) != 0) return; // the console can not follow the stream
@@ -41,13 +39,10 @@ void printDetections() {
 
 void processFrame() {
   if (Camera.get()) {
-    // the AI Vision 2 driver already provides a JPEG frame (PIXFORMAT_JPEG),
-    // so there is no need to convert it with frame2jpg()
-    // Camera.frameMeta() is the AI results of this frame (nullptr in SAMPLE
-    // mode), it rides with the frame and the receiver can paint it over it
+    // Camera.frameMeta() is the AI results of this frame (nullptr in SAMPLE mode)
     radio.sendDataAndMeta(Camera.fb->buf, Camera.fb->len, Camera.frameMeta(), Camera.frameMetaLen());
     printFPS("CAM:");
-    printDetections();
+    // printDetections(); // optional, the detections are also sent to the receiver
     Camera.free();
   }
 }
@@ -63,30 +58,18 @@ void shutdown() {
 void setup() {
   Serial.begin(115200);
 
-  // delay(4000); // only for debugging 
-
   if(psramFound()){
-    size_t psram_size = esp_spiram_get_size() / 1048576;
+    size_t psram_size = ESP.getPsramSize() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
-
-  // The AI Vision 2 driver always uses the WiFi raw (80211tx) implementation:
-  // the AI results of every frame travel inside the frame (see FrameMeta.h)
-  // and the ESP-NOW messages are too small for them (250 bytes) and their
-  // protocol must stay compatible with the previous releases of the library.
-  // The receiver must use WiFiRawComm too (see wifiraw-80211tx-receiver).
-
   // Optional M5Core2 receiver B8:F0:09:C6:0E:CC
   const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
   radio.setTarget(macRecv);
   radio.setChannel(6);
   radio.init(960);
 
-  // The AI module sends the frames encoded in base64 over its UART, and that
-  // link (921600 baud ~ 90KB/s) is the real limit of this camera: a 240x240
-  // JPEG is ~13KB (17KB in base64, ~200ms), while 480x480 and VGA are ~4x and
-  // ~6x bigger, so they cap the FPS below 1 and they overflow the receiver
-  // buffers. Keep the 240x240 resolution (0) unless you really need more.
+  // The AI Vision 2 encoded in base64 over its UART (921600 baud ~ 90KB/s) 
+  // Keep the 240x240 resolution unless you really need more.
   // 0 -> 240x240 (default), 1 -> 480x480, 2 -> VGA 640x480
   Camera.setResolution(0);
 
@@ -110,7 +93,7 @@ void setup() {
   // request) is the recommended one for this radio
   Camera.setStreamMode(CamAIVision2::STREAM_CONTINUOUS);
 
-  // ...or with any other SSCMA AT command, e.g. the model thresholds:
+  // or with any other SSCMA AT command, e.g. the model thresholds:
   // Camera.sendCmd("TSCORE=60");
   // more details: https://github.com/Seeed-Studio/SSCMA-Micro/blob/main/docs/protocol/at-protocol-en_US.md
 

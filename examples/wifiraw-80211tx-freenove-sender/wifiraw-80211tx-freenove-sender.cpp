@@ -13,6 +13,7 @@
 #include <Arduino.h>
 #include <ESPNowCam.h>
 #include <drivers/CamFreenove.h>
+#include "Utils.h"
 
 CamFreenove Camera;
 WiFiRawComm wifiRaw;
@@ -22,8 +23,9 @@ void processFrame() {
   if (Camera.get()) {
     uint8_t *out_jpg = NULL;
     size_t out_jpg_len = 0;
-    frame2jpg(Camera.fb, 24, &out_jpg, &out_jpg_len); 
+    frame2jpg(Camera.fb, 12, &out_jpg, &out_jpg_len); 
     radio.sendData(out_jpg, out_jpg_len);
+    printFPS("CAM:");
     free(out_jpg);
     Camera.free();
   }
@@ -36,13 +38,13 @@ void setup() {
   delay(100);
 
   if(psramFound()){
-    size_t psram_size = esp_spiram_get_size() / 1048576;
+    size_t psram_size = ESP.getPsramSize() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
 
   // M5Core2 receiver
-  const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
-  radio.setTarget(macRecv);
+  // const uint8_t macRecv[6] = {0xB8,0xF0,0x09,0xC6,0x0E,0xCC};
+  // radio.setTarget(macRecv);
   radio.setChannel(6);
 
   if (radio.init(960)) {  // chunk size in bytes (beta feature)

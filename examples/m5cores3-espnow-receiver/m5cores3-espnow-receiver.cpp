@@ -48,7 +48,7 @@ void setup() {
   dh = CoreS3.Display.height();
 
   if(psramFound()){
-    size_t psram_size = esp_spiram_get_size() / 1048576;
+    size_t psram_size = ESP.getPsramSize() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
 

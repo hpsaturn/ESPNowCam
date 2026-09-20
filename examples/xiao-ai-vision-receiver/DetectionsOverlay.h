@@ -61,7 +61,7 @@ static inline size_t drawDetectionsOverlay(M5GFX &canvas, const uint8_t *meta, u
       continue; // too small to be seen
     }
     uint16_t color = overlayColors[box.target % OVERLAY_COLORS];
-    canvas.drawRect(bx, by, bw, bh, color);
+    canvas.drawRect(bx - bw/2, by - bh/2, bw, bh, color);
     /// the label is painted over the image, the small font with its own
     /// background is the cheapest way to be readable (no extra fills, the
     /// frame rate of the stream would pay for them)
