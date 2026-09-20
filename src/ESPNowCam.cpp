@@ -370,8 +370,8 @@ void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int32_t data
     return;
   } else {
     curReceiver = (struct_receiver*)(&pos->second);
-    uint32_t msgLen = ((uint32_t)dataLen < sizeof(recv_buffer)) ? (uint32_t)dataLen
-                                                               : (uint32_t)sizeof(recv_buffer);
+
+    uint32_t msgLen = (dataLen < COMM_MAX_DATA_LEN) ? (uint32_t)dataLen : (uint32_t)COMM_MAX_DATA_LEN;
     memcpy(recv_buffer, data, msgLen);
     if (mulDecodeMessage(msgLen) && decodedLenght() > 0) {
       if (curReceiver->recvCb != nullptr) curReceiver->recvCb(decodedLenght());
@@ -433,13 +433,6 @@ void ESPNowCam::setChannel(uint8_t channel) {
 }
 
 bool ESPNowCam::init(uint16_t chunk_size) {
-  /// the encoded chunk (payload + protobuf headers) must fit in the send buffer
-  uint32_t max_chunk = (uint32_t)sizeof(send_buffer) - 16;
-  if (chunk_size > max_chunk) {
-    log_w("Chunk size %u does not fit in the send buffer, using %u..", chunk_size,
-          (unsigned int)max_chunk);
-    chunk_size = (uint16_t)max_chunk;
-  }
   chunksize = chunk_size; 
   chunk_size_left = chunk_size;
 

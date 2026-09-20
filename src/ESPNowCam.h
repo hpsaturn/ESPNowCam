@@ -73,14 +73,15 @@ class ESPNowCam {
 
   /// @brief send data to the target device or broadcast if targetAddress is not set.
   /// @param data pointer to the data to be sent
-  /// @param lenght length of the data to be sent
-  /// @param meta optional metadata of this frame (see FrameMeta.h), it travels
-  ///        with the last chunk of the frame, so the receiver gets it together
-  ///        with the frame it belongs to. Only the communication interfaces
-  ///        with room for it can send it (supportsFrameMetadata), on the others
-  ///        the frame is sent without the metadata
+  /// @param length length of the data to be sent
+  bool sendData(uint8_t *data, uint32_t length);
+
+  /// @brief send data to the target device or broadcast with metadata
+  /// @param data pointer to the data to be sent
+  /// @param length length of the data to be sent
+  /// @param meta optional metadata of this frame (see FrameMeta.h)
   /// @param metaLenght length of the metadata
-  bool sendData(uint8_t *data, uint32_t lenght, const uint8_t *meta = nullptr,
+  bool sendData(uint8_t *data, uint32_t length, const uint8_t *meta = nullptr,
                 uint32_t metaLenght = 0);
 
   /// @brief set the target device MAC address. (For 1:1 mode)
@@ -95,17 +96,11 @@ class ESPNowCam {
   /// @param fb pointer to the buffer to receive the data
   void setRecvBuffer(uint8_t *fb);
 
-  /// @brief set the receiver metadata callback (optional, single source mode).
-  ///        see FrameMeta.h to read the metadata of the frame (AI results).
-  ///        It is ignored by the interfaces that can not carry the metadata
-  ///        (see supportsFrameMetadata).
+  /// @brief set the receiver metadata cb (optional).
   /// @param cb callback function to be called with the metadata of a frame
   void setMetaCallback(MetaCb cb);
 
-  /// @brief true when the communication interface in use can carry the frame
-  ///        metadata, i.e. when the frames are sent with the extended schema
-  ///        of src/frame_wifiraw.proto instead of the minimal src/frame.proto
-  ///        one (the AI results can only be sent on those interfaces)
+  /// @brief true when the comm interface in use can carry the frame metadata
   bool supportsFrameMetadata();
 
   /// @brief filter for multiple sources (N:1)
