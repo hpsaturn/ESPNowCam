@@ -64,6 +64,14 @@ class CommInterface {
   // Channel control (optional)
   virtual void setChannel(uint8_t channel) = 0;
 
+  // Frame metadata support (see FrameMeta.h and src/frame_wifiraw.proto).
+  // The AI results of a frame (and any other metadata) are attached to the
+  // last chunk of the frame that they describe, which needs some free room in
+  // every message. The old ESP-NOW interface only has 250 bytes per message
+  // (and its protocol must stay byte compatible with the previous releases),
+  // so it keeps the minimal src/frame.proto schema and returns false here.
+  virtual bool supportsFrameMetadata() { return false; }
+
   virtual ~CommInterface() = default;
 };
 

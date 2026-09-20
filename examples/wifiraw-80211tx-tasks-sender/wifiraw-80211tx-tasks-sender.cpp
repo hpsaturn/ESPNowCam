@@ -88,7 +88,7 @@ void setup() {
 
     // Check PSRAM
     if (psramFound()) {
-        size_t psram_size = esp_spiram_get_size() / 1048576;
+        size_t psram_size = ESP.getPsramSize() / 1048576;
         Serial.printf("PSRAM size: %d MB\r\n", psram_size);
     }
 

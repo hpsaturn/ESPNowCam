@@ -14,6 +14,7 @@
 | m5cores3-espnow-sender | PSRAM, 2FB, JPG built-in camera | QVGA | STABLE |
 | esp32cam-p2p-sender | PSRAM, 2FB, JPG | QVGA | UNTESTED |
 | freenoveWR-basic-sender | PSRAM, 2FB, JPG | QVGA | UNTESTED |
+| xiao-ai-vision-sender | Seeed AI Vision 2 (SSCMA), JPG, on demand frames, AI detections [3] | 240x240 | 16 FPS (80211tx) |
 
 ### Receivers samples
 
@@ -33,7 +34,8 @@ Some video receivers
 | crowpanel-receiver | Elecrow round panel 320x240 [1] | TESTING |
 
 [1] Use with any sender sample  
-[2] Use with freenove HVGA sender sample for example.
+[2] Use with freenove HVGA sender sample for example.  
+[3] WiFi raw (80211tx) only: it sends the AI results of each frame inside it (see the FrameMeta section on the main README), use it with the wifiraw-80211tx-receiver sample
 
 ### Advanced samples
 

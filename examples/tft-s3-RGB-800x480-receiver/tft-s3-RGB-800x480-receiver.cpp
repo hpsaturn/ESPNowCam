@@ -11,11 +11,8 @@
 **************************************************/
 
 #include <Arduino.h>
-#include <HardwareSerial.h>
 #include "LGFX_ESP32S3_RGB_ESP32-8048S043.h"
-
 #include <LGFX_TFT_eSPI.hpp>
-
 #include "ESPNowCam.h"
 
 const uint8_t pin_brightness = 2;
@@ -38,8 +35,6 @@ void setup(void) {
   tft.setRotation(0);
 
   pinMode(pin_brightness, OUTPUT);
-  analogWriteResolution(8);
-  analogWriteFrequency(1000);
   analogWrite(pin_brightness, 127);
 
   tft.setTextColor(TFT_WHITE);
