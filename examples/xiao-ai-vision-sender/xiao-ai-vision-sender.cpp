@@ -12,7 +12,6 @@
 **************************************************/
 
 #include <Arduino.h>
-#include <OneButton.h>
 #include <ESPNowCam.h>
 #include <drivers/CamAIVision2.h>
 #include <Utils.h>
@@ -20,8 +19,6 @@
 CamAIVision2 Camera;  
 WiFiRawComm wifiRaw;
 ESPNowCam radio(&wifiRaw);
-
-OneButton btnB(GPIO_NUM_0, true);
 
 void printDetections() {
   static uint32_t frames = 0;
@@ -45,14 +42,6 @@ void processFrame() {
     // printDetections(); // optional, the detections are also sent to the receiver
     Camera.free();
   }
-}
-
-void shutdown() {
-  Serial.println("shutdown..");
-  Camera.stopStream(); // stop the AI module tasks before sleeping
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_0,0);
-  delay(1000);
-  esp_deep_sleep_start();
 }
 
 void setup() {
@@ -97,11 +86,9 @@ void setup() {
   // Camera.sendCmd("TSCORE=60");
   // more details: https://github.com/Seeed-Studio/SSCMA-Micro/blob/main/docs/protocol/at-protocol-en_US.md
 
-  btnB.attachClick([]() { shutdown(); });
   delay(100);
 }
 
 void loop() {
   processFrame();
-  btnB.tick();
 }
