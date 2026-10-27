@@ -36,12 +36,12 @@ typedef void (*RecvCb)(uint32_t lenght);
 /// first and the AI results on top of it.
 typedef void (*MetaCb)(const uint8_t *meta, uint32_t lenght);
 
-#define ENC_VERSION "0.2.2"
+#define ENC_VERSION "0.2.3"
 #define ENC_REVISION 085
 
 // Maximum data length (can be overridden by implementations)
 #ifndef COMM_MAX_DATA_LEN
-#define COMM_MAX_DATA_LEN 350
+#define COMM_MAX_DATA_LEN 351
 #endif
 
 // Maximum metadata size of a frame (see FrameMeta.h and src/frame.proto)
