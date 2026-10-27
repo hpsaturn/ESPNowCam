@@ -17,7 +17,6 @@
 
 WiFiRawComm wifiRaw;
 ESPNowCam radio(&wifiRaw);
-// ESPNowCam radio;
 
 uint8_t *fb;    // frame buffer
 int32_t dw, dh; // display width and height
@@ -40,11 +39,11 @@ void setup() {
   dh=M5.Display.height();
 
   if(psramFound()){
-    size_t psram_size = esp_spiram_get_size() / 1048576;
+    size_t psram_size = ESP.getPsramSize() / 1048576;
     Serial.printf("PSRAM size: %dMb\r\n", psram_size);
   }
   // BE CAREFUL WITH IT, IF JPG LEVEL CHANGES, INCREASE IT
-  fb = static_cast<uint8_t*>(ps_malloc(15000 * sizeof(uint8_t)));
+  fb = static_cast<uint8_t*>(ps_malloc(40000 * sizeof(uint8_t)));
 
   radio.setRecvBuffer(fb);
   radio.setRecvCallback(onDataReady);

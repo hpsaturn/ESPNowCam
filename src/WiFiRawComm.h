@@ -95,6 +95,11 @@ class WiFiRawComm : public CommInterface {
   comm_err_t registerRecvCallback(comm_recv_cb_t cb) override;
   void setChannel(uint8_t channel) override;
 
+  /// @brief the WiFi raw messages have room for the metadata of the frame
+  ///        (the AI results, see FrameMeta.h), this interface is the only one
+  ///        that uses the extended src/frame_wifiraw.proto schema
+  bool supportsFrameMetadata() override { return true; }
+
   ~WiFiRawComm() override;
 };
 

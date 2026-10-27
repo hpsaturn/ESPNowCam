@@ -15,30 +15,28 @@
 comm_recv_cb_t ESPNowComm::user_recv_cb = nullptr;
 comm_send_cb_t ESPNowComm::user_send_cb = nullptr;
 
-// Wrapper callback to convert ESP types to abstract types
-void ESPNowComm::esp_send_cb_wrapper(const uint8_t* mac_addr, esp_now_send_status_t esp_status) {
+/// @brief Wrapper callback to convert the ESP-NOW send callback (whose
+///        signature depends on the ESP-IDF version, see the adapter of
+///        ESPNowComm.h) to the abstract callback of this library
+void ESPNowComm::esp_send_cb_wrapper(const esp_send_info_t *info, esp_now_send_status_t esp_status) {
   if (user_send_cb) {
-    comm_send_status_t status = (comm_send_status_t)esp_status;
+    const uint8_t *mac_addr = espnow_adapter::SendAddress<esp_send_info_t>::of(info);
+    comm_send_status_t status =
+        (esp_status == ESP_NOW_SEND_SUCCESS) ? COMM_SEND_SUCCESS : COMM_SEND_FAIL;
     user_send_cb(mac_addr, status);
   }
 }
 
-// Wrapper callback for receive
-#ifdef CONFIG_IDF_TARGET_ESP32C3
-// ESP32-C3 expects int for data_len
-void ESPNowComm::esp_recv_cb_wrapper(const uint8_t* mac_addr, const uint8_t* data, int data_len) {
+/// @brief Wrapper callback to convert the ESP-NOW receive callback (whose
+///        signature depends on the ESP-IDF version, see the adapter of
+///        ESPNowComm.h) to the abstract callback of this library
+void ESPNowComm::esp_recv_cb_wrapper(const esp_recv_info_t *info, const uint8_t *data,
+                                     esp_recv_len_t data_len) {
   if (user_recv_cb) {
+    const uint8_t *mac_addr = espnow_adapter::RecvAddress<esp_recv_info_t>::of(info);
     user_recv_cb(mac_addr, data, (int32_t)data_len);
   }
 }
-#else
-// ESP32 (Xtensa) expects int32_t for data_len
-void ESPNowComm::esp_recv_cb_wrapper(const uint8_t* mac_addr, const uint8_t* data, int32_t data_len) {
-  if (user_recv_cb) {
-    user_recv_cb(mac_addr, data, data_len);
-  }
-}
-#endif
 
 comm_err_t ESPNowComm::init() { return (comm_err_t)esp_now_init(); }
 

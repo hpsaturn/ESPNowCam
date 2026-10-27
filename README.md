@@ -1,6 +1,6 @@
 # ESPNowCam - Data streamer
 
-[![PlatformIO](https://github.com/hpsaturn/esp32s3-cam/workflows/PlatformIO/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) [![All Platforms](https://github.com/hpsaturn/esp32s3-cam/workflows/Scheduled/badge.svg)](https://github.com/hpsaturn/esp32s3-cam/actions/) ![ViewCount](https://views.whatilearened.today/views/github/hpsaturn/esp32s3-cam.svg)  
+[![Master](https://github.com/hpsaturn/esp32s3-cam/workflows/Scheduled/badge.svg)](https://github.com/hpsaturn/ESPNowCam/actions/workflows/schedule.yml) [![Devel](https://github.com/hpsaturn/ESPNowCam/actions/workflows/devel.yml/badge.svg)](https://github.com/hpsaturn/ESPNowCam/actions/workflows/devel.yml) ![ViewCount](https://views.whatilearened.today/views/github/hpsaturn/esp32s3-cam.svg)  
 
 The ESPNowCam library is a simple and direct video or data streamer designed for popular ESP32 devices, utilizing ESPNow and WiFi-raw (80211tx) protocols. No need for IPs, routers, or credentials-keeping it straightforward and hassle-free! :D
 
@@ -169,6 +169,8 @@ radio.init(512);                    // the same sender chunk size
 >[!TIP]
 >Note: The N:1 mode is not full implemented on WiFi raw. It is recommended use channel and mac address target on the sender for improve quality. Please sse the examples for details.
 
+This is the only interface that uses the extended [frame_wifiraw.proto](https://github.com/hpsaturn/ESPNowCam/blob/master/src/frame_wifiraw.proto) schema, the one that allows to attach the metadata (the AI results) to the frames, see the [Frame metadata](#frame-metadata-the-ai-results-on-the-receiver) section. The ESP-NOW mode keeps the original `frame.proto` protocol.
+
 ### Predefined drivers
 
 The library includes some pre-defined camera configs to have an easy implementation, for example:
@@ -181,7 +183,53 @@ CamFreenove Camera;
 ```
 
 >[!TIP]
->For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker and the TTGO T-Journal cameras, but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me via a [GitHub issue](https://github.com/hpsaturn/ESPNowCam/issues/new) or please contribute with the project sending a pull request :D
+>For now, it includes drivers for FreenoveS3, XIAOS3, M5UnitCamS3, Freenove WRover, ESP32Cam AI-Thinker, the TTGO T-Journal cameras and the Seeed Studio AI Vision 2 module (SSCMA), but you are able to define your custom camera like is shown in the [custom-camera-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/custom-camera-sender) example. If you can run it in a different camera, please notify me via a [GitHub issue](https://github.com/hpsaturn/ESPNowCam/issues/new) or please contribute with the project sending a pull request :D
+
+### Seeed Studio AI Vision 2
+
+This module owns the camera and the model: it does the inference itself and sends every frame as a base64 JPEG inside the SSCMA AT protocol events, so the driver only decodes them and exposes `Camera.fb` like any other camera of this library. It only works with the WiFi raw (80211tx) interface, because it is the only one that can carry the AI results with the frames (see the [Frame metadata](#frame-metadata-the-ai-results-on-the-receiver) section):
+
+```cpp
+CamAIVision2 Camera;
+WiFiRawComm wifiRaw;
+ESPNowCam radio(&wifiRaw);
+...
+if (Camera.get()) {
+  radio.sendDataAndMeta(Camera.fb->buf, Camera.fb->len,
+                        Camera.frameMeta(), Camera.frameMetaLen());
+  Camera.free();
+}
+```
+
+A frame can carry a small metadata blob with it (see [FrameMeta.h](https://github.com/hpsaturn/ESPNowCam/blob/master/src/FrameMeta.h)): what the AI found inside the image, the resolution that the detection boxes refer to, the state of the frame, the inference timings. `sendDataAndMeta()` sends it with the last chunk of the frame, so the metadata and its frame arrive atomically: no extra radio message, no ordering problem and no change of the frame rate (the blob is a few tens of bytes against the KBs of a frame).
+
+More details in [CamAIVision2.h](https://github.com/hpsaturn/ESPNowCam/blob/master/src/drivers/CamAIVision2.h) and in the [xiao-ai-vision-sender](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-sender) example.
+
+```cpp
+// sender: Camera.frameMeta() is nullptr when the frame has no results
+radio.sendDataAndMeta(Camera.fb->buf, Camera.fb->len, Camera.frameMeta(), Camera.frameMetaLen());
+
+// receiver
+radio.setRecvBuffer(fb);
+radio.setRecvCallback(onDataReady);   // it paints the frame
+radio.setMetaCallback(onMetaReady);   // and then its AI results over it
+```
+
+The receiver reads the blob with `FrameMetaReader`, and the boxes are in the resolution of the sender frame, so they are easy to scale to the rectangle used to paint the image:
+
+```cpp
+void onMetaReady(const uint8_t *meta, uint32_t lenght) {
+  FrameMetaReader reader(meta, lenght);
+  if (!reader.valid() || reader.type() != FRAME_META_TYPE_DETECTIONS) return;
+  for (size_t i = 0; i < reader.count(); i++) {
+    FrameMetaBox box;
+    if (!reader.box(i, box)) break;
+    // box.x/y/w/h in a reader.width() x reader.height() frame
+  }
+}
+```
+
+The [xiao-ai-vision-receiver](https://github.com/hpsaturn/ESPNowCam/tree/master/examples/xiao-ai-vision-receiver) sample paints the boxes, the class and the score over the video with [DetectionsOverlay.h](https://github.com/hpsaturn/ESPNowCam/blob/master/examples/common/DetectionsOverlay.h).
 
 ### Channel
 

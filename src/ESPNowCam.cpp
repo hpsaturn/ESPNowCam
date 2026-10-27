@@ -26,6 +26,7 @@ bool msgReady = false;
 
 bool sendMessage(uint32_t msglen, const uint8_t *mac, CommInterface* comm);
 uint32_t encodeMsg(Frame msg);
+uint32_t encodeMsg(FrameWifiRaw msg);
 
 bool encode_uint8_array(pb_ostream_t *stream, const pb_field_t *field, void *const *arg) {
   if (!pb_encode_tag_for_field(stream, field))
@@ -80,10 +81,83 @@ bool ESPNowCam::sendData(uint8_t *data, uint32_t lenght) {
   return true;
 }
 
+bool ESPNowCam::sendDataAndMeta(uint8_t *data, uint32_t lenght, const uint8_t *meta, uint32_t metaLenght) {
+  log_v("sending data (size: %i, meta: %i)", lenght, metaLenght);
+  if (data == nullptr || lenght == 0) {
+    return false;
+  }
+  
+  uint32_t meta_reserve = 0;
+  if (metaLenght > 0) {
+    meta_reserve = metaLenght + 16;
+    if (meta_reserve >= sizeof(send_buffer)) {
+      log_e("Frame metadata does not fit in the send buffer, sending the frame without it..");
+      metaLenght = 0;
+      meta_reserve = 0;
+    }
+  }
+
+  outdata = data;
+  outdata_len = lenght;
+
+  Frame msg = Frame_init_zero;
+  FrameWifiRaw msg_ext = FrameWifiRaw_init_zero;
+  uint32_t offset = 0;
+  while (offset < outdata_len) {
+    uint32_t left = outdata_len - offset;
+    log_v("frame left: %i)", left);
+    chunk_pos = offset;
+    chunk_size_left = min(left, (uint32_t)chunksize);
+    bool last = (left <= (uint32_t)chunksize);
+
+    if (last && meta_reserve > 0) {
+      uint32_t room = (uint32_t)sizeof(send_buffer) - meta_reserve;
+      if (chunk_size_left > room) {
+        chunk_size_left = room; // the last chunk gives room to the metadata
+        last = (left <= chunk_size_left);
+      }
+    }
+
+    /// the schema of the message depends on the interface: the extended one
+    /// carries the metadata of the frame in its last chunk
+    uint32_t msgLen = 0;
+
+    msg_ext.lenght = last ? outdata_len : 0;
+    msg_ext.has_meta = false;
+    if (last && metaLenght > 0) {
+      memcpy(msg_ext.meta.bytes, meta, metaLenght);
+      msg_ext.meta.size = (pb_size_t)metaLenght;
+      msg_ext.has_meta = true;
+    }
+    msg_ext.data.funcs.encode = &encode_uint8_array;
+    msgReady = false;
+    sendMessage(encodeMsg(msg_ext), this->targetAddress, comm);
+    while (!msgReady) delayMicroseconds(1);
+    offset += chunk_size_left;
+  }
+  chunk_pos = 0;
+  chunk_size_left = chunksize;
+  return true;
+}
+
 uint32_t encodeMsg(Frame msg) {
   pb_ostream_t stream = pb_ostream_from_buffer(send_buffer, sizeof(send_buffer));
   
   bool status = pb_encode(&stream, Frame_fields, &msg);
+  uint32_t message_length = stream.bytes_written;
+  if (!status) {
+    printf("Encoding failed: %s\r\n", PB_GET_ERROR(&stream));
+    return 0;
+  }
+  return message_length;
+}
+
+/// @brief encode the extended schema (src/frame_wifiraw.proto), it is the one
+///        used by the interfaces with room for the metadata of the frame
+uint32_t encodeMsg(FrameWifiRaw msg) {
+  pb_ostream_t stream = pb_ostream_from_buffer(send_buffer, sizeof(send_buffer));
+
+  bool status = pb_encode(&stream, FrameWifiRaw_fields, &msg);
   uint32_t message_length = stream.bytes_written;
   if (!status) {
     printf("Encoding failed: %s\r\n", PB_GET_ERROR(&stream));
@@ -145,8 +219,13 @@ void printMacAddress(const uint8_t * macAddress){
 uint8_t recv_buffer[COMM_MAX_DATA_LEN - 8];
 uint32_t fbpos = 0;
 RecvCb recvCb = nullptr;
+MetaCb metaCb = nullptr;
 uint8_t *recvBuffer = nullptr;
 Frame msg_recv = Frame_init_zero;
+FrameWifiRaw msg_recv_ext = FrameWifiRaw_init_zero;
+/// schema in use, it is selected by the communication interface on init()
+/// (see ESPNowCam::init and CommInterface::supportsFrameMetadata)
+bool frameMetadata = false;
 
 bool decode_data(pb_istream_t *stream, const pb_field_t *field, void **arg) {
   /// store the initial bytes left for after update fpos
@@ -161,8 +240,14 @@ bool decode_data(pb_istream_t *stream, const pb_field_t *field, void **arg) {
 
 bool decodeMessage(uint16_t message_length) {
   pb_istream_t stream = pb_istream_from_buffer(recv_buffer, message_length);
-  msg_recv.data.funcs.decode = &decode_data;
-  bool status = pb_decode(&stream, Frame_fields, &msg_recv);
+  bool status;
+  if (frameMetadata) {
+    msg_recv_ext.data.funcs.decode = &decode_data;
+    status = pb_decode(&stream, FrameWifiRaw_fields, &msg_recv_ext);
+  } else {
+    msg_recv.data.funcs.decode = &decode_data;
+    status = pb_decode(&stream, Frame_fields, &msg_recv);
+  }
   if (!status) {
     log_w("%s", PB_GET_ERROR(&stream));
     return false;
@@ -170,15 +255,34 @@ bool decodeMessage(uint16_t message_length) {
   return true;
 }
 
+/// @brief length of the frame of the last decoded chunk (0 while the frame is
+///        still incomplete, it is only set on its last chunk)
+uint32_t decodedLenght() { return frameMetadata ? msg_recv_ext.lenght : msg_recv.lenght; }
+
+/// @brief metadata of the last decoded frame (see FrameMeta.h), it is never
+///        available on the interfaces that can not carry it (the ESP-NOW one)
+/// @return false when the frame has no metadata
+bool decodedMeta(const uint8_t **meta, uint32_t *lenght) {
+  if (!frameMetadata || !msg_recv_ext.has_meta) {
+    return false;
+  }
+  *meta = msg_recv_ext.meta.bytes;
+  *lenght = msg_recv_ext.meta.size;
+  return true;
+}
+
 void msgReceiveCb(const uint8_t *macAddr, const uint8_t *data, int32_t dataLen) {
-#ifdef CONFIG_IDF_TARGET_ESP32C3
-  uint32_t msgLen = min((int32_t)COMM_MAX_DATA_LEN, dataLen);
-#else
-  uint32_t msgLen = min(COMM_MAX_DATA_LEN, dataLen);
-#endif
+  /// never copy more than the receive buffer (a truncated message is detected
+  /// by the protobuf decoder, but an overflow is corrupted memory)
+  uint32_t msgLen = ((uint32_t)dataLen < sizeof(recv_buffer)) ? (uint32_t)dataLen
+                                                             : (uint32_t)sizeof(recv_buffer);
   memcpy(recv_buffer, data, msgLen);
-  if (decodeMessage(msgLen) && msg_recv.lenght > 0) {
-    if (recvCb != nullptr) recvCb(msg_recv.lenght);
+  if (decodeMessage(msgLen) && decodedLenght() > 0) {
+    if (recvCb != nullptr) recvCb(decodedLenght());
+    /// the metadata of this frame is available once the frame is complete
+    const uint8_t *meta = nullptr;
+    uint32_t metaLen = 0;
+    if (metaCb != nullptr && decodedMeta(&meta, &metaLen)) metaCb(meta, metaLen);
     fbpos = 0;
   }
 }
@@ -189,6 +293,14 @@ void ESPNowCam::setRecvCallback(RecvCb cb) {
 
 void ESPNowCam::setRecvBuffer(uint8_t *fb) {
   recvBuffer = fb;
+}
+
+void ESPNowCam::setMetaCallback(MetaCb cb) {
+  metaCb = cb;
+}
+
+bool ESPNowCam::supportsFrameMetadata() {
+  return (comm != nullptr) && comm->supportsFrameMetadata();
 }
 
 /***********************************
@@ -225,8 +337,14 @@ bool mul_decode_data(pb_istream_t *stream, const pb_field_t *field, void **arg) 
 
 bool mulDecodeMessage(uint16_t message_length) {
   pb_istream_t stream = pb_istream_from_buffer(recv_buffer, message_length);
-  msg_recv.data.funcs.decode = &mul_decode_data;
-  bool status = pb_decode(&stream, Frame_fields, &msg_recv);
+  bool status;
+  if (frameMetadata) {
+    msg_recv_ext.data.funcs.decode = &mul_decode_data;
+    status = pb_decode(&stream, FrameWifiRaw_fields, &msg_recv_ext);
+  } else {
+    msg_recv.data.funcs.decode = &mul_decode_data;
+    status = pb_decode(&stream, Frame_fields, &msg_recv);
+  }
   if (!status) {
     log_w("%s", PB_GET_ERROR(&stream));
     return false;
@@ -244,14 +362,14 @@ void msgReceiveCbByMAC(const uint8_t *macAddr, const uint8_t *data, int32_t data
     return;
   } else {
     curReceiver = (struct_receiver*)(&pos->second);
-    #ifdef CONFIG_IDF_TARGET_ESP32C3
-    uint32_t msgLen = min((int32_t)COMM_MAX_DATA_LEN, dataLen);
-    #else
-    uint32_t msgLen = min(COMM_MAX_DATA_LEN, dataLen);
-    #endif
+
+    uint32_t msgLen = (dataLen < COMM_MAX_DATA_LEN) ? (uint32_t)dataLen : (uint32_t)COMM_MAX_DATA_LEN;
     memcpy(recv_buffer, data, msgLen);
-    if (mulDecodeMessage(msgLen) && msg_recv.lenght > 0) {
-      if (curReceiver->recvCb != nullptr) curReceiver->recvCb(msg_recv.lenght);
+    if (mulDecodeMessage(msgLen) && decodedLenght() > 0) {
+      if (curReceiver->recvCb != nullptr) curReceiver->recvCb(decodedLenght());
+      const uint8_t *meta = nullptr;
+      uint32_t metaLen = 0;
+      if (metaCb != nullptr && decodedMeta(&meta, &metaLen)) metaCb(meta, metaLen);
       curReceiver->fbpos = 0;
     }
   }
@@ -309,6 +427,15 @@ void ESPNowCam::setChannel(uint8_t channel) {
 bool ESPNowCam::init(uint16_t chunk_size) {
   chunksize = chunk_size; 
   chunk_size_left = chunk_size;
+
+  /// the schema of the protocol depends on the interface: the WiFi raw one
+  /// uses the extended src/frame_wifiraw.proto (with the frame metadata), the
+  /// old ESP-NOW one keeps the minimal src/frame.proto shared by the previous
+  /// releases of the library
+  frameMetadata = comm->supportsFrameMetadata();
+  if (!frameMetadata && metaCb != nullptr) {
+    log_w("This interface can not carry frame metadata, the metadata callback is ignored..");
+  }
 
   if (_channel != -1) {
     log_i("Set custom channel: %i", _channel);

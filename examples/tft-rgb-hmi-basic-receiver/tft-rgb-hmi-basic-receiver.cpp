@@ -5,11 +5,8 @@
  */
 
 #include <Arduino.h>
-#include <HardwareSerial.h>
-
 #include "LGFX_ESP32S3_RGB_ESP32-8048S043.h"
 #include <LGFX_TFT_eSPI.hpp>
-
 #include "ESPNowCam.h"
 
 static LGFX tft;
@@ -30,8 +27,6 @@ void setup(void) {
   tft.setRotation(0);
 
   pinMode(2, OUTPUT);          // Display brightness enable
-  analogWriteResolution(8);    // PWM resolution
-  analogWriteFrequency(1000);  // PWM frequency
   analogWrite(2, 127);         // Brightness set
 
   tft.setTextColor(TFT_WHITE);
